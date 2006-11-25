@@ -1,3 +1,9 @@
+youtube-dl (2006.11.12-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 25 Nov 2006 16:12:03 -0500
+
 youtube-dl (2006.09.25-1) unstable; urgency=low
 
   * New upstream release.
