@@ -30,6 +30,8 @@ import optparse
 import httplib
 import urllib2
 import re
+import string
+import os
 
 # First off, check Python and refuse to run
 if sys.hexversion < 0x020400f0:
@@ -37,13 +39,14 @@ if sys.hexversion < 0x020400f0:
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
-const_video_url_re = re.compile(r'http://(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?v=)([^&]+).*')
+const_video_url_re = re.compile(r'(?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?v=)([^&]+).*')
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
 const_age_post_str = 'next_url=%%2Fwatch%%3Fv%%3D%s&action_confirm=Confirm'
 const_video_url_params_re = re.compile(r'player2\.swf\?([^"]+)"', re.M)
 const_video_url_real_str = 'http://www.youtube.com/get_video?%s'
+const_video_title_re = re.compile(r'<title>YouTube - ([^<]*)</title>', re.M | re.I)
 const_1k = 1024
 const_block_size = 10 * const_1k
 
@@ -93,9 +96,50 @@ def cond_print(str):
 		sys.stdout.write(str)
 		sys.stdout.flush()
 
+# Title string normalization
+def title_string_norm(title):
+	title = title.lower()
+	title = map(lambda x: x in string.whitespace and '_' or x, title)
+	title = filter(lambda x: x in string.lowercase or x in string.digits or x == '_', title)
+	return ''.join(title)
+
+# Generic download step
+def download_step(return_data_flag, step_title, step_error, url, post_data=None):
+	try:
+		cond_print('%s... ' % step_title)
+		data = perform_request(url, post_data).read()
+		cond_print('done.\n')
+		if return_data_flag:
+			return data
+		return None
+
+	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
+		cond_print('failed.\n')
+		error_advice_exit(step_error)
+
+	except KeyboardInterrupt:
+		sys.exit('\n')
+
+# Generic extract step
+def extract_step(step_title, step_error, regexp, data):
+	try:
+		cond_print('%s... ' % step_title)
+		match = regexp.search(data)
+		
+		if match is None:
+			cond_print('failed.\n')
+			error_advice_exit(step_error)
+		
+		extracted_data = match.group(1)
+		cond_print('done.\n')
+		return extracted_data
+	
+	except KeyboardInterrupt:
+		sys.exit('\n')
+
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2006.11.12'
+cmdl_version = '2006.12.07'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -104,6 +148,7 @@ cmdl_parser.add_option('-p', '--password', dest='password', metavar='PASSWORD', 
 cmdl_parser.add_option('-o', '--output', dest='outfile', metavar='FILE', help='output video file name')
 cmdl_parser.add_option('-q', '--quiet', action='store_true', dest='quiet', help='activates quiet mode')
 cmdl_parser.add_option('-s', '--simulate', action='store_true', dest='simulate', help='do not download video')
+cmdl_parser.add_option('-t', '--title', action='store_true', dest='use_title', help='use title in file name')
 (cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
 
 # Get video URL
@@ -123,6 +168,14 @@ video_url = const_video_url_str % video_url_id
 if not cmdl_opts.outfile is None and cmdl_opts.simulate:
 	sys.stderr.write('Warning: video file name given but will not be used.\n')
 
+if not cmdl_opts.outfile is None and cmdl_opts.use_title:
+	sys.exit('Error: using the video title conflicts with using a given file name.')
+
+# Verify both or none present
+if ((cmdl_opts.username is None and not cmdl_opts.password is None) or
+    (not cmdl_opts.username is None and cmdl_opts.password is None)):
+	sys.exit('Error: both username and password must be given, or none.')
+
 # Get output file name 
 if cmdl_opts.outfile is None:
 	video_filename = '%s.flv' % video_url_id
@@ -132,11 +185,6 @@ else:
 # Check name
 if not video_filename.lower().endswith('.flv'):
 	sys.stderr.write('Warning: video file name does not end in .flv\n')
-
-# Verify both or none present
-if ((cmdl_opts.username is None and not cmdl_opts.password is None) or
-    (not cmdl_opts.username is None and cmdl_opts.password is None)):
-	sys.exit('Error: both username and password must be given, or none.')
 
 # Test writable file
 if not cmdl_opts.simulate:
@@ -151,62 +199,26 @@ if not cmdl_opts.simulate:
 urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler()))
 urllib2.install_opener(urllib2.build_opener(urllib2.HTTPCookieProcessor()))
 
-# Login and confirm age if needed
+# Log in and confirm age if needed
 if not cmdl_opts.username is None:
-	try:
-		# Log in
-		cond_print('Logging in... ')
-		perform_request(const_login_url_str % video_url_id, const_login_post_str % (video_url_id, cmdl_opts.username, cmdl_opts.password)).read()
-		cond_print('done.\n')
+	url = const_login_url_str % video_url_id
+	post = const_login_post_str % (video_url_id, cmdl_opts.username, cmdl_opts.password)
+	download_step(False, 'Logging in', 'unable to log in', url, post)
 
-	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
-		cond_print('failed.\n')
-		error_advice_exit('unable to login')
-
-	except KeyboardInterrupt:
-		sys.exit('\n')
-
-	try:
-		# Get age confirmation cookie
-		cond_print('Confirming age... ')
-		perform_request(const_age_url_str % video_url_id, const_age_post_str % video_url_id).read()
-		cond_print('done.\n')
-
-	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
-		cond_print('failed.\n')
-		error_advice_exit('unable to confirm age')
-
-	except KeyboardInterrupt:
-		sys.exit('\n')
+	url = const_age_url_str % video_url_id
+	post = const_age_post_str % video_url_id
+	download_step(False, 'Confirming age', 'unable to confirm age', url, post)
 
 # Retrieve video webpage
-try:
-	cond_print('Retrieving video webpage... ')
-	video_webpage = perform_request(video_url).read()
-	cond_print('done.\n')
+video_webpage = download_step(True, 'Retrieving video webpage', 'unable to retrieve video webpage', video_url)
 
-except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
-	cond_print('failed.\n')
-	error_advice_exit('unable to download video webpage')
-
-except KeyboardInterrupt:
-	sys.exit('\n')
+# Extract video title if needed
+if cmdl_opts.use_title:
+	video_title = extract_step('Extracting video title', 'unable to extract video title', const_video_title_re, video_webpage)
 
 # Extract needed video URL parameters
-try:
-	cond_print('Extracting video URL parameters... ')
-	video_url_params_mo = const_video_url_params_re.search(video_webpage)
-	
-	if video_url_params_mo is None:
-		cond_print('failed.\n')
-		error_advice_exit('unable to extract URL parameters')
-	
-	video_url_params = video_url_params_mo.group(1)
-	video_url_real = const_video_url_real_str % video_url_params
-	cond_print('done.\n')
-
-except KeyboardInterrupt:
-	sys.exit('\n')
+video_url_params = extract_step('Extracting video URL parameters', 'unable to extract URL parameters', const_video_url_params_re, video_webpage)
+video_url_real = const_video_url_real_str % video_url_params
 
 # Retrieve video data
 try:
@@ -220,7 +232,7 @@ try:
 	cond_print('Retrieving video data... ')
 	video_file = open(video_filename, 'wb')
 	try:
-		video_len_str = '%sk' % to_k(int(video_data.info()['Content-length']))
+		video_len_str = '%sk' % to_k(long(video_data.info()['Content-length']))
 	except KeyError:
 		video_len_str = '(unknown)'
 
@@ -235,7 +247,6 @@ try:
 	video_file.close()
 	cond_print('done.\n')
 	cond_print('Video data saved to %s\n' % video_filename)
-	sys.exit()
 
 except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 	cond_print('failed.\n')
@@ -243,3 +254,19 @@ except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 
 except KeyboardInterrupt:
 	sys.exit('\n')
+
+# Rename video file if needed
+if cmdl_opts.use_title:
+	try:
+		final_filename = '%s-%s.flv' % (title_string_norm(video_title), video_url_id)
+		os.rename(video_filename, final_filename)
+		cond_print('Video file renamed to %s\n' % final_filename)
+	
+	except OSError:
+		sys.stderr.write('Warning: unable to rename file.\n')
+
+	except KeyboardInterrupt:
+		sys.exit('\n')
+
+# Finish
+sys.exit()
