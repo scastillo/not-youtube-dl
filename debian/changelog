@@ -1,3 +1,12 @@
+youtube-dl (2007.03.27-1) unstable; urgency=low
+
+  * New upstream release:
+    - Progress meter.
+    - "--literal" command line option to use the video title in the filename.
+    - "--get-url" command line option to print the real video URL.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon,  2 Apr 2007 21:46:56 -0400
+
 youtube-dl (2007.02.18-1) unstable; urgency=low
 
   * New upstream release:
