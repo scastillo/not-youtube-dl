@@ -1,3 +1,10 @@
+youtube-dl (2007.06.06-1) unstable; urgency=low
+
+  * New upstream release:
+    - "--title-too" command line option to print the video's title.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 07 Jun 2007 01:04:01 -0400
+
 youtube-dl (2007.03.27-1) unstable; urgency=low
 
   * New upstream release:
