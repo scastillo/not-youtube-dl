@@ -1,3 +1,10 @@
+youtube-dl (2007.06.22-1) unstable; urgency=low
+
+  * New upstream release:
+    - regex update.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 21 Jun 2007 20:42:57 -0400
+
 youtube-dl (2007.06.06-1) unstable; urgency=low
 
   * New upstream release:

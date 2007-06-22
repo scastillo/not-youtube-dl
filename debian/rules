@@ -10,18 +10,15 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
-	dh_installdirs
+	dh_install
 
-	install -m 0755 $(CURDIR)/youtube-dl $(CURDIR)/debian/youtube-dl/usr/bin
-
+binary-arch:
 binary-indep: build install
-
-binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs 
 	dh_installdocs
-	dh_installman $(CURDIR)/debian/youtube-dl.1
+	dh_installman debian/youtube-dl.1
 	dh_compress
 	dh_fixperms
 	dh_installdeb
