@@ -45,8 +45,8 @@ const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
 const_age_post_str = 'next_url=%%2Fwatch%%3Fv%%3D%s&action_confirm=Confirm'
-const_video_url_params_re = re.compile(r'player2\.swf\?([^"]+)"', re.M)
-const_video_url_real_str = 'http://www.youtube.com/get_video?%s'
+const_url_t_param_re = re.compile(r'[,{]t:\'([^\']*)\'')
+const_video_url_real_str = 'http://www.youtube.com/get_video?video_id=%s&t=%s'
 const_video_title_re = re.compile(r'<title>YouTube - ([^<]*)</title>', re.M | re.I)
 const_1k = 1024
 const_initial_block_size = 10 * const_1k
@@ -191,7 +191,7 @@ def calc_speed(start, now, bytes):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.06.22'
+cmdl_version = '2007.08.24'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -318,8 +318,8 @@ if cmdl_opts.use_title or cmdl_opts.use_literal or cmdl_opts.get_title:
 	video_title = extract_step('Extracting video title', 'unable to extract video title', const_video_title_re, video_webpage)
 
 # Extract needed video URL parameters
-video_url_params = extract_step('Extracting video URL parameters', 'unable to extract URL parameters', const_video_url_params_re, video_webpage)
-video_url_real = const_video_url_real_str % video_url_params
+video_url_t_param = extract_step('Extracting URL "t" parameter', 'unable to extract URL "t" parameter', const_url_t_param_re, video_webpage)
+video_url_real = const_video_url_real_str % (video_url_id, video_url_t_param)
 
 # Retrieve video data
 try:
