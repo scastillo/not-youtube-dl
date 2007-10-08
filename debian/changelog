@@ -1,3 +1,9 @@
+youtube-dl (2007.10.09-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 08 Oct 2007 19:22:33 -0400
+
 youtube-dl (2007.08.24-1) unstable; urgency=low
 
   * New upstream release; closes: #439363.
