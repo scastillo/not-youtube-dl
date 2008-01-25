@@ -3,7 +3,7 @@ Section: web
 Priority: extra
 Maintainer: Robert S. Edmonds <edmonds@debian.org>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 
 Package: youtube-dl
 Architecture: all

@@ -1,3 +1,10 @@
+youtube-dl (2008.01.24-1) unstable; urgency=low
+
+  * New upstream release; closes: #462427, #462428.
+    - fixes youtube download issues.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 24 Jan 2008 22:15:05 -0500
+
 youtube-dl (2007.10.09-1) unstable; urgency=low
 
   * New upstream release.
