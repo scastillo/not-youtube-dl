@@ -1,3 +1,10 @@
+youtube-dl (2008.03.08-1) unstable; urgency=low
+
+  * New upstream release:
+    - adds -b / --best-quality command line option.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 12 Mar 2008 14:26:04 -0400
+
 youtube-dl (2008.01.24-1) unstable; urgency=low
 
   * New upstream release; closes: #462427, #462428.
