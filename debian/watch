@@ -1,0 +1,6 @@
+version=3
+#
+#http://bitbucket.org/rg3/youtube-dl/wiki/Home http://bitbucket.org/rg3/youtube-dl/raw/(.*)/youtube-dl
+#http://bitbucket.org/rg3/youtube-dl/get/(.*).gz
+#
+http://bitbucket.org/rg3/youtube-dl/downloads/ (?:.*/)?(\d+\.\d+\.\d+)\.tar\.gz

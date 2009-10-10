@@ -1,3 +1,38 @@
+youtube-dl (2009.09.13-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/watch:
+    + adjust for the new upstream layout.
+  * debian/control:
+    + Standards-Version updated to 3.8.3. No changes needed.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 10 Oct 2009 12:17:53 -0300
+
+youtube-dl (2009.08.08-1~try01) unstable; urgency=low
+
+  * The current maintainer seems busy (Closes: #491616):
+    + ability to recognize more qualities of a video.
+    + ability to automatically find the best quality video.
+    + ability to download entire playlists.
+    + ability to specify various urls. (Closes: #452071)
+    + ability to resume interrupted downloads.
+    + many other things.
+  * debian/copyright:
+    + rework the file.
+    + mention that the package is in the public domain.
+    + include my information.
+    + update the URL of the package.
+  * debian/control:
+    + add a Homepage: field.
+    + keeping the current manpage for now.
+    + give more details in the long description.
+    + list me as the maintainer.
+    + Standards-Version updated to 3.8.2.
+  * debian/watch:
+    + let's help with automatic updates.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 10 Aug 2009 08:14:08 -0300
+
 youtube-dl (2008.03.22-1) unstable; urgency=low
 
   * New upstream release:

@@ -1,13 +1,19 @@
 Source: youtube-dl
 Section: web
 Priority: extra
-Maintainer: Robert S. Edmonds <edmonds@debian.org>
+Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.7.3
+Standards-Version: 3.8.3
+Homepage: http://bitbucket.org/rg3/youtube-dl/
 
 Package: youtube-dl
 Architecture: all
 Depends: python (>= 2.4)
 Description: download videos from youtube.com
  youtube-dl is a small command-line program to download videos from
- YouTube.com.
+ YouTube.com and other sites that don't provide direct links to the
+ videos served.
+ .
+ youtube-dl allows the user, among other things, to choose a specific
+ video quality to download (if available) or let the program
+ automatically determine the best quality video to grab.
