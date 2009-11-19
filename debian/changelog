@@ -1,3 +1,13 @@
+youtube-dl (2009.09.13-2) unstable; urgency=low
+
+  * change to "3.0 (quilt)" format.
+  * add support for 1080p videos. Thanks Josh Triplett. Closes: #557042.
+  * include a better manpage. Closes: #553919.
+  * include the DMUA: yes field.
+  * kindly reviewed by Li Daobing.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 19 Nov 2009 11:21:36 -0200
+
 youtube-dl (2009.09.13-1) unstable; urgency=low
 
   * New upstream release

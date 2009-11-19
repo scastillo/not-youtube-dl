@@ -1,0 +1,195 @@
+# -*- pod -*-
+=head1 NAME
+
+youtube-dl - download videos from youtube.com
+
+=head1 SYNOPSIS
+
+  youtube-dl [options] url ...
+
+=head1 DESCRIPTION
+
+youtube-dl is a script to download videos from youtube.com.
+
+Once it is installed in your system, you should be able to call it from
+the command line. Usage instructions are easy. Use youtube-dl followed
+by a video URL or identifier. As an example, consider:
+
+  youtube-dl "http://www.youtube.com/watch?v=foobar"
+
+The video will be saved to the file C<foobar.flv> in that example. Many
+YouTube.com videos are in Flash Video format and their extension would
+be C<flv>. Other videos are encoded in H.264 and these usually have the
+extension C<mp4>.  In Linux and other unices, video players using a
+recent version of ffmpeg can play them. That includes MPlayer, VLC,
+xine, among others.
+
+=head1 OPTIONS
+
+B<youtube-dl> accepts options in the following categories
+
+=over
+
+=item -h, --help
+
+Print help text and exit.
+
+=item -v, --version
+
+Print program version and exit.
+
+=item -i, --ignore-errors
+
+Ignore errors during download and continue processing.
+
+=item -r B<L>, --rate-limit=B<L>
+
+Limit the download speed to the specified maximum B<L> (e.g., 50k or 44.6m).
+
+=item -u B<UN>, --username=B<UN>
+
+Specify the youtube account username B<UN>. Some videos require an
+account to be downloaded, mostly because they're flagged as mature
+content.
+
+=item -p B<PW>, --password=B<PW>
+
+Like the username, specifies the account password to be B<PW>.
+
+=item -n, --netrc 
+
+Get authentication data from the standard unix .netrc file on the user's
+home directory. The machine name is youtube in regarding this usage.
+
+=item -f FMT, --format=FMT
+
+Specify the video format (quality) in which to download the video. Note
+that not all videos are available in all formats.
+
+=item -b, --best-quality
+
+Download the best video quality available for the video(s) specified by
+the user.
+
+=item -m, --mobile-version
+
+Synonymous to the option "-f 17", to download videos playable on some
+mobile phones.
+
+=item -d, --high-def
+
+Synonymous to the option "-f 37", to download videos in HD quality
+(1080p).
+
+=item -q, --quiet
+
+Activates quiet mode, avoiding many messages being written to the
+terminal.
+
+=item -s, --simulate
+
+Simulate the operation, but do not download the video. Useful for
+testing.
+
+=item -g, --get-url
+
+Simulate the operation, like quiet mode, but show the URL that would be
+used to download the video. Can be used with other download tools like
+wget or aria2c.
+
+=item -e, --get-title
+
+Simulate the operation, like quiet mode, but show the title of the video
+that would be downloaded.
+
+=item -t, --title
+
+Use the title of the video in the file name used to download the video.
+
+=item -l, --literal
+
+Use the literal title of the video in file name used to download the
+video. Can contain "weird" characters that are not filtered like with
+the -t option.
+
+=item -o B<TPL>, --output=B<TPL>
+
+Specify a template B<TPL> for the names of the files to be created when
+they are downloaded. The default filename is video_id.flv. But you can
+also use the video title in the filename with the C<-t> or C<--title>
+option, or preserve the literal title in the filename with the C<-l> or
+C<--literal> option.
+
+=item -a B<F>, --batch-file=B<F>
+
+Specify the name of a file containing URLs of videos to download from
+youtube in batch mode. The file must contain one URL per line.
+
+=item -w, --no-overwrites
+
+Do no overwrite already existing files.
+
+=item -c, --continue
+
+Resume partially downloaded files.
+
+=back
+
+=head1 OUTPUT TEMPLATE
+
+The -o option allows users to indicate a template for the output file
+names. The basic usage is not to set any template arguments when
+downloading a single file, like in youtube-dl -o funny_video.flv
+"http://some/video". However, it may contain special sequences that will
+be replaced when downloading each video.
+
+The special sequences have the format C<%(NAME)s>. To clarify, that's a
+percent symbol followed by a name in parenthesis, followed by a
+lowercase S. Allowed names are:
+
+=over
+
+=item id
+
+The sequence will be replaced by the video identifier.
+
+=item url
+
+The sequence will be replaced by the video URL.
+
+=item uploader
+
+The sequence will be replaced by the nickname of the person who uploaded
+the video.
+
+=item title
+
+The sequence will be replaced by the literal video title.
+
+=item stitle
+
+The sequence will be replaced by a simplified video title, restricted to
+alphanumeric characters and dashes.
+
+=item ext
+
+The sequence will be replaced by the appropriate extension (like C<flv>
+or C<mp4>).
+
+=item epoch
+
+The sequence will be replaced by the Unix epoch when creating the file.
+
+=back
+
+As you may have guessed, the default template is C<%(id)s.%(ext)s>. When
+some command line options are used, it's replaced by other templates
+like C<%(title)s-%(id)s.%(ext)s>. You can specify your own.
+
+=head1 AUTHOR
+
+youtube-dl was written by Ricardo Garcia Gonzalez and many contributors
+from all around the internet.  This manpage was written by Rogério Brito
+<rbrito@users.sf.net>.
+
+=cut

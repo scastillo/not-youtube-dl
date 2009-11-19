@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.8.3
+DM-Upload-Allowed: yes
 Homepage: http://bitbucket.org/rg3/youtube-dl/
 
 Package: youtube-dl

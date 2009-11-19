@@ -1,0 +1,28 @@
+Description: Add support for 1080p videos.
+Author: Rogério Brito <rbrito@ime.usp.br>
+--- a/youtube-dl
++++ b/youtube-dl
+@@ -530,12 +530,13 @@
+ 	_LOGIN_URL = 'http://www.youtube.com/signup?next=/&gl=US&hl=en'
+ 	_AGE_URL = 'http://www.youtube.com/verify_age?next_url=/&gl=US&hl=en'
+ 	_NETRC_MACHINE = 'youtube'
+-	_available_formats = ['22', '35', '18', '5', '17', '13', None] # listed in order of priority for -b flag
++	_available_formats = ['37', '22', '35', '18', '5', '17', '13', None] # listed in order of priority for -b flag
+ 	_video_extensions = {
+ 		'13': '3gp',
+ 		'17': 'mp4',
+ 		'18': 'mp4',
+ 		'22': 'mp4',
++		'37': 'mp4',
+ 	}
+ 
+ 	@staticmethod
+@@ -1127,7 +1128,7 @@
+ 		video_format.add_option('-m', '--mobile-version',
+ 				action='store_const', dest='format', help='alias for -f 17', const='17')
+ 		video_format.add_option('-d', '--high-def',
+-				action='store_const', dest='format', help='alias for -f 22', const='22')
++				action='store_const', dest='format', help='alias for -f 37', const='37')
+ 		parser.add_option_group(video_format)
+ 
+ 		verbosity = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
