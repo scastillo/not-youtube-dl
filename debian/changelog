@@ -1,3 +1,24 @@
+youtube-dl (2010.01.19-1) unstable; urgency=low
+
+  * New upstream release. As upstream does not provide a changelog, here
+    are the highlights:
+    + patched to add Google Video and Photobucket support
+    + add support for using rtmpdump
+    + added support to download all of a user's videos!
+    + fix detection of uploader nickname in metacafe
+    + take format 37 into account
+    + add self-updating code
+    + allow empty titles because they do appear in some videos
+    + use default values for "continuedl" and "nooverwrites" parameters
+    + avoid using Unicode strings when forming URL requests
+    + improve preferred encoding detection method
+  * Remove all patches (applied upstream).
+  * Add suggests on rtmpdump.
+  * Shorten the short description.
+  * Include list of sites supported in the long description.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 26 Jan 2010 11:28:40 -0200
+
 youtube-dl (2009.09.13-2) unstable; urgency=low
 
   * change to "3.0 (quilt)" format.

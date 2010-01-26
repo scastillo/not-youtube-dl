@@ -10,11 +10,16 @@ Homepage: http://bitbucket.org/rg3/youtube-dl/
 Package: youtube-dl
 Architecture: all
 Depends: python (>= 2.4)
-Description: download videos from youtube.com
+Suggests: rtmpdump
+Description: download videos from youtube
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the
  videos served.
  .
  youtube-dl allows the user, among other things, to choose a specific
  video quality to download (if available) or let the program
- automatically determine the best quality video to grab.
+ automatically determine the best quality video to grab. It supports
+ downloading entire playlists and all videos from a given user.
+ .
+ Currently supported sites are video.google.com, youtube, photobucket,
+ and metacafe.
