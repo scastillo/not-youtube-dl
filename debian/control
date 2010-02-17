@@ -3,13 +3,13 @@ Section: web
 Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 DM-Upload-Allowed: yes
 Homepage: http://bitbucket.org/rg3/youtube-dl/
 
 Package: youtube-dl
 Architecture: all
-Depends: python (>= 2.4)
+Depends: python (>= 2.4), ${misc:Depends}
 Suggests: rtmpdump
 Description: download videos from youtube
  youtube-dl is a small command-line program to download videos from

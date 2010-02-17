@@ -1,3 +1,14 @@
+youtube-dl (2010.02.13-1) unstable; urgency=low
+
+  * New upstream release
+    + stronger parsing of URLs.
+    + better generation of filenames.
+  * debian/control:
+    + include misc-depends due to debhelper.
+    + the package is compliant with policy 3.8.4.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Feb 2010 00:19:23 -0200
+
 youtube-dl (2010.01.19-1) unstable; urgency=low
 
   * New upstream release. As upstream does not provide a changelog, here
