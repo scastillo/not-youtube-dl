@@ -1,3 +1,11 @@
+youtube-dl (2010.03.13-1) unstable; urgency=low
+
+  * New upstream release
+    + added option to disable the status/progress updates.
+    + fine tuned the sequence of formats searched to discover the best quality.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 14 Mar 2010 23:33:48 -0300
+
 youtube-dl (2010.02.13-1) unstable; urgency=low
 
   * New upstream release
