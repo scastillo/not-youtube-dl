@@ -1,3 +1,18 @@
+youtube-dl (2010.04.04-1) unstable; urgency=low
+
+  * New upstream release:
+    + allow grabbing videos from vevo.
+    + allow download whole playlists and keep the videos numbered.
+    + add support for new playlist style.
+    + fix detection of multipage playlists.
+    + insist a little bit more to grab videos from youtube.
+    + add information extractor for video.yahoo.com.
+    + fix cosmetic issues with rtmpdump.
+    + add option --all-formats to grab all available formats for a given video.
+    + add "-" (without quotes) as an alias to output videos to stdout.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 04 Apr 2010 17:55:00 -0300
+
 youtube-dl (2010.03.13-1) unstable; urgency=low
 
   * New upstream release
