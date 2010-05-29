@@ -1,3 +1,12 @@
+youtube-dl (2010.04.04-2) unstable; urgency=low
+
+  * Add support to webm (vp8 + vorbis) format:
+    + debian/patches/01-add-support-to-webm.patch: the code
+    + debian/NEWS: the documentation
+    + debian/control: the suggests field
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 29 May 2010 13:11:43 -0300
+
 youtube-dl (2010.04.04-1) unstable; urgency=low
 
   * New upstream release:

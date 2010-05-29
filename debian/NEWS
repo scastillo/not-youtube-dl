@@ -1,0 +1,16 @@
+youtube-dl (2010.04.04-2) unstable; urgency=low
+
+  For the time being, you can play WebM files (which are VP8 for video and
+  Vorbis for audio, enclosed in a Matroska container) with gst123, which
+  was just uploaded to Debian.
+  
+  Other gstreamer-based players should support those files right away, as
+  long as you have gstreamer0.10-plugins-bad version at least 0.10.18.3-2
+  installed.
+  
+  Videos in those formats, where available, are taken automatically with
+  the use of the '-b' switch or with the specification of formats 43 (for
+  360p videos) or 45 (for 720p videos).
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 29 May 2010 13:14:02 -0300
+

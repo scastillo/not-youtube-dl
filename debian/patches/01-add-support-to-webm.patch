@@ -1,0 +1,24 @@
+Description: Add support for webm (VP8 video + Vorbis audio)
+Author: Rogério Brito <rbrito@ime.usp.br>
+Forwarded: no
+Last-Update: 2010-05-29
+
+--- a/youtube-dl
++++ b/youtube-dl
+@@ -649,13 +649,15 @@
+ 	_LOGIN_URL = 'http://www.youtube.com/signup?next=/&gl=US&hl=en'
+ 	_AGE_URL = 'http://www.youtube.com/verify_age?next_url=/&gl=US&hl=en'
+ 	_NETRC_MACHINE = 'youtube'
+-	_available_formats = ['37', '22', '35', '18', '34', '5', '17', '13', None] # listed in order of priority for -b flag
++	_available_formats = ['45', '43', '37', '22', '35', '18', '34', '5', '17', '13', None] # listed in order of priority for -b flag
+ 	_video_extensions = {
+ 		'13': '3gp',
+ 		'17': 'mp4',
+ 		'18': 'mp4',
+ 		'22': 'mp4',
+ 		'37': 'mp4',
++		'43': 'webm',
++		'45': 'webm'
+ 	}
+ 
+ 	@staticmethod
