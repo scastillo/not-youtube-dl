@@ -5,7 +5,7 @@ The current maintainer is Rogério Brito <rbrito@ime.usp.br>.
 
 It was downloaded from:
 
-http://bitbucket.org/rg3/youtube-dl/raw/2009.08.08/youtube-dl
+http://bitbucket.org/rg3/youtube-dl/raw/2010.04.04/youtube-dl
 
 Authors:
 
@@ -15,7 +15,7 @@ Authors:
     * Many other people contributing patches, code, ideas and kind messages.
       Too many to be listed here. You know who you are. Thank you very much. 
 
-Copyright © 2006-2009 Ricardo Garcia Gonzalez
+Copyright © 2006-2010 Ricardo Garcia Gonzalez
 
 License:
 
@@ -23,8 +23,8 @@ License:
 
     The packaging is licensed under the GNU GPL License:
 
-        Copyright 2006, Robert S. Edmonds <edmonds@debian.org>.
-	Copyright 2009, Rogério Brito <rbrito@ime.usp.br>.
+        Copyright © 2006, Robert S. Edmonds <edmonds@debian.org>.
+	Copyright © 2009-2010, Rogério Brito <rbrito@ime.usp.br>.
 
 For the text of the GPL License in a Debian system, please see
 `/usr/share/common-licenses/GPL-2'.

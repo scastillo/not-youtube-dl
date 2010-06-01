@@ -1,34 +1,3 @@
 #!/usr/bin/make -f
-
-build: build-stamp
-
-build-stamp:
-	pod2man -n YOUTUBE-DL -c "User Commands" debian/youtube-dl.pod > debian/youtube-dl.1
-	touch $@
-
-clean:
-	dh_testdir
-	dh_clean build-stamp debian/youtube-dl.1
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_install
-
-binary-arch:
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs 
-	dh_installdocs
-	dh_installman debian/youtube-dl.1
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+%:
+	dh $@

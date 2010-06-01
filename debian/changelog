@@ -1,3 +1,10 @@
+youtube-dl (2010.04.04-3) unstable; urgency=low
+
+  * Migrate the packaging to smaller dh(7) style.
+  * Update the years of copyright.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 01 Jun 2010 11:06:06 -0300
+
 youtube-dl (2010.04.04-2) unstable; urgency=low
 
   * Add support to webm (vp8 + vorbis) format:
