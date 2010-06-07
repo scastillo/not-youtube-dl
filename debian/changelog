@@ -1,3 +1,15 @@
+youtube-dl (2010.06.06-1) unstable; urgency=low
+
+  * New upstream release:
+    + support for retrying connections after a 503 error
+    + argument '-' can be used with -a to indicate stdin
+    + support for webm formats
+  * debian/patches/01-add-support-to-webm.patch:
+    + remove parts applied upstream
+    + update to download webm videos based on their quality
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 07 Jun 2010 04:16:54 -0300
+
 youtube-dl (2010.04.04-3) unstable; urgency=low
 
   * Migrate the packaging to smaller dh(7) style.
