@@ -1,3 +1,17 @@
+youtube-dl (2010.07.14-1) unstable; urgency=low
+
+  * New upstream release:
+    + add preliminary support for Dailymotion videos
+    + improve support for WebM in YouTube
+    + add support for the "original" video format in YouTube
+    + add a --max-quality option
+    + add support for youtu.be URLs
+    + add fixes.
+  * debian/patches/01-add-support-to-webm.patch:
+    + update and refresh.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 14 Jul 2010 22:39:54 -0300
+
 youtube-dl (2010.06.06-1) unstable; urgency=low
 
   * New upstream release:
