@@ -1,3 +1,19 @@
+youtube-dl (2010.07.22-1) unstable; urgency=medium
+
+  * Urgency set to medium due to changes in the site
+  * New upstream release:
+    + make youtube-dl work again. Closes: #589974.
+    + removed command line options -b and -f.
+  * debian/NEWS:
+    + document the removal of command line options and the new behavior.
+  * debian/patches:
+    + disabled for the moment.
+  * debian/control:
+    + include the support of dailymotion in the long description.
+    + update the standards version to 3.9.0, with no other changes.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 22 Jul 2010 18:58:29 -0300
+
 youtube-dl (2010.07.14-1) unstable; urgency=low
 
   * New upstream release:

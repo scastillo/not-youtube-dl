@@ -1,16 +1,16 @@
-youtube-dl (2010.04.04-2) unstable; urgency=low
+youtube-dl (2010.07.22-1) unstable; urgency=medium
 
-  For the time being, you can play WebM files (which are VP8 for video and
-  Vorbis for audio, enclosed in a Matroska container) with gst123, which
-  was just uploaded to Debian.
+  The upstream author has removed support for the -b ("best format") and
+  the -d ("high def") command line options.
   
-  Other gstreamer-based players should support those files right away, as
-  long as you have gstreamer0.10-plugins-bad version at least 0.10.18.3-2
-  installed.
+  The behavior now is to download the best quality for each video.
+  If you experience a problem with youtube-dl downloading videos that are
+  too large, you should consider using the --max-quality option to limit
+  which format to use.
   
-  Videos in those formats, where available, are taken automatically with
-  the use of the '-b' switch or with the specification of formats 43 (for
-  360p videos) or 45 (for 720p videos).
+  The list of formats (in decreasing quality) can be found with:
+  
+      grep "available_formats =" /usr/bin/youtube-dl
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sat, 29 May 2010 13:14:02 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 22 Jul 2010 19:07:03 -0300
 

@@ -3,7 +3,7 @@ Section: web
 Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends: debhelper (>= 7)
-Standards-Version: 3.8.4
+Standards-Version: 3.9.0
 DM-Upload-Allowed: yes
 Homepage: http://bitbucket.org/rg3/youtube-dl/
 
@@ -22,4 +22,4 @@ Description: download videos from youtube
  downloading entire playlists and all videos from a given user.
  .
  Currently supported sites are video.google.com, youtube, photobucket,
- and metacafe.
+ dailymotion, and metacafe.
