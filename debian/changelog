@@ -1,9 +1,19 @@
+youtube-dl (2010.07.24-1) unstable; urgency=medium
+
+  * Urgency medium due to changes in the site that broke earlier versions.
+  * New upstream release:
+    + restore support for WebM formats.
+  * debian/changelog:
+    + fix entry that stated incorrect removed options. Closes: #590144.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 24 Jul 2010 22:29:21 -0300
+
 youtube-dl (2010.07.22-1) unstable; urgency=medium
 
   * Urgency set to medium due to changes in the site
   * New upstream release:
     + make youtube-dl work again. Closes: #589974.
-    + removed command line options -b and -f.
+    + removed command line options -b and -d.
   * debian/NEWS:
     + document the removal of command line options and the new behavior.
   * debian/patches:
