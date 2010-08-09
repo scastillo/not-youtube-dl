@@ -1,3 +1,23 @@
+youtube-dl (2010.08.04-1) unstable; urgency=low
+
+  * New upstream release:
+    + Fix metacafe.com code not working due to gdaKey again
+    + Add option (--playlist-start) to specify the initial video for playlists
+    + Put back -b option as a placeholder with a warning message
+    + Consider the file downloaded if the size differs in less than 100 bytes
+    + Reorganize request code to make it a bit more robust
+    + Properly detect YouTube error messages to print them on screen
+  * debian/control:
+    + Remove suggests on gst-p-b (>= 0.10.18.3-2)
+    + The package complies with Policy 3.9.1 without any other changes.
+  * debian/watch:
+    + Remove commented lines.
+  * debian/youtube-dl.pod:
+    + Update the manpage to include newer options.
+    + Don't mention removed options anymore. Closes: #590825, #592368.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 09 Aug 2010 13:27:41 -0400
+
 youtube-dl (2010.07.24-1) unstable; urgency=medium
 
   * Urgency medium due to changes in the site that broke earlier versions.

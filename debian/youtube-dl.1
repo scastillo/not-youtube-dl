@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "YOUTUBE-DL 1"
-.TH YOUTUBE-DL 1 "2009-11-19" "perl v5.10.1" "User Commands"
+.TH YOUTUBE-DL 1 "2010-08-09" "youtube-dl" "User Commands"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -163,12 +163,18 @@ Print help text and exit.
 .IP "\-v, \-\-version" 4
 .IX Item "-v, --version"
 Print program version and exit.
+.IP "\-U, \-\-update" 4
+.IX Item "-U, --update"
+Update this program to the latest stable version.
 .IP "\-i, \-\-ignore\-errors" 4
 .IX Item "-i, --ignore-errors"
 Ignore errors during download and continue processing.
 .IP "\-r \fBL\fR, \-\-rate\-limit=\fBL\fR" 4
 .IX Item "-r L, --rate-limit=L"
 Limit the download speed to the specified maximum \fBL\fR (e.g., 50k or 44.6m).
+.IP "\-R \fBR\fR, \-\-retries=\fBR\fR" 4
+.IX Item "-R R, --retries=R"
+Number \fBR\fR of retries for a given download (default is 10).
 .IP "\-u \fB\s-1UN\s0\fR, \-\-username=\fB\s-1UN\s0\fR" 4
 .IX Item "-u UN, --username=UN"
 Specify the youtube account username \fB\s-1UN\s0\fR. Some videos require an
@@ -180,23 +186,25 @@ Like the username, specifies the account password to be \fB\s-1PW\s0\fR.
 .IP "\-n, \-\-netrc" 4
 .IX Item "-n, --netrc"
 Get authentication data from the standard unix .netrc file on the user's
-home directory. The machine name is youtube in regarding this usage.
-.IP "\-f \s-1FMT\s0, \-\-format=FMT" 4
+home directory. The machine name is youtube regarding this usage.
+.IP "\-f \fB\s-1FMT\s0\fR, \-\-format=\fB\s-1FMT\s0\fR" 4
 .IX Item "-f FMT, --format=FMT"
 Specify the video format (quality) in which to download the video. Note
 that not all videos are available in all formats.
 .IP "\-b, \-\-best\-quality" 4
 .IX Item "-b, --best-quality"
-Download the best video quality available for the video(s) specified by
-the user.
+This option is deprecated, does nothing currently, and is expected to be
+removed in a next release, as it is the current behavior of youtube-dl.
 .IP "\-m, \-\-mobile\-version" 4
 .IX Item "-m, --mobile-version"
 Synonymous to the option \*(L"\-f 17\*(R", to download videos playable on some
 mobile phones.
-.IP "\-d, \-\-high\-def" 4
-.IX Item "-d, --high-def"
-Synonymous to the option \*(L"\-f 37\*(R", to download videos in \s-1HD\s0 quality
-(1080p).
+.IP "\-\-all\-formats" 4
+.IX Item "--all-formats"
+Downloads all formats for which a video may be available.
+.IP "\-\-max\-quality=\fB\s-1FMT\s0\fR" 4
+.IX Item "--max-quality=FMT"
+Limit the maximum quality of the videos to downloads to \fB\s-1FMT\s0\fR.
 .IP "\-q, \-\-quiet" 4
 .IX Item "-q, --quiet"
 Activates quiet mode, avoiding many messages being written to the
@@ -214,6 +222,17 @@ wget or aria2c.
 .IX Item "-e, --get-title"
 Simulate the operation, like quiet mode, but show the title of the video
 that would be downloaded.
+.IP "\-\-get\-thumbnail" 4
+.IX Item "--get-thumbnail"
+Simulate the operation, like quiet mode, but print the \s-1URL\s0 of of the video's
+thumbnail.
+.IP "\-\-get\-description" 4
+.IX Item "--get-description"
+Simulate the operation, like quiet mode, but print the description of the
+video.
+.IP "\-\-no\-progress" 4
+.IX Item "--no-progress"
+Do not print the progress bar during downloads.
 .IP "\-t, \-\-title" 4
 .IX Item "-t, --title"
 Use the title of the video in the file name used to download the video.
@@ -281,5 +300,5 @@ like \f(CW\*(C`%(title)s\-%(id)s.%(ext)s\*(C'\fR. You can specify your own.
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 youtube-dl was written by Ricardo Garcia Gonzalez and many contributors
-from all around the internet.  This manpage was written by RogA\*~Xrio Brito
+from all around the internet.  This manpage was written by Rogerio Brito
 <rbrito@users.sf.net>.

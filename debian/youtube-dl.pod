@@ -38,6 +38,10 @@ Print help text and exit.
 
 Print program version and exit.
 
+=item -U, --update
+
+Update this program to the latest stable version.
+
 =item -i, --ignore-errors
 
 Ignore errors during download and continue processing.
@@ -45,6 +49,10 @@ Ignore errors during download and continue processing.
 =item -r B<L>, --rate-limit=B<L>
 
 Limit the download speed to the specified maximum B<L> (e.g., 50k or 44.6m).
+
+=item -R B<R>, --retries=B<R>
+
+Number B<R> of retries for a given download (default is 10).
 
 =item -u B<UN>, --username=B<UN>
 
@@ -59,27 +67,30 @@ Like the username, specifies the account password to be B<PW>.
 =item -n, --netrc 
 
 Get authentication data from the standard unix .netrc file on the user's
-home directory. The machine name is youtube in regarding this usage.
+home directory. The machine name is youtube regarding this usage.
 
-=item -f FMT, --format=FMT
+=item -f B<FMT>, --format=B<FMT>
 
 Specify the video format (quality) in which to download the video. Note
 that not all videos are available in all formats.
 
 =item -b, --best-quality
 
-Download the best video quality available for the video(s) specified by
-the user.
+This option is deprecated, does nothing currently, and is expected to be
+removed in a next release, as it is the current behavior of youtube-dl.
 
 =item -m, --mobile-version
 
 Synonymous to the option "-f 17", to download videos playable on some
 mobile phones.
 
-=item -d, --high-def
+=item --all-formats
 
-Synonymous to the option "-f 37", to download videos in HD quality
-(1080p).
+Downloads all formats for which a video may be available.
+
+=item --max-quality=B<FMT>
+
+Limit the maximum quality of the videos to downloads to B<FMT>.
 
 =item -q, --quiet
 
@@ -101,6 +112,20 @@ wget or aria2c.
 
 Simulate the operation, like quiet mode, but show the title of the video
 that would be downloaded.
+
+=item --get-thumbnail
+
+Simulate the operation, like quiet mode, but print the URL of of the video's
+thumbnail.
+
+=item --get-description
+
+Simulate the operation, like quiet mode, but print the description of the
+video.
+
+=item --no-progress
+
+Do not print the progress bar during downloads.
 
 =item -t, --title
 
@@ -189,7 +214,7 @@ like C<%(title)s-%(id)s.%(ext)s>. You can specify your own.
 =head1 AUTHOR
 
 youtube-dl was written by Ricardo Garcia Gonzalez and many contributors
-from all around the internet.  This manpage was written by Rogério Brito
+from all around the internet.  This manpage was written by Rogerio Brito
 <rbrito@users.sf.net>.
 
 =cut

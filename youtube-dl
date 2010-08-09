@@ -27,7 +27,7 @@ except ImportError:
 	from cgi import parse_qs
 
 std_headers = {
-	'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.7) Gecko/20100720 Firefox/3.6.7',
+	'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.8) Gecko/20100723 Firefox/3.6.8',
 	'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
 	'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 	'Accept-Language': 'en-us,en;q=0.5',
@@ -287,16 +287,6 @@ class FileDownloader(object):
 		multiplier = 1024.0 ** 'bkmgtpezy'.index(matchobj.group(2).lower())
 		return long(round(number * multiplier))
 
-	@staticmethod
-	def verify_url(url):
-		"""Verify a URL is valid and data could be downloaded. Return real data URL."""
-		request = urllib2.Request(url, None, std_headers)
-		data = urllib2.urlopen(request)
-		data.read(1)
-		url = data.geturl()
-		data.close()
-		return url
-
 	def add_info_extractor(self, ie):
 		"""Add an InfoExtractor object to the end of the list."""
 		self._ies.append(ie)
@@ -396,13 +386,6 @@ class FileDownloader(object):
 		"""Process a single dictionary returned by an InfoExtractor."""
 		# Do nothing else if in simulate mode
 		if self.params.get('simulate', False):
-			# Verify URL if it's an HTTP one
-			if info_dict['url'].startswith('http'):
-				try:
-					self.verify_url(info_dict['url'].encode('utf-8')).decode('utf-8')
-				except (OSError, IOError, urllib2.URLError, httplib.HTTPException, socket.error), err:
-					raise UnavailableVideoError
-
 			# Forced printings
 			if self.params.get('forcetitle', False):
 				print info_dict['title'].encode(preferredencoding(), 'xmlcharrefreplace')
@@ -539,32 +522,50 @@ class FileDownloader(object):
 
 		count = 0
 		retries = self.params.get('retries', 0)
-		while True:
+		while count <= retries:
 			# Establish connection
 			try:
 				data = urllib2.urlopen(request)
 				break
 			except (urllib2.HTTPError, ), err:
-				if err.code == 503:
-					# Retry in case of HTTP error 503
-					count += 1
-					if count <= retries:
-						self.report_retry(count, retries)
-						continue
-				if err.code != 416: #  416 is 'Requested range not satisfiable'
+				if err.code != 503 and err.code != 416:
+					# Unexpected HTTP error
 					raise
-				# Unable to resume
-				data = urllib2.urlopen(basic_request)
-				content_length = data.info()['Content-Length']
+				elif err.code == 416:
+					# Unable to resume (requested range not satisfiable)
+					try:
+						# Open the connection again without the range header
+						data = urllib2.urlopen(basic_request)
+						content_length = data.info()['Content-Length']
+					except (urllib2.HTTPError, ), err:
+						if err.code != 503:
+							raise
+					else:
+						# Examine the reported length
+						if (content_length is not None and
+						    (resume_len - 100 < long(content_length) < resume_len + 100)):
+							# The file had already been fully downloaded.
+							# Explanation to the above condition: in issue #175 it was revealed that
+							# YouTube sometimes adds or removes a few bytes from the end of the file,
+							# changing the file size slightly and causing problems for some users. So
+							# I decided to implement a suggested change and consider the file
+							# completely downloaded if the file size differs less than 100 bytes from
+							# the one in the hard drive.
+							self.report_file_already_downloaded(filename)
+							return True
+						else:
+							# The length does not match, we start the download over
+							self.report_unable_to_resume()
+							open_mode = 'wb'
+							break
+			# Retry
+			count += 1
+			if count <= retries:
+				self.report_retry(count, retries)
 
-				if content_length is not None and long(content_length) == resume_len:
-					# Because the file had already been fully downloaded
-					self.report_file_already_downloaded(filename)
-					return True
-				else:
-					# Because the server didn't let us
-					self.report_unable_to_resume()
-					open_mode = 'wb'
+		if count > retries:
+			self.trouble(u'ERROR: giving up after %s retries' % retries)
+			return False
 
 		data_len = data.info().get('Content-length', None)
 		data_len_str = self.format_bytes(data_len)
@@ -844,6 +845,14 @@ class YoutubeIE(InfoExtractor):
 			except (urllib2.URLError, httplib.HTTPException, socket.error), err:
 				self._downloader.trouble(u'ERROR: unable to download video info webpage: %s' % str(err))
 				return
+		if 'token' not in video_info:
+			if 'reason' in video_info:
+				self._downloader.trouble(u'ERROR: YouTube said: %s' % video_info['reason'][0])
+			else:
+				self._downloader.trouble(u'ERROR: "token" parameter not in video info for unknown reason')
+			return
+
+		# Start extracting information
 		self.report_information_extraction(video_id)
 
 		# uploader
@@ -1030,15 +1039,15 @@ class MetacafeIE(InfoExtractor):
 			return
 		mediaURL = urllib.unquote(mobj.group(1))
 
-		#mobj = re.search(r'(?m)&gdaKey=(.*?)&', webpage)
-		#if mobj is None:
-		#	self._downloader.trouble(u'ERROR: unable to extract gdaKey')
-		#	return
-		#gdaKey = mobj.group(1)
-		#
-		#video_url = '%s?__gda__=%s' % (mediaURL, gdaKey)
-
-		video_url = mediaURL
+		# Extract gdaKey if available
+		mobj = re.search(r'(?m)&gdaKey=(.*?)&', webpage)
+		if mobj is None:
+			video_url = mediaURL
+			#self._downloader.trouble(u'ERROR: unable to extract gdaKey')
+			#return
+		else:
+			gdaKey = mobj.group(1)
+			video_url = '%s?__gda__=%s' % (mediaURL, gdaKey)
 
 		mobj = re.search(r'(?im)<title>(.*) - Video</title>', webpage)
 		if mobj is None:
@@ -1932,6 +1941,11 @@ class YoutubePlaylistIE(InfoExtractor):
 				break
 			pagenum = pagenum + 1
 
+		playliststart = self._downloader.params.get('playliststart', 1)
+		playliststart -= 1 #our arrays are zero-based but the playlist is 1-based
+		if playliststart > 0:
+			video_ids = video_ids[playliststart:]
+			
 		for id in video_ids:
 			self._youtube_ie.extract('http://www.youtube.com/watch?v=%s' % id)
 		return
@@ -1986,6 +2000,11 @@ class YoutubeUserIE(InfoExtractor):
 			if mobj.group(1) not in ids_in_page:
 				ids_in_page.append(mobj.group(1))
 		video_ids.extend(ids_in_page)
+
+		playliststart = self._downloader.params.get('playliststart', 1)
+		playliststart = playliststart-1 #our arrays are zero-based but the playlist is 1-based
+		if playliststart > 0:
+			video_ids = video_ids[playliststart:]	
 
 		for id in video_ids:
 			self._youtube_ie.extract('http://www.youtube.com/watch?v=%s' % id)
@@ -2068,7 +2087,7 @@ if __name__ == '__main__':
 		# Parse command line
 		parser = optparse.OptionParser(
 			usage='Usage: %prog [options] url...',
-			version='2010.07.24',
+			version='2010.08.04',
 			conflict_handler='resolve',
 		)
 
@@ -2084,6 +2103,8 @@ if __name__ == '__main__':
 				dest='ratelimit', metavar='LIMIT', help='download rate limit (e.g. 50k or 44.6m)')
 		parser.add_option('-R', '--retries',
 				dest='retries', metavar='RETRIES', help='number of retries (default is 10)', default=10)
+		parser.add_option('--playlist-start',
+				dest='playliststart', metavar='NUMBER', help='playlist video to start at (default is 1)', default=1)
 
 		authentication = optparse.OptionGroup(parser, 'Authentication Options')
 		authentication.add_option('-u', '--username',
@@ -2103,6 +2124,8 @@ if __name__ == '__main__':
 				action='store_const', dest='format', help='download all available video formats', const='-1')
 		video_format.add_option('--max-quality',
 				action='store', dest='format_limit', metavar='FORMAT', help='highest quality format to download')
+		video_format.add_option('-b', '--best-quality',
+				action='store_true', dest='bestquality', help='download the best video quality (DEPRECATED)')
 		parser.add_option_group(video_format)
 
 		verbosity = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
@@ -2155,6 +2178,8 @@ if __name__ == '__main__':
 		all_urls = batchurls + args
 
 		# Conflicting, missing and erroneous options
+		if opts.bestquality:
+			print >>sys.stderr, u'\nWARNING: -b/--best-quality IS DEPRECATED AS IT IS THE DEFAULT BEHAVIOR NOW\n'
 		if opts.usenetrc and (opts.username is not None or opts.password is not None):
 			parser.error(u'using .netrc conflicts with giving username/password')
 		if opts.password is not None and opts.username is None:
@@ -2175,6 +2200,11 @@ if __name__ == '__main__':
 				opts.retries = long(opts.retries)
 			except (TypeError, ValueError), err:
 				parser.error(u'invalid retry count specified')
+		if opts.playliststart is not None:
+			try:
+				opts.playliststart = long(opts.playliststart)
+			except (TypeError, ValueError), err:
+				parser.error(u'invalid playlist page specified')
 
 		# Information extractors
 		youtube_ie = YoutubeIE()
@@ -2216,6 +2246,7 @@ if __name__ == '__main__':
 			'retries': opts.retries,
 			'continuedl': opts.continue_dl,
 			'noprogress': opts.noprogress,
+			'playliststart': opts.playliststart,
 			})
 		fd.add_info_extractor(youtube_search_ie)
 		fd.add_info_extractor(youtube_pl_ie)
