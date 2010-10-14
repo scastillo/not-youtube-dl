@@ -1,3 +1,24 @@
+youtube-dl (2010.10.03-1) unstable; urgency=low
+
+  * The "upload from sunny California" release
+  * New upstream release:
+    + Downloading manually the release 2010.10.03 corresponding to
+      http://bitbucket.org/rg3/youtube-dl/changeset/190d2d0fd729
+    + Abort downloads that can't be written to the disk
+    + Fix downloading some videos from metacafe.com
+    + Try to discover the video extension from metacafe.com
+    + Allow #! in youtube urls
+    + Fix extraction of uploader nickname on dailymotion
+    + Support downloads from youtube-nocookie.com urls
+    + Code improvements in general
+    + Retry that fail with codes 5xx on youtube
+  * debian/patches/*:
+    + rename 01-add-support-to-webm.patch to 01-prefer-open-formats.patch
+    + update the patch to apply to new versions of youtube-dl
+    + re-enable the patch to give preference to webm videos
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 13 Oct 2010 21:58:24 -0700
+
 youtube-dl (2010.08.04-1) unstable; urgency=low
 
   * New upstream release:
