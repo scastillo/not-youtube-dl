@@ -1,8 +1,20 @@
+youtube-dl (2010.10.24-2) unstable; urgency=low
+
+  * The "I forgot to save the changelog file" release.
+  * The highlights of the new release are:
+    + Add --cookies option to allow saving cookies to disk
+      (primarily to be used with external downloaders: e.g., aria2c).
+    + Support "https" both for YouTube URLs and for login.
+  * debian/patches:
+    + refresh patch.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 25 Oct 2010 03:10:07 -0200
+
 youtube-dl (2010.10.24-1) unstable; urgency=low
 
-  * New upstream release
+  * New upstream release.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Mon, 25 Oct 2010 02:23:18 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 25 Oct 2010 02:23:40 -0200
 
 youtube-dl (2010.10.03-1) unstable; urgency=low
 
