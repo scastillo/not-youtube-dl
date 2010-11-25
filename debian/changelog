@@ -1,3 +1,17 @@
+youtube-dl (2010.11.19-1) unstable; urgency=low
+
+  * New upstream release. Highlights:
+    + Fix downloading of RTMP URL's.
+    + Added command line switch (-A) to auto-number downloads.
+    + Allow comments in batchfiles.
+    + Add option to specify the video to end at in a playlist.
+  * debian/{watch,control}:
+    + Update for the move from bitbucket to github.
+  * debian/patches:
+    + refresh patch.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 25 Nov 2010 15:54:56 -0200
+
 youtube-dl (2010.10.24-2) unstable; urgency=low
 
   * The "I forgot to save the changelog file" release.

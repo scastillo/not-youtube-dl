@@ -1,4 +1,0 @@
-repo: f87cf8f2527c4adda57b14bd79a354f815164a41
-node: 3b1889cc83b5085e178593f4dfa376b429f5be0d
-branch: default
-tag: 2010.10.24
