@@ -54,6 +54,16 @@ Limit the download speed to the specified maximum B<L> (e.g., 50k or 44.6m).
 
 Number B<R> of retries for a given download (default is 10).
 
+=item --playlist-start=B<N>
+
+The number B<N> of the video in a playlist where we should start downlading
+(default is 1).
+
+=item --playlist-end=B<N>
+
+The number B<N> of the video in a playlist where we should stop downloading
+(default is -1, which stands for the last video in the playlist).
+
 =item -u B<UN>, --username=B<UN>
 
 Specify the youtube account username B<UN>. Some videos require an
@@ -71,8 +81,33 @@ home directory. The machine name is youtube regarding this usage.
 
 =item -f B<FMT>, --format=B<FMT>
 
-Specify the video format (quality) in which to download the video. Note
-that not all videos are available in all formats.
+Specify the video format (quality) in which to download the video.
+
+For youtube.com, in particular, the meaning of the format codes is given as:
+
+=over
+
+=item WebM video at 480p: 43
+
+=item WebM video at 720p: 45
+
+=item H264 video in MP4 container at 480p: 18
+
+=item H264 video in MP4 container at 720p: 22
+
+=item H264 video in MP4 container at 1080p: 37
+
+=item H264 video in FLV container at 360p: 34
+
+=item H264 video in FLV container at 480p: 35
+
+=item H263 video at 240p: 5
+
+=item 3GP video: 17
+
+=back
+
+Note that not all videos are available in all formats.
 
 =item -b, --best-quality
 
@@ -136,6 +171,11 @@ Use the title of the video in the file name used to download the video.
 Use the literal title of the video in file name used to download the
 video. Can contain "weird" characters that are not filtered like with
 the -t option.
+
+=item -A, --auto-number
+
+When downloading multiple videos from a playlist, automatically number them,
+in sequence, starting from 00000.
 
 =item -o B<TPL>, --output=B<TPL>
 

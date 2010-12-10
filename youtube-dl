@@ -3,8 +3,10 @@
 # Author: Ricardo Garcia Gonzalez
 # Author: Danny Colligan
 # Author: Benjamin Johnson
+# Author: Vasyl' Vavrychuk
 # License: Public domain code
 import cookielib
+import datetime
 import htmlentitydefs
 import httplib
 import locale
@@ -35,21 +37,6 @@ std_headers = {
 }
 
 simple_title_chars = string.ascii_letters.decode('ascii') + string.digits.decode('ascii')
-
-month_name_to_number = {
-	'January':	'01',
-	'February':	'02',
-	'March':	'03',
-	'April':	'04',
-	'May':		'05',
-	'June':		'06',
-	'July':		'07',
-	'August':	'08',
-	'September':	'09',
-	'October':	'10',
-	'November':	'11',
-	'December':	'12',
-}
 
 def preferredencoding():
 	"""Get preferred encoding.
@@ -123,7 +110,6 @@ def sanitize_open(filename, open_mode):
 		# An exception here should be caught in the caller
 		stream = open(filename, open_mode)
 		return (stream, filename)
-
 
 class DownloadError(Exception):
 	"""Download Error exception.
@@ -250,6 +236,13 @@ class FileDownloader(object):
 				os.mkdir(dir)
 	
 	@staticmethod
+	def temp_name(filename):
+		"""Returns a temporary filename for the given filename."""
+		if filename == u'-' or (os.path.exists(filename) and not os.path.isfile(filename)):
+			return filename
+		return filename + u'.part'
+	
+	@staticmethod
 	def format_bytes(bytes):
 		if bytes is None:
 			return 'N/A'
@@ -367,6 +360,14 @@ class FileDownloader(object):
 		speed = float(byte_counter) / elapsed
 		if speed > rate_limit:
 			time.sleep((byte_counter - rate_limit * (now - start_time)) / rate_limit)
+	
+	def try_rename(self, old_filename, new_filename):
+		try:
+			if old_filename == new_filename:
+				return
+			os.rename(old_filename, new_filename)
+		except (IOError, OSError), err:
+			self.trouble(u'ERROR: unable to rename file')
 
 	def report_destination(self, filename):
 		"""Report destination filename."""
@@ -498,6 +499,7 @@ class FileDownloader(object):
 	
 	def _download_with_rtmpdump(self, filename, url, player_url):
 		self.report_destination(filename)
+		tmpfilename = self.temp_name(filename)
 
 		# Check for rtmpdump first
 		try:
@@ -509,36 +511,43 @@ class FileDownloader(object):
 		# Download using rtmpdump. rtmpdump returns exit code 2 when
 		# the connection was interrumpted and resuming appears to be
 		# possible. This is part of rtmpdump's normal usage, AFAIK.
-		basic_args = ['rtmpdump', '-q'] + [[], ['-W', player_url]][player_url is not None] + ['-r', url, '-o', filename]
+		basic_args = ['rtmpdump', '-q'] + [[], ['-W', player_url]][player_url is not None] + ['-r', url, '-o', tmpfilename]
 		retval = subprocess.call(basic_args + [[], ['-e', '-k', '1']][self.params.get('continuedl', False)])
 		while retval == 2 or retval == 1:
-			prevsize = os.path.getsize(filename)
+			prevsize = os.path.getsize(tmpfilename)
 			self.to_screen(u'\r[rtmpdump] %s bytes' % prevsize, skip_eol=True)
 			time.sleep(5.0) # This seems to be needed
 			retval = subprocess.call(basic_args + ['-e'] + [[], ['-k', '1']][retval == 1])
-			cursize = os.path.getsize(filename)
+			cursize = os.path.getsize(tmpfilename)
 			if prevsize == cursize and retval == 1:
 				break
 		if retval == 0:
-			self.to_screen(u'\r[rtmpdump] %s bytes' % os.path.getsize(filename))
+			self.to_screen(u'\r[rtmpdump] %s bytes' % os.path.getsize(tmpfilename))
+			self.try_rename(tmpfilename, filename)
 			return True
 		else:
 			self.trouble(u'\nERROR: rtmpdump exited with code %d' % retval)
 			return False
 
 	def _do_download(self, filename, url, player_url):
+		# Check file already present
+		if self.params.get('continuedl', False) and os.path.isfile(filename):
+			self.report_file_already_downloaded(filename)
+			return True
+
 		# Attempt to download using rtmpdump
 		if url.startswith('rtmp'):
 			return self._download_with_rtmpdump(filename, url, player_url)
 
+		tmpfilename = self.temp_name(filename)
 		stream = None
 		open_mode = 'wb'
 		basic_request = urllib2.Request(url, None, std_headers)
 		request = urllib2.Request(url, None, std_headers)
 
 		# Establish possible resume length
-		if os.path.isfile(filename):
-			resume_len = os.path.getsize(filename)
+		if os.path.isfile(tmpfilename):
+			resume_len = os.path.getsize(tmpfilename)
 		else:
 			resume_len = 0
 
@@ -580,6 +589,7 @@ class FileDownloader(object):
 							# completely downloaded if the file size differs less than 100 bytes from
 							# the one in the hard drive.
 							self.report_file_already_downloaded(filename)
+							self.try_rename(tmpfilename, filename)
 							return True
 						else:
 							# The length does not match, we start the download over
@@ -613,7 +623,7 @@ class FileDownloader(object):
 			# Open file just in time
 			if stream is None:
 				try:
-					(stream, filename) = sanitize_open(filename, open_mode)
+					(stream, tmpfilename) = sanitize_open(tmpfilename, open_mode)
 					self.report_destination(filename)
 				except (OSError, IOError), err:
 					self.trouble(u'ERROR: unable to open for writing: %s' % str(err))
@@ -634,9 +644,11 @@ class FileDownloader(object):
 			# Apply rate limit
 			self.slow_down(start, byte_counter)
 
+		stream.close()
 		self.report_finish()
 		if data_len is not None and str(byte_counter) != data_len:
 			raise ContentTooShortError(byte_counter, long(data_len))
+		self.try_rename(tmpfilename, filename)
 		return True
 
 class InfoExtractor(object):
@@ -913,18 +925,13 @@ class YoutubeIE(InfoExtractor):
 		upload_date = u'NA'
 		mobj = re.search(r'id="eow-date".*?>(.*?)</span>', video_webpage, re.DOTALL)
 		if mobj is not None:
-			try:
-				if ',' in mobj.group(1):
-					# Month Day, Year
-					m, d, y = mobj.group(1).replace(',', '').split()
-				else:
-					# Day Month Year, we'll suppose
-					d, m, y = mobj.group(1).split()
-				m = month_name_to_number[m]
-				d = '%02d' % (long(d))
-				upload_date = '%s%s%s' % (y, m, d)
-			except:
-				upload_date = u'NA'
+			upload_date = ' '.join(re.sub(r'[/,-]', r' ', mobj.group(1)).split())
+			format_expressions = ['%d %B %Y', '%B %d %Y']
+			for expression in format_expressions:
+				try:
+					upload_date = datetime.datetime.strptime(upload_date, expression).strftime('%Y%m%d')
+				except:
+					pass
 
 		# description
 		video_description = 'No description available.'
@@ -937,7 +944,7 @@ class YoutubeIE(InfoExtractor):
 		video_token = urllib.unquote_plus(video_info['token'][0])
 
 		# Decide which formats to download
-		requested_format = self._downloader.params.get('format', None)
+		req_format = self._downloader.params.get('format', None)
 		get_video_template = 'http://www.youtube.com/get_video?video_id=%s&t=%s&eurl=&el=&ps=&asv=&fmt=%%s' % (video_id, video_token)
 
 		if 'fmt_url_map' in video_info:
@@ -951,12 +958,15 @@ class YoutubeIE(InfoExtractor):
 			if len(existing_formats) == 0:
 				self._downloader.trouble(u'ERROR: no known formats available for video')
 				return
-			if requested_format is None:
-				video_url_list = [(existing_formats[0], get_video_template % existing_formats[0])] # Best quality
-			elif requested_format == '-1':
-				video_url_list = [(f, get_video_template % f) for f in existing_formats] # All formats
+			if req_format is None:
+				video_url_list = [(existing_formats[0], url_map[existing_formats[0]])] # Best quality
+			elif req_format == '-1':
+				video_url_list = [(f, url_map[f]) for f in existing_formats] # All formats
 			else:
-				video_url_list = [(requested_format, get_video_template % requested_format)] # Specific format
+				if req_format in url_map:
+					video_url_list = [(req_format, url_map[req_format])] # Specific format
+				else:
+					video_url_list = [(req_format, get_video_template % req_format)] # Specific format
 
 		elif 'conn' in video_info and video_info['conn'][0].startswith('rtmp'):
 			self.report_rtmp_download()
@@ -1617,6 +1627,7 @@ class GenericIE(InfoExtractor):
 			self._downloader.trouble(u'ERROR: Invalid URL: %s' % url)
 			return
 
+		self.report_extraction(video_id)
 		# Start with something easy: JW Player in SWFObject
 		mobj = re.search(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)
 		if mobj is None:
@@ -2073,6 +2084,85 @@ class YoutubeUserIE(InfoExtractor):
 			self._youtube_ie.extract('http://www.youtube.com/watch?v=%s' % id)
 		return
 
+class DepositFilesIE(InfoExtractor):
+	"""Information extractor for depositfiles.com"""
+
+	_VALID_URL = r'(?:http://)?(?:\w+\.)?depositfiles.com/(?:../(?#locale))?files/(.+)'
+
+	def __init__(self, downloader=None):
+		InfoExtractor.__init__(self, downloader)
+
+	@staticmethod
+	def suitable(url):
+		return (re.match(DepositFilesIE._VALID_URL, url) is not None)
+
+	def report_download_webpage(self, file_id):
+		"""Report webpage download."""
+		self._downloader.to_screen(u'[DepositFiles] %s: Downloading webpage' % file_id)
+
+	def report_extraction(self, file_id):
+		"""Report information extraction."""
+		self._downloader.to_screen(u'[DepositFiles] %s: Extracting information' % file_id)
+
+	def _real_initialize(self):
+		return
+
+	def _real_extract(self, url):
+		# At this point we have a new file
+		self._downloader.increment_downloads()
+
+		file_id = url.split('/')[-1]
+		# Rebuild url in english locale
+		url = 'http://depositfiles.com/en/files/' + file_id
+
+		# Retrieve file webpage with 'Free download' button pressed
+		free_download_indication = { 'gateway_result' : '1' }
+		request = urllib2.Request(url, urllib.urlencode(free_download_indication), std_headers)
+		try:
+			self.report_download_webpage(file_id)
+			webpage = urllib2.urlopen(request).read()
+		except (urllib2.URLError, httplib.HTTPException, socket.error), err:
+			self._downloader.trouble(u'ERROR: Unable to retrieve file webpage: %s' % str(err))
+			return
+
+		# Search for the real file URL
+		mobj = re.search(r'<form action="(http://fileshare.+?)"', webpage)
+		if (mobj is None) or (mobj.group(1) is None):
+			# Try to figure out reason of the error.
+			mobj = re.search(r'<strong>(Attention.*?)</strong>', webpage, re.DOTALL)
+			if (mobj is not None) and (mobj.group(1) is not None):
+				restriction_message = re.sub('\s+', ' ', mobj.group(1)).strip()
+				self._downloader.trouble(u'ERROR: %s' % restriction_message)
+			else:
+				self._downloader.trouble(u'ERROR: unable to extract download URL from: %s' % url)
+			return
+
+		file_url = mobj.group(1)
+		file_extension = os.path.splitext(file_url)[1][1:]
+
+		# Search for file title
+		mobj = re.search(r'<b title="(.*?)">', webpage)
+		if mobj is None:
+			self._downloader.trouble(u'ERROR: unable to extract title')
+			return
+		file_title = mobj.group(1).decode('utf-8')
+
+		try:
+			# Process file information
+			self._downloader.process_info({
+				'id':		file_id.decode('utf-8'),
+				'url':		file_url.decode('utf-8'),
+				'uploader':	u'NA',
+				'upload_date':	u'NA',
+				'title':	file_title,
+				'stitle':	file_title,
+				'ext':		file_extension.decode('utf-8'),
+				'format':	u'NA',
+				'player_url':	None,
+			})
+		except UnavailableVideoError, err:
+			self._downloader.trouble(u'ERROR: unable to download file')
+
 class PostProcessor(object):
 	"""Post Processor class.
 
@@ -2145,7 +2235,7 @@ if __name__ == '__main__':
 		# Parse command line
 		parser = optparse.OptionParser(
 			usage='Usage: %prog [options] url...',
-			version='2010.11.19',
+			version='2010.12.09',
 			conflict_handler='resolve',
 		)
 
@@ -2306,6 +2396,7 @@ if __name__ == '__main__':
 		photobucket_ie = PhotobucketIE()
 		yahoo_ie = YahooIE()
 		yahoo_search_ie = YahooSearchIE(yahoo_ie)
+		deposit_files_ie = DepositFilesIE()
 		generic_ie = GenericIE()
 
 		# File downloader
@@ -2352,6 +2443,7 @@ if __name__ == '__main__':
 		fd.add_info_extractor(photobucket_ie)
 		fd.add_info_extractor(yahoo_ie)
 		fd.add_info_extractor(yahoo_search_ie)
+		fd.add_info_extractor(deposit_files_ie)
 
 		# This must come last since it's the
 		# fallback if none of the others work

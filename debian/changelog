@@ -1,3 +1,21 @@
+youtube-dl (2010.12.09-1) unstable; urgency=low
+
+  * New upstream release:
+    + Use filename with suffix .part while the download is still incomplete.
+    + Add support for downloading files from depositfiles.com.
+    + Fix recent changes in youtube.com. Closes: #606537.
+  * debian/watch:
+    + Update to work with the github redirector.
+  * debian/youtube-dl.pod:
+    + Add short description on youtube.com's video formats.
+      Based on Nicola Ferralis's patch. Closes: #605311.
+    + Add description of options -A, --playlist-start, and --playlist-end
+      options. Thanks to Josh Triplett. Closes: #604983.
+  * debian/patches:
+    + refresh patch.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 10 Dec 2010 10:41:25 -0200
+
 youtube-dl (2010.11.19-1) unstable; urgency=low
 
   * New upstream release. Highlights:

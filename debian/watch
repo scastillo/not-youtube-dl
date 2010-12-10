@@ -1,2 +1,2 @@
 version=3
-http://bitbucket.org/rg3/youtube-dl/downloads/ (?:.*/)?(\d+\.\d+\.\d+)\.tar\.gz
+http://githubredir.debian.net/github/rg3/youtube-dl (?:.*/)?(\d+\.\d+\.\d+)\.tar\.gz
