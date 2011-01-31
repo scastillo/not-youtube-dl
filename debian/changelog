@@ -1,3 +1,23 @@
+youtube-dl (2011.01.30-1) unstable; urgency=low
+
+  * New upstream release. Some highlights:
+    + options -b and -f are removed.
+    + fix progress report when continuing partial downloads.
+    + request compressed pages by default.
+    + add support for embedded youtube playlist URLs; doesn't fix #495164 yet.
+    + add option --dump-user-agent.
+    + add option --console-title.
+    + add option --no-part.
+    + add option --get-filename.
+    + set downloaded file mtime to the last-modified header, if possible.
+    + add option --no-mtime.
+  * debian/control:
+    + update dependency on python's minimum version to 2.5.
+  * debian/youtube-dl.pod:
+    + update a lot.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 31 Jan 2011 00:31:09 -0200
+
 youtube-dl (2010.12.09-1) unstable; urgency=low
 
   * New upstream release:

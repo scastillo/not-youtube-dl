@@ -9,7 +9,7 @@ Homepage: http://rg3.github.com/youtube-dl/
 
 Package: youtube-dl
 Architecture: all
-Depends: python (>= 2.4), ${misc:Depends}
+Depends: python (>= 2.5), ${misc:Depends}
 Suggests: rtmpdump
 Description: download videos from youtube
  youtube-dl is a small command-line program to download videos from

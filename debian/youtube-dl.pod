@@ -64,6 +64,11 @@ The number B<N> of the video in a playlist where we should start downlading
 The number B<N> of the video in a playlist where we should stop downloading
 (default is -1, which stands for the last video in the playlist).
 
+=item --dump-user-agent
+
+Display how youtube-dl will identify itself (the User-Agent string) to the
+remote server.
+
 =item -u B<UN>, --username=B<UN>
 
 Specify the youtube account username B<UN>. Some videos require an
@@ -109,16 +114,6 @@ For youtube.com, in particular, the meaning of the format codes is given as:
 
 Note that not all videos are available in all formats.
 
-=item -b, --best-quality
-
-This option is deprecated, does nothing currently, and is expected to be
-removed in a next release, as it is the current behavior of youtube-dl.
-
-=item -m, --mobile-version
-
-Synonymous to the option "-f 17", to download videos playable on some
-mobile phones.
-
 =item --all-formats
 
 Downloads all formats for which a video may be available.
@@ -158,9 +153,18 @@ thumbnail.
 Simulate the operation, like quiet mode, but print the description of the
 video.
 
+=item --get-filename
+
+Simulate the operation, like quiet mode, but print the output filename.
+
 =item --no-progress
 
 Do not print the progress bar during downloads.
+
+=item --console-title
+
+If possible, set the title of the console window with the progress of the
+download.
 
 =item -t, --title
 
@@ -197,6 +201,18 @@ Do no overwrite already existing files.
 =item -c, --continue
 
 Resume partially downloaded files.
+
+=item --cookies=B<F>
+
+Store the received cookies to file B<F> (the "cookie jar").
+
+=item --no-part
+
+Do not append the I<.part> suffix do files that have not yet been completed.
+
+=item --no-mtime
+
+Do not use the I<Last-modified> header to set the file modification time.
 
 =back
 
