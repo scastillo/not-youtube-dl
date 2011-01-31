@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "YOUTUBE-DL 1"
-.TH YOUTUBE-DL 1 "2010-12-10" "perl v5.10.1" "User Contributed Perl Documentation"
+.TH YOUTUBE-DL 1 "2011-01-31" "perl v5.10.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -183,6 +183,10 @@ The number \fBN\fR of the video in a playlist where we should start downlading
 .IX Item "--playlist-end=N"
 The number \fBN\fR of the video in a playlist where we should stop downloading
 (default is \-1, which stands for the last video in the playlist).
+.IP "\-\-dump\-user\-agent" 4
+.IX Item "--dump-user-agent"
+Display how youtube-dl will identify itself (the User-Agent string) to the
+remote server.
 .IP "\-u \fB\s-1UN\s0\fR, \-\-username=\fB\s-1UN\s0\fR" 4
 .IX Item "-u UN, --username=UN"
 Specify the youtube account username \fB\s-1UN\s0\fR. Some videos require an
@@ -224,16 +228,10 @@ For youtube.com, in particular, the meaning of the format codes is given as:
 .RS 4
 .PD
 .Sp
-Note that not all videos are available in all formats.
+Note that not all videos are available in all formats and that other
+sites supported by \fByoutube-dl\fR may have different conventions for
+their video formats.
 .RE
-.IP "\-b, \-\-best\-quality" 4
-.IX Item "-b, --best-quality"
-This option is deprecated, does nothing currently, and is expected to be
-removed in a next release, as it is the current behavior of youtube-dl.
-.IP "\-m, \-\-mobile\-version" 4
-.IX Item "-m, --mobile-version"
-Synonymous to the option \*(L"\-f 17\*(R", to download videos playable on some
-mobile phones.
 .IP "\-\-all\-formats" 4
 .IX Item "--all-formats"
 Downloads all formats for which a video may be available.
@@ -265,9 +263,16 @@ thumbnail.
 .IX Item "--get-description"
 Simulate the operation, like quiet mode, but print the description of the
 video.
+.IP "\-\-get\-filename" 4
+.IX Item "--get-filename"
+Simulate the operation, like quiet mode, but print the output filename.
 .IP "\-\-no\-progress" 4
 .IX Item "--no-progress"
 Do not print the progress bar during downloads.
+.IP "\-\-console\-title" 4
+.IX Item "--console-title"
+If possible, set the title of the console window with the progress of the
+download.
 .IP "\-t, \-\-title" 4
 .IX Item "-t, --title"
 Use the title of the video in the file name used to download the video.
@@ -297,6 +302,15 @@ Do no overwrite already existing files.
 .IP "\-c, \-\-continue" 4
 .IX Item "-c, --continue"
 Resume partially downloaded files.
+.IP "\-\-cookies=\fBF\fR" 4
+.IX Item "--cookies=F"
+Store the received cookies to file \fBF\fR (the \*(L"cookie jar\*(R").
+.IP "\-\-no\-part" 4
+.IX Item "--no-part"
+Do not append the \fI.part\fR suffix do files that have not yet been completed.
+.IP "\-\-no\-mtime" 4
+.IX Item "--no-mtime"
+Do not use the \fILast-modified\fR header to set the file modification time.
 .SH "OUTPUT TEMPLATE"
 .IX Header "OUTPUT TEMPLATE"
 The \-o option allows users to indicate a template for the output file

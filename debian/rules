@@ -1,3 +1,7 @@
 #!/usr/bin/make -f
 %:
 	dh $@
+
+override_dh_installman:
+	pod2man debian/youtube-dl.pod > debian/youtube-dl.1
+	dh_installman

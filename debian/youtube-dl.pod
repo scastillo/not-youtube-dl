@@ -112,7 +112,9 @@ For youtube.com, in particular, the meaning of the format codes is given as:
 
 =back
 
-Note that not all videos are available in all formats.
+Note that not all videos are available in all formats and that other
+sites supported by B<youtube-dl> may have different conventions for
+their video formats.
 
 =item --all-formats
 
