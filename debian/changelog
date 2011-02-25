@@ -1,3 +1,19 @@
+youtube-dl (2011.02.25b-1) unstable; urgency=low
+
+  * New upstream release. Some highlights:
+    + Enable artist playlists in YoutubePlaylistIE.
+    + Add support for getting videos from Facebook.
+    + Support more common YouTube playlist URLs
+    + Extract audio from your videos using ffmpeg as a postprocessor.
+  * debian/control:
+    + Add recommends on ffmpeg.
+    + Update the list of sites supported by youtube-dl in the long
+      description.
+  * debian/patches/*:
+    + Refresh.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 25 Feb 2011 20:27:47 -0300
+
 youtube-dl (2011.01.30-2) unstable; urgency=low
 
   * debian/control:

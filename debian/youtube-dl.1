@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "YOUTUBE-DL 1"
-.TH YOUTUBE-DL 1 "2011-01-31" "perl v5.10.1" "User Contributed Perl Documentation"
+.TH YOUTUBE-DL 1 "2011-02-25" "perl v5.10.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -311,6 +311,14 @@ Do not append the \fI.part\fR suffix do files that have not yet been completed.
 .IP "\-\-no\-mtime" 4
 .IX Item "--no-mtime"
 Do not use the \fILast-modified\fR header to set the file modification time.
+.IP "\-\-extract\-audio" 4
+.IX Item "--extract-audio"
+Create an audio-only file extracted from the video downloaded. Requires that
+ffmpeg and ffprobe be installed.
+.IP "\-\-audio\-format=\fB\s-1FORMAT\s0\fR" 4
+.IX Item "--audio-format=FORMAT"
+Set the audio format to be used for the extraction. Possible values are
+\&\fIbest\fR, \fIaac\fR, \fImp3\fR, with \fIbest\fR being the default.
 .SH "OUTPUT TEMPLATE"
 .IX Header "OUTPUT TEMPLATE"
 The \-o option allows users to indicate a template for the output file

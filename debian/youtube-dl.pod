@@ -216,6 +216,16 @@ Do not append the I<.part> suffix do files that have not yet been completed.
 
 Do not use the I<Last-modified> header to set the file modification time.
 
+=item --extract-audio
+
+Create an audio-only file extracted from the video downloaded. Requires that
+ffmpeg and ffprobe be installed.
+
+=item --audio-format=B<FORMAT>
+
+Set the audio format to be used for the extraction. Possible values are
+I<best>, I<aac>, I<mp3>, with I<best> being the default.
+
 =back
 
 =head1 OUTPUT TEMPLATE
