@@ -46,7 +46,8 @@ const_timeout = 120
 
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
 const_video_url_re = re.compile(r'^((?:http://)?(?:\w+\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=))?([0-9A-Za-z_-]+)(?(1)[&/].*)?$')
-const_video_url_best_quality_suffix='&fmt=18'
+const_video_url_format_suffix = '&fmt=%s'
+const_best_quality_format = 18
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
@@ -200,7 +201,7 @@ def title_string_touch(title):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2008.03.08'
+cmdl_version = '2008.03.22'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -214,7 +215,8 @@ cmdl_parser.add_option('-l', '--literal', action='store_true', dest='use_literal
 cmdl_parser.add_option('-n', '--netrc', action='store_true', dest='use_netrc', help='use .netrc authentication data')
 cmdl_parser.add_option('-g', '--get-url', action='store_true', dest='get_url', help='print final video URL only')
 cmdl_parser.add_option('-2', '--title-too', action='store_true', dest='get_title', help='used with -g, print title too')
-cmdl_parser.add_option('-b', '--best-quality', action='store_true', dest='best_quality', help='try to download the best quality version')
+cmdl_parser.add_option('-f', '--format', dest='video_format', metavar='FORMAT', help='append &fmt=FORMAT to the URL')
+cmdl_parser.add_option('-b', '--best-quality', action='store_true', dest='best_quality', help='alias for -f 18')
 (cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
 
 # Set socket timeout
@@ -232,11 +234,21 @@ if video_url_mo is None:
 	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.')
 video_url_id = video_url_mo.group(2)
 video_url = const_video_url_str % video_url_id
+
+video_format = None
 if cmdl_opts.best_quality:
-	video_url = '%s%s' % (video_url, const_video_url_best_quality_suffix)
+	video_format = const_best_quality_format
 	video_extension = '.mp4'
 else:
 	video_extension = '.flv'
+
+if cmdl_opts.video_format is not None:
+	if video_format is not None and video_format != cmdl_opts.video_format:
+		sys.exit('Error: conflicting video formats specified\n')
+	video_format = cmdl_opts.video_format
+
+if video_format is not None:
+	video_url = '%s%s' % (video_url, const_video_url_format_suffix % video_format)
 
 # Check conflicting options
 if cmdl_opts.outfile is not None and (cmdl_opts.simulate or cmdl_opts.get_url):
@@ -314,8 +326,8 @@ if cmdl_opts.use_title or cmdl_opts.use_literal or cmdl_opts.get_title:
 # Extract needed video URL parameters
 video_url_t_param = extract_step('Extracting URL "t" parameter', 'unable to extract URL "t" parameter', const_url_t_param_re, video_webpage)
 video_url_real = const_video_url_real_str % (video_url_id, video_url_t_param)
-if cmdl_opts.best_quality:
-	video_url_real = '%s%s' % (video_url_real, const_video_url_best_quality_suffix)
+if video_format is not None:
+	video_url_real = '%s%s' % (video_url_real, const_video_url_format_suffix % video_format)
 
 # Rebuild filename if needed
 if cmdl_opts.use_title or cmdl_opts.use_literal:
