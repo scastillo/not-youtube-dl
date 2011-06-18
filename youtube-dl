@@ -27,8 +27,13 @@
 #
 import sys
 import optparse
+import httplib
 import urllib2
 import re
+
+# First off, check Python and refuse to run
+if sys.hexversion < 0x020400f0:
+	sys.exit('Error: Python 2.4 or later needed to run the program')
 
 # Exit status constants
 exit_failure = 1
@@ -36,13 +41,13 @@ exit_success = 0
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
-const_video_url_re = re.compile(r'http://(?:www\.)?youtube\.com/(?:v/|(?:watch)?\?v=)([^&]+).*')
+const_video_url_re = re.compile(r'http://(?:www\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?v=)([^&]+).*')
 const_login_url_str = 'http://www.youtube.com/signup?next=/'
 const_login_post_str = 'current_form=loginForm&next=%%2F&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
 const_age_post_str = 'next_url=%%2Fwatch%%3Fv%%3D%s&action_confirm=Confirm'
-const_video_url_params_re = re.compile(r'player2\.swf\?video_id=([^&]+)&.*t=([^&]+)&', re.M)
-const_video_url_real_str = 'http://www.youtube.com/get_video?video_id=%s&t=%s'
+const_video_url_params_re = re.compile(r'player2\.swf\?([^"]+)"', re.M)
+const_video_url_real_str = 'http://www.youtube.com/get_video?%s'
 const_1k = 1024
 const_block_size = 10 * const_1k
 
@@ -59,6 +64,7 @@ def error_advice_exit(error_text):
 	sys.stderr.write('\tYouTube changed their system, and the program no longer works.\n')
 	sys.stderr.write('\nTry to confirm you are able to view the video using a web browser.\n')
 	sys.stderr.write('Use the same video URL and account information, if needed, with this program.\n')
+	sys.stderr.write('When using a proxy, make sure http_proxy has http://host:port format.\n')
 	sys.stderr.write('Try again several times and contact me if the problem persists.\n')
 	sys.exit(exit_failure)
 
@@ -94,7 +100,7 @@ def cond_print(str):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2006.08.28'
+cmdl_version = '2006.09.25'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -114,7 +120,7 @@ video_url_cmdl = cmdl_args[0]
 # Verify video URL format and convert to "standard" format
 video_url_mo = const_video_url_re.match(video_url_cmdl)
 if video_url_mo is None:
-	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.\n')
+	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.')
 video_url_id = video_url_mo.group(1)
 video_url = const_video_url_str % video_url_id
 
@@ -146,8 +152,9 @@ if not cmdl_opts.simulate:
 	except (OSError, IOError):
 		sys.exit('Error: unable to open %s for writing.' % video_filename)
 
-# Install cookie handler
+# Install cookie and proxy handlers
 urllib2.install_opener(urllib2.build_opener(urllib2.HTTPCookieProcessor()))
+urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler()))
 
 # Login and confirm age if needed
 if not cmdl_opts.username is None:
@@ -157,12 +164,12 @@ if not cmdl_opts.username is None:
 		perform_request(const_login_url_str, const_login_post_str % (cmdl_opts.username, cmdl_opts.password)).read()
 		cond_print('done.\n')
 
-	except (urllib2.URLError, ValueError):
+	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 		cond_print('failed.\n')
 		error_advice_exit('unable to login')
 
 	except KeyboardInterrupt:
-		sys.exit(exit_failure)
+		sys.exit('\n')
 
 	try:
 		# Get age confirmation cookie
@@ -170,26 +177,25 @@ if not cmdl_opts.username is None:
 		perform_request(const_age_url_str % video_url_id, const_age_post_str % video_url_id).read()
 		cond_print('done.\n')
 
-	except (urllib2.URLError, ValueError):
+	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 		cond_print('failed.\n')
 		error_advice_exit('unable to confirm age')
 
 	except KeyboardInterrupt:
-		sys.exit(exit_failure)
+		sys.exit('\n')
 
 # Retrieve video webpage
 try:
 	cond_print('Retrieving video webpage... ')
 	video_webpage = perform_request(video_url).read()
+	cond_print('done.\n')
 
-except (urllib2.URLError, ValueError):
+except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 	cond_print('failed.\n')
 	error_advice_exit('unable to download video webpage')
 
 except KeyboardInterrupt:
-	sys.exit(exit_failure)
-
-cond_print('done.\n')
+	sys.exit('\n')
 
 # Extract needed video URL parameters
 try:
@@ -200,13 +206,12 @@ try:
 		cond_print('failed.\n')
 		error_advice_exit('unable to extract URL parameters')
 	
-	video_real_id = video_url_params_mo.group(1)
-	video_t_param = video_url_params_mo.group(2)
-	video_url_real = const_video_url_real_str % (video_real_id, video_t_param)
+	video_url_params = video_url_params_mo.group(1)
+	video_url_real = const_video_url_real_str % video_url_params
 	cond_print('done.\n')
 
 except KeyboardInterrupt:
-	sys.exit(exit_failure)
+	sys.exit('\n')
 
 # Retrieve video data
 try:
@@ -233,14 +238,13 @@ try:
 		video_block = video_data.read(const_block_size)
 
 	video_file.close()
+	cond_print('done.\n')
+	cond_print('Video data saved to %s\n' % video_filename)
+	sys.exit()
 
-except (urllib2.URLError, ValueError):
+except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
 	cond_print('failed.\n')
 	error_advice_exit('unable to download video data')
 
 except KeyboardInterrupt:
-	sys.exit(exit_failure)
-
-cond_print('done.\n')
-cond_print('Video data saved to %s\n' % video_filename)
-sys.exit()
+	sys.exit('\n')
