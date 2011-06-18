@@ -46,6 +46,7 @@ const_timeout = 120
 
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
 const_video_url_re = re.compile(r'^((?:http://)?(?:\w+\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=))?([0-9A-Za-z_-]+)(?(1)[&/].*)?$')
+const_video_url_best_quality_suffix='&fmt=18'
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
@@ -71,20 +72,23 @@ def error_advice_exit(error_text):
 	sys.exit('\n')
 
 # Wrapper to create custom requests with typical headers
-def request_create(url, data=None):
+def request_create(url, extra_headers, post_data):
 	retval = urllib2.Request(url)
-	if data is not None:
-		retval.add_data(data)
+	if post_data is not None:
+		retval.add_data(post_data)
 	# Try to mimic Firefox, at least a little bit
 	retval.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11')
 	retval.add_header('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')
 	retval.add_header('Accept', 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5')
 	retval.add_header('Accept-Language', 'en-us,en;q=0.5')
+	if extra_headers is not None:
+		for header in extra_headers:
+			retval.add_header(header[0], header[1])
 	return retval
 
 # Perform a request, process headers and return response
-def perform_request(url, data=None):
-	request = request_create(url, data)
+def perform_request(url, headers=None, data=None):
+	request = request_create(url, headers, data)
 	response = urllib2.urlopen(request)
 	return response
 
@@ -106,7 +110,7 @@ def title_string_norm(title):
 def download_step(return_data_flag, step_title, step_error, url, post_data=None):
 	try:
 		cond_print('%s... ' % step_title)
-		data = perform_request(url, post_data).read()
+		data = perform_request(url, data=post_data).read()
 		cond_print('done.\n')
 		if return_data_flag:
 			return data
@@ -196,7 +200,7 @@ def title_string_touch(title):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2008.01.24'
+cmdl_version = '2008.03.08'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -210,6 +214,7 @@ cmdl_parser.add_option('-l', '--literal', action='store_true', dest='use_literal
 cmdl_parser.add_option('-n', '--netrc', action='store_true', dest='use_netrc', help='use .netrc authentication data')
 cmdl_parser.add_option('-g', '--get-url', action='store_true', dest='get_url', help='print final video URL only')
 cmdl_parser.add_option('-2', '--title-too', action='store_true', dest='get_title', help='used with -g, print title too')
+cmdl_parser.add_option('-b', '--best-quality', action='store_true', dest='best_quality', help='try to download the best quality version')
 (cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
 
 # Set socket timeout
@@ -227,6 +232,11 @@ if video_url_mo is None:
 	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.')
 video_url_id = video_url_mo.group(2)
 video_url = const_video_url_str % video_url_id
+if cmdl_opts.best_quality:
+	video_url = '%s%s' % (video_url, const_video_url_best_quality_suffix)
+	video_extension = '.mp4'
+else:
+	video_extension = '.flv'
 
 # Check conflicting options
 if cmdl_opts.outfile is not None and (cmdl_opts.simulate or cmdl_opts.get_url):
@@ -276,7 +286,7 @@ else:
 
 # Get output file name 
 if cmdl_opts.outfile is None:
-	video_filename = '%s.flv' % video_url_id
+	video_filename = '%s%s' % (video_url_id, video_extension)
 else:
 	video_filename = cmdl_opts.outfile
 
@@ -304,6 +314,8 @@ if cmdl_opts.use_title or cmdl_opts.use_literal or cmdl_opts.get_title:
 # Extract needed video URL parameters
 video_url_t_param = extract_step('Extracting URL "t" parameter', 'unable to extract URL "t" parameter', const_url_t_param_re, video_webpage)
 video_url_real = const_video_url_real_str % (video_url_id, video_url_t_param)
+if cmdl_opts.best_quality:
+	video_url_real = '%s%s' % (video_url_real, const_video_url_best_quality_suffix)
 
 # Rebuild filename if needed
 if cmdl_opts.use_title or cmdl_opts.use_literal:
@@ -311,11 +323,11 @@ if cmdl_opts.use_title or cmdl_opts.use_literal:
 		prefix = title_string_norm(video_title)
 	else:
 		prefix = title_string_touch(video_title)
-	video_filename = '%s-%s.flv' % (prefix, video_url_id)
+	video_filename = '%s-%s%s' % (prefix, video_url_id, video_extension)
 
 # Check name
-if not video_filename.lower().endswith('.flv'):
-	sys.stderr.write('Warning: video file name does not end in .flv\n')
+if not video_filename.lower().endswith(video_extension):
+	sys.stderr.write('Warning: video file name does not end in %s\n' % video_extension)
 
 # Retrieve video data
 try:
