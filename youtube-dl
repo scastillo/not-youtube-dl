@@ -25,20 +25,17 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 #
-import sys
-import optparse
-import httplib
-import urllib2
-import re
-import string
-import os
-import time
-import netrc
 import getpass
-
-# First off, check Python and refuse to run
-if sys.hexversion < 0x020400f0:
-	sys.exit('Error: Python 2.4 or later needed to run the program')
+import httplib
+import netrc
+import optparse
+import os
+import re
+import socket
+import string
+import sys
+import time
+import urllib2
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
@@ -56,7 +53,7 @@ const_initial_block_size = 10 * const_1k
 # Print error message, followed by standard advice information, and then exit
 def error_advice_exit(error_text):
 	sys.stderr.write('Error: %s.\n' % error_text)
-	sys.stderr.write('Try again several times. It may be a temporal problem.\n')
+	sys.stderr.write('Try again several times. It may be a temporary problem.\n')
 	sys.stderr.write('Other typical problems:\n\n')
 	sys.stderr.write('\tVideo no longer exists.\n')
 	sys.stderr.write('\tVideo requires age confirmation but you did not provide an account.\n')
@@ -116,7 +113,7 @@ def download_step(return_data_flag, step_title, step_error, url, post_data=None)
 			return data
 		return None
 
-	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
+	except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError, socket.error):
 		cond_print('failed.\n')
 		error_advice_exit(step_error)
 
@@ -156,7 +153,7 @@ def new_block_size(before, after, bytes):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.01.19'
+cmdl_version = '2007.02.18'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -307,7 +304,7 @@ try:
 	cond_print('done.\n')
 	cond_print('Video data saved to %s\n' % video_filename)
 
-except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError):
+except (urllib2.URLError, ValueError, httplib.HTTPException, TypeError, socket.error):
 	cond_print('failed.\n')
 	error_advice_exit('unable to download video data')
 
