@@ -878,7 +878,13 @@ class YoutubeIE(InfoExtractor):
 			if mobj is not None:
 				video_description = mobj.group(1)
 
+		# token
+		video_token = urllib.unquote_plus(video_info['token'][0])
+
 		# Decide which formats to download
+		requested_format = self._downloader.params.get('format', None)
+		get_video_template = 'http://www.youtube.com/get_video?video_id=%s&t=%s&eurl=&el=&ps=&asv=&fmt=%%s' % (video_id, video_token)
+
 		if 'fmt_url_map' in video_info:
 			url_map = dict(tuple(pair.split('|')) for pair in video_info['fmt_url_map'][0].split(','))
 			format_limit = self._downloader.params.get('format_limit', None)
@@ -890,19 +896,17 @@ class YoutubeIE(InfoExtractor):
 			if len(existing_formats) == 0:
 				self._downloader.trouble(u'ERROR: no known formats available for video')
 				return
-			requested_format = self._downloader.params.get('format', None)
 			if requested_format is None:
-				video_url_list = [(existing_formats[0], url_map[existing_formats[0]])] # Best quality
+				video_url_list = [(existing_formats[0], get_video_template % existing_formats[0])] # Best quality
 			elif requested_format == '-1':
-				video_url_list = url_map.items() # All formats
+				video_url_list = [(f, get_video_template % f) for f in existing_formats] # All formats
 			else:
-				if requested_format not in existing_formats:
-					self._downloader.trouble(u'ERROR: format not available for video')
-					return
-				video_url_list = [(requested_format, url_map[requested_format])] # Specific format
+				video_url_list = [(requested_format, get_video_template % requested_format)] # Specific format
+
 		elif 'conn' in video_info and video_info['conn'][0].startswith('rtmp'):
 			self.report_rtmp_download()
 			video_url_list = [(None, video_info['conn'][0])]
+
 		else:
 			self._downloader.trouble(u'ERROR: no fmt_url_map or conn information found in video info')
 			return
@@ -930,7 +934,7 @@ class YoutubeIE(InfoExtractor):
 					'player_url':	player_url,
 				})
 			except UnavailableVideoError, err:
-				self._downloader.trouble(u'ERROR: unable to download video')
+				self._downloader.trouble(u'ERROR: unable to download video (format may not be available)')
 
 
 class MetacafeIE(InfoExtractor):
@@ -2064,7 +2068,7 @@ if __name__ == '__main__':
 		# Parse command line
 		parser = optparse.OptionParser(
 			usage='Usage: %prog [options] url...',
-			version='2010.07.22',
+			version='2010.07.24',
 			conflict_handler='resolve',
 		)
 
