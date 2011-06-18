@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2006 Ricardo Garcia Gonzalez
+# Copyright (c) 2006-2007 Ricardo Garcia Gonzalez
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -40,7 +40,7 @@ import urllib2
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
-const_video_url_re = re.compile(r'(?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=)([^&]+).*')
+const_video_url_re = re.compile(r'^((?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=))?([0-9A-Za-z_-]+)(?(1)[&/].*)?$')
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
@@ -191,7 +191,7 @@ def calc_speed(start, now, bytes):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.03.27'
+cmdl_version = '2007.06.06'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -204,6 +204,7 @@ cmdl_parser.add_option('-t', '--title', action='store_true', dest='use_title', h
 cmdl_parser.add_option('-l', '--literal', action='store_true', dest='use_literal', help='use literal title in file name')
 cmdl_parser.add_option('-n', '--netrc', action='store_true', dest='use_netrc', help='use .netrc authentication data')
 cmdl_parser.add_option('-g', '--get-url', action='store_true', dest='get_url', help='print final video URL only')
+cmdl_parser.add_option('-2', '--title-too', action='store_true', dest='get_title', help='used with -g, print title too')
 (cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
 
 # Get video URL
@@ -216,7 +217,7 @@ video_url_cmdl = cmdl_args[0]
 video_url_mo = const_video_url_re.match(video_url_cmdl)
 if video_url_mo is None:
 	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.')
-video_url_id = video_url_mo.group(1)
+video_url_id = video_url_mo.group(2)
 video_url = const_video_url_str % video_url_id
 
 # Check conflicting options
@@ -238,6 +239,9 @@ if cmdl_opts.quiet and cmdl_opts.get_url:
 # Incorrect option formatting
 if cmdl_opts.username is None and cmdl_opts.password is not None:
 	sys.exit('Error: password give but username is missing.')
+
+if cmdl_opts.get_url is None and cmdl_opts.get_title is not None:
+	sys.exit('Error: getting title requires getting URL.')
 
 # Get account information if any
 account_username = None
@@ -310,7 +314,7 @@ if account_username is not None:
 video_webpage = download_step(True, 'Retrieving video webpage', 'unable to retrieve video webpage', video_url)
 
 # Extract video title if needed
-if cmdl_opts.use_title or cmdl_opts.use_literal:
+if cmdl_opts.use_title or cmdl_opts.use_literal or cmdl_opts.get_title:
 	video_title = extract_step('Extracting video title', 'unable to extract video title', const_video_title_re, video_webpage)
 
 # Extract needed video URL parameters
@@ -321,6 +325,9 @@ video_url_real = const_video_url_real_str % video_url_params
 try:
 	video_data = perform_request(video_url_real)
 	cond_print('Video data found at %s\n' % video_data.geturl())
+
+	if cmdl_opts.get_title:
+		print video_title
 
 	if cmdl_opts.get_url:
 		print video_data.geturl()
