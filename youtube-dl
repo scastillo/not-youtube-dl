@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2006 Ricardo Garcia Gonzalez
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+# 
+# Except as contained in this notice, the name(s) of the above copyright
+# holders shall not be used in advertising or otherwise to promote the
+# sale, use or other dealings in this Software without prior written
+# authorization.
+#
+import sys
+import optparse
+import urllib2
+import re
+
+# Exit status constants
+exit_failure = 1
+exit_success = 0
+
+# Global constants
+const_video_url_str = 'http://www.youtube.com/watch?v=%s'
+const_video_url_re = re.compile(r'http://(?:www\.)?youtube\.com/(?:v/|(?:watch)?\?v=)([^&]+).*')
+const_login_url_str = 'http://www.youtube.com/signup?next=/'
+const_login_post_str = 'current_form=loginForm&next=%%2F&username=%s&password=%s&action_login=Log+In'
+const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
+const_age_post_str = 'next_url=%%2Fwatch%%3Fv%%3D%s&action_confirm=Confirm'
+const_video_url_params_re = re.compile(r'player2\.swf\?video_id=([^&]+)&.*t=([^&]+)&', re.M)
+const_video_url_real_str = 'http://www.youtube.com/get_video?video_id=%s&t=%s'
+const_1k = 1024
+const_block_size = 10 * const_1k
+
+# Print error message, followed by standard advice information, and then exit
+def error_advice_exit(error_text):
+	global exit_failure
+	sys.stderr.write('Error: %s.\n' % error_text)
+	sys.stderr.write('Try again several times. It may be a temporal problem.\n')
+	sys.stderr.write('Other typical problems:\n\n')
+	sys.stderr.write('\tVideo no longer exists.\n')
+	sys.stderr.write('\tVideo requires age confirmation but you did not provide an account.\n')
+	sys.stderr.write('\tYou provided the account data, but it is not valid.\n')
+	sys.stderr.write('\tThe connection was cut suddenly for some reason.\n')
+	sys.stderr.write('\tYouTube changed their system, and the program no longer works.\n')
+	sys.stderr.write('\nTry to confirm you are able to view the video using a web browser.\n')
+	sys.stderr.write('Use the same video URL and account information, if needed, with this program.\n')
+	sys.stderr.write('Try again several times and contact me if the problem persists.\n')
+	sys.exit(exit_failure)
+
+# Wrapper to create custom requests with typical headers
+def request_create(url, data=None):
+	retval = urllib2.Request(url)
+	if not data is None:
+		retval.add_data(data)
+	# Try to mimic Firefox, at least a little bit
+	retval.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6')
+	retval.add_header('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')
+	retval.add_header('Accept', 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5')
+	retval.add_header('Accept-Language', 'en-us,en;q=0.5')
+	return retval
+
+# Perform a request, process headers and return response
+def perform_request(url, data=None):
+	request = request_create(url, data)
+	response = urllib2.urlopen(request)
+	return response
+
+# Convert bytes to KiB
+def to_k(bytes):
+	global const_1k
+	return bytes / const_1k
+
+# Conditional print
+def cond_print(str):
+	global cmdl_opts
+	if not cmdl_opts.quiet:
+		sys.stdout.write(str)
+		sys.stdout.flush()
+
+# Create the command line options parser and parse command line
+cmdl_usage = 'usage: %prog [options] video_url'
+cmdl_version = '2006.08.28'
+cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
+cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
+cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
+cmdl_parser.add_option('-u', '--username', dest='username', metavar='USERNAME', help='account username')
+cmdl_parser.add_option('-p', '--password', dest='password', metavar='PASSWORD', help='account password')
+cmdl_parser.add_option('-o', '--output', dest='outfile', metavar='FILE', help='output video file name')
+cmdl_parser.add_option('-q', '--quiet', action='store_true', dest='quiet', help='activates quiet mode')
+cmdl_parser.add_option('-s', '--simulate', action='store_true', dest='simulate', help='do not download video')
+(cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
+
+# Get video URL
+if len(cmdl_args) != 1:
+	cmdl_parser.print_help()
+	sys.exit(exit_failure)
+video_url_cmdl = cmdl_args[0]
+
+# Verify video URL format and convert to "standard" format
+video_url_mo = const_video_url_re.match(video_url_cmdl)
+if video_url_mo is None:
+	sys.exit('Error: URL does not seem to be a youtube video URL. If it is, report a bug.\n')
+video_url_id = video_url_mo.group(1)
+video_url = const_video_url_str % video_url_id
+
+# Check conflicting options
+if not cmdl_opts.outfile is None and cmdl_opts.simulate:
+	sys.stderr.write('Warning: video file name given but will not be used.\n')
+
+# Get output file name 
+if cmdl_opts.outfile is None:
+	video_filename = '%s.flv' % video_url_id
+else:
+	video_filename = cmdl_opts.outfile
+
+# Check name
+if not video_filename.lower().endswith('.flv'):
+	sys.stderr.write('Warning: video file name does not end in .flv\n')
+
+# Verify both or none present
+if ((cmdl_opts.username is None and not cmdl_opts.password is None) or
+    (not cmdl_opts.username is None and cmdl_opts.password is None)):
+	sys.exit('Error: both username and password must be given, or none.')
+
+# Test writable file
+if not cmdl_opts.simulate:
+	try:
+		disk_test = open(video_filename, 'wb')
+		disk_test.close()
+
+	except (OSError, IOError):
+		sys.exit('Error: unable to open %s for writing.' % video_filename)
+
+# Install cookie handler
+urllib2.install_opener(urllib2.build_opener(urllib2.HTTPCookieProcessor()))
+
+# Login and confirm age if needed
+if not cmdl_opts.username is None:
+	try:
+		# Log in
+		cond_print('Logging in... ')
+		perform_request(const_login_url_str, const_login_post_str % (cmdl_opts.username, cmdl_opts.password)).read()
+		cond_print('done.\n')
+
+	except (urllib2.URLError, ValueError):
+		cond_print('failed.\n')
+		error_advice_exit('unable to login')
+
+	except KeyboardInterrupt:
+		sys.exit(exit_failure)
+
+	try:
+		# Get age confirmation cookie
+		cond_print('Confirming age... ')
+		perform_request(const_age_url_str % video_url_id, const_age_post_str % video_url_id).read()
+		cond_print('done.\n')
+
+	except (urllib2.URLError, ValueError):
+		cond_print('failed.\n')
+		error_advice_exit('unable to confirm age')
+
+	except KeyboardInterrupt:
+		sys.exit(exit_failure)
+
+# Retrieve video webpage
+try:
+	cond_print('Retrieving video webpage... ')
+	video_webpage = perform_request(video_url).read()
+
+except (urllib2.URLError, ValueError):
+	cond_print('failed.\n')
+	error_advice_exit('unable to download video webpage')
+
+except KeyboardInterrupt:
+	sys.exit(exit_failure)
+
+cond_print('done.\n')
+
+# Extract needed video URL parameters
+try:
+	cond_print('Extracting video URL parameters... ')
+	video_url_params_mo = const_video_url_params_re.search(video_webpage)
+	
+	if video_url_params_mo is None:
+		cond_print('failed.\n')
+		error_advice_exit('unable to extract URL parameters')
+	
+	video_real_id = video_url_params_mo.group(1)
+	video_t_param = video_url_params_mo.group(2)
+	video_url_real = const_video_url_real_str % (video_real_id, video_t_param)
+	cond_print('done.\n')
+
+except KeyboardInterrupt:
+	sys.exit(exit_failure)
+
+# Retrieve video data
+try:
+	video_data = perform_request(video_url_real)
+	cond_print('Video data found at %s\n' % video_data.geturl())
+
+	# Abort here if in simulate mode
+	if cmdl_opts.simulate:
+		sys.exit()
+
+	cond_print('Retrieving video data... ')
+	video_file = open(video_filename, 'wb')
+	try:
+		video_len_str = '%sk' % to_k(int(video_data.info()['Content-length']))
+	except KeyError:
+		video_len_str = '(unknown)'
+
+	byte_counter = 0
+	video_block = video_data.read(const_block_size)
+	while len(video_block) != 0:
+		byte_counter += len(video_block)
+		video_file.write(video_block)
+		cond_print('\rRetrieving video data... %sk of %s ' % (to_k(byte_counter), video_len_str))
+		video_block = video_data.read(const_block_size)
+
+	video_file.close()
+
+except (urllib2.URLError, ValueError):
+	cond_print('failed.\n')
+	error_advice_exit('unable to download video data')
+
+except KeyboardInterrupt:
+	sys.exit(exit_failure)
+
+cond_print('done.\n')
+cond_print('Video data saved to %s\n' % video_filename)
+sys.exit()
