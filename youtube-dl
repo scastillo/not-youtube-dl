@@ -27,6 +27,7 @@
 #
 import getpass
 import httplib
+import math
 import netrc
 import optparse
 import os
@@ -39,7 +40,7 @@ import urllib2
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
-const_video_url_re = re.compile(r'(?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?v=)([^&]+).*')
+const_video_url_re = re.compile(r'(?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=)([^&]+).*')
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
@@ -55,11 +56,11 @@ def error_advice_exit(error_text):
 	sys.stderr.write('Error: %s.\n' % error_text)
 	sys.stderr.write('Try again several times. It may be a temporary problem.\n')
 	sys.stderr.write('Other typical problems:\n\n')
-	sys.stderr.write('\tVideo no longer exists.\n')
-	sys.stderr.write('\tVideo requires age confirmation but you did not provide an account.\n')
-	sys.stderr.write('\tYou provided the account data, but it is not valid.\n')
-	sys.stderr.write('\tThe connection was cut suddenly for some reason.\n')
-	sys.stderr.write('\tYouTube changed their system, and the program no longer works.\n')
+	sys.stderr.write('* Video no longer exists.\n')
+	sys.stderr.write('* Video requires age confirmation but you did not provide an account.\n')
+	sys.stderr.write('* You provided the account data, but it is not valid.\n')
+	sys.stderr.write('* The connection was cut suddenly for some reason.\n')
+	sys.stderr.write('* YouTube changed their system, and the program no longer works.\n')
 	sys.stderr.write('\nTry to confirm you are able to view the video using a web browser.\n')
 	sys.stderr.write('Use the same video URL and account information, if needed, with this program.\n')
 	sys.stderr.write('When using a proxy, make sure http_proxy has http://host:port format.\n')
@@ -84,15 +85,10 @@ def perform_request(url, data=None):
 	response = urllib2.urlopen(request)
 	return response
 
-# Convert bytes to KiB
-def to_k(bytes):
-	global const_1k
-	return bytes / const_1k
-
 # Conditional print
 def cond_print(str):
 	global cmdl_opts
-	if not cmdl_opts.quiet:
+	if not (cmdl_opts.quiet or cmdl_opts.get_url):
 		sys.stdout.write(str)
 		sys.stdout.flush()
 
@@ -102,6 +98,10 @@ def title_string_norm(title):
 	title = '_'.join(title.split())
 	title = title.lower()
 	return title
+
+# Title string minimal transformation
+def title_string_touch(title):
+	return title.replace(os.sep, '%')
 
 # Generic download step
 def download_step(return_data_flag, step_title, step_error, url, post_data=None):
@@ -139,21 +139,59 @@ def extract_step(step_title, step_error, regexp, data):
 
 # Calculate new block size based on previous block size
 def new_block_size(before, after, bytes):
-	new_min = max(bytes / 2, 1)
-	new_max = max(bytes * 2, 1)
+	new_min = max(bytes / 2.0, 1.0)
+	new_max = max(bytes * 2.0, 1.0)
 	dif = after - before
 	if dif < 0.0001:
-		return new_max
-	rate = int(bytes / dif)
+		return int(new_max)
+	rate = bytes / dif
 	if rate > new_max:
-		return new_max
+		return int(new_max)
 	if rate < new_min:
-		return new_min
-	return rate
+		return int(new_min)
+	return int(rate)
+
+# Get optimum 1k exponent to represent a number of bytes
+def optimum_k_exp(num_bytes):
+	global const_1k
+	if num_bytes == 0:
+		return 0
+	return long(math.log(num_bytes, const_1k))
+
+# Get optimum representation of number of bytes
+def format_bytes(num_bytes):
+	global const_1k
+	try:
+		exp = optimum_k_exp(num_bytes)
+		suffix = 'bkMGTPEZY'[exp]
+		if exp == 0:
+			return '%s%s' % (num_bytes, suffix)
+		converted = float(num_bytes) / float(const_1k**exp)
+		return '%.2f%s' % (converted, suffix)
+	except IndexError:
+		sys.exit('Error: internal error formatting number of bytes.')
+
+# Calculate ETA and return it in string format as MM:SS
+def calc_eta(start, now, total, current):
+	if current == 0:
+		return '--:--'
+	rate = float(current) / (now - start)
+	eta = long((total - current) / rate)
+	eta_mins = eta / 60
+	eta_secs = eta % 60
+	if eta_mins > 99:
+		return '--:--'
+	return '%02d:%02d' % (eta_mins, eta_secs)
+
+# Calculate speed and return it in string format
+def calc_speed(start, now, bytes):
+	if bytes == 0:
+		return 'N/A b'
+	return format_bytes(float(bytes) / (now - start))
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.02.18'
+cmdl_version = '2007.03.27'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -163,7 +201,9 @@ cmdl_parser.add_option('-o', '--output', dest='outfile', metavar='FILE', help='o
 cmdl_parser.add_option('-q', '--quiet', action='store_true', dest='quiet', help='activates quiet mode')
 cmdl_parser.add_option('-s', '--simulate', action='store_true', dest='simulate', help='do not download video')
 cmdl_parser.add_option('-t', '--title', action='store_true', dest='use_title', help='use title in file name')
+cmdl_parser.add_option('-l', '--literal', action='store_true', dest='use_literal', help='use literal title in file name')
 cmdl_parser.add_option('-n', '--netrc', action='store_true', dest='use_netrc', help='use .netrc authentication data')
+cmdl_parser.add_option('-g', '--get-url', action='store_true', dest='get_url', help='print final video URL only')
 (cmdl_opts, cmdl_args) = cmdl_parser.parse_args()
 
 # Get video URL
@@ -180,14 +220,20 @@ video_url_id = video_url_mo.group(1)
 video_url = const_video_url_str % video_url_id
 
 # Check conflicting options
-if cmdl_opts.outfile is not None and cmdl_opts.simulate:
+if cmdl_opts.outfile is not None and (cmdl_opts.simulate or cmdl_opts.get_url):
 	sys.stderr.write('Warning: video file name given but will not be used.\n')
 
-if cmdl_opts.outfile is not None and cmdl_opts.use_title:
+if cmdl_opts.outfile is not None and (cmdl_opts.use_title or cmdl_opts.use_literal):
 	sys.exit('Error: using the video title conflicts with using a given file name.')
 
 if cmdl_opts.use_netrc and cmdl_opts.password is not None:
 	sys.exit('Error: using netrc conflicts with giving command line password.')
+
+if cmdl_opts.use_title and cmdl_opts.use_literal:
+	sys.exit('Error: cannot use title and literal title at the same time.')
+
+if cmdl_opts.quiet and cmdl_opts.get_url:
+	sys.exit('Error: cannot be quiet and print final URL at the same time.')
 
 # Incorrect option formatting
 if cmdl_opts.username is None and cmdl_opts.password is not None:
@@ -238,7 +284,7 @@ if not video_filename.lower().endswith('.flv'):
 	sys.stderr.write('Warning: video file name does not end in .flv\n')
 
 # Test writable file
-if not cmdl_opts.simulate:
+if not (cmdl_opts.simulate or cmdl_opts.get_url):
 	try:
 		disk_test = open(video_filename, 'wb')
 		disk_test.close()
@@ -264,7 +310,7 @@ if account_username is not None:
 video_webpage = download_step(True, 'Retrieving video webpage', 'unable to retrieve video webpage', video_url)
 
 # Extract video title if needed
-if cmdl_opts.use_title:
+if cmdl_opts.use_title or cmdl_opts.use_literal:
 	video_title = extract_step('Extracting video title', 'unable to extract video title', const_video_title_re, video_webpage)
 
 # Extract needed video URL parameters
@@ -276,20 +322,35 @@ try:
 	video_data = perform_request(video_url_real)
 	cond_print('Video data found at %s\n' % video_data.geturl())
 
-	# Abort here if in simulate mode
-	if cmdl_opts.simulate:
+	if cmdl_opts.get_url:
+		print video_data.geturl()
+
+	if cmdl_opts.simulate or cmdl_opts.get_url:
 		sys.exit()
 
 	video_file = open(video_filename, 'wb')
 	try:
-		video_len_str = '%sk' % to_k(long(video_data.info()['Content-length']))
+		video_len = long(video_data.info()['Content-length'])
+		video_len_str = format_bytes(video_len)
 	except KeyError:
-		video_len_str = '(unknown)'
+		video_len = None
+		video_len_str = 'N/A'
 
 	byte_counter = 0
 	block_size = const_initial_block_size
+	start_time = time.time()
 	while True:
-		cond_print('\rRetrieving video data... %sk of %s ' % (to_k(byte_counter), video_len_str))
+		if video_len is not None:
+			percent = float(byte_counter) / float(video_len) * 100.0
+			percent_str = '%.1f' % percent
+			eta_str = calc_eta(start_time, time.time(), video_len, byte_counter)
+		else:
+			percent_str = '---.-'
+			eta_str = '--:--'
+		counter = format_bytes(byte_counter)
+		speed_str = calc_speed(start_time, time.time(), byte_counter)
+		cond_print('\rRetrieving video data: %5s%% (%8s of %s) at %8s/s ETA %s ' % (percent_str, counter, video_len_str, speed_str, eta_str))
+
 		before = time.time()
 		video_block = video_data.read(block_size)
 		after = time.time()
@@ -299,6 +360,9 @@ try:
 		byte_counter += dl_bytes
 		video_file.write(video_block)
 		block_size = new_block_size(before, after, dl_bytes)
+
+	if video_len is not None and byte_counter != video_len:
+		error_advice_exit('server did not send the expected ammount of data')
 
 	video_file.close()
 	cond_print('done.\n')
@@ -312,9 +376,13 @@ except KeyboardInterrupt:
 	sys.exit('\n')
 
 # Rename video file if needed
-if cmdl_opts.use_title:
+if cmdl_opts.use_title or cmdl_opts.use_literal:
 	try:
-		final_filename = '%s-%s.flv' % (title_string_norm(video_title), video_url_id)
+		if cmdl_opts.use_title:
+			prefix = title_string_norm(video_title)
+		else:
+			prefix = title_string_touch(video_title)
+		final_filename = '%s-%s.flv' % (prefix, video_url_id)
 		os.rename(video_filename, final_filename)
 		cond_print('Video file renamed to %s\n' % final_filename)
 	
