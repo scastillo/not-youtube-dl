@@ -45,11 +45,12 @@ const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
 const_age_post_str = 'next_url=%%2Fwatch%%3Fv%%3D%s&action_confirm=Confirm'
-const_url_t_param_re = re.compile(r'[,{]t:\'([^\']*)\'')
+const_url_t_param_re = re.compile(r"[,{]t:'([^']*)'")
 const_video_url_real_str = 'http://www.youtube.com/get_video?video_id=%s&t=%s'
 const_video_title_re = re.compile(r'<title>YouTube - ([^<]*)</title>', re.M | re.I)
 const_1k = 1024
 const_initial_block_size = 10 * const_1k
+const_epsilon = 0.0001
 
 # Print error message, followed by standard advice information, and then exit
 def error_advice_exit(error_text):
@@ -142,7 +143,7 @@ def new_block_size(before, after, bytes):
 	new_min = max(bytes / 2.0, 1.0)
 	new_max = max(bytes * 2.0, 1.0)
 	dif = after - before
-	if dif < 0.0001:
+	if dif < const_epsilon:
 		return int(new_max)
 	rate = bytes / dif
 	if rate > new_max:
@@ -173,9 +174,10 @@ def format_bytes(num_bytes):
 
 # Calculate ETA and return it in string format as MM:SS
 def calc_eta(start, now, total, current):
-	if current == 0:
+	dif = now - start
+	if current == 0 or dif < const_epsilon:
 		return '--:--'
-	rate = float(current) / (now - start)
+	rate = float(current) / dif
 	eta = long((total - current) / rate)
 	eta_mins = eta / 60
 	eta_secs = eta % 60
@@ -185,13 +187,14 @@ def calc_eta(start, now, total, current):
 
 # Calculate speed and return it in string format
 def calc_speed(start, now, bytes):
-	if bytes == 0:
+	dif = now - start
+	if bytes == 0 or dif < const_epsilon:
 		return 'N/A b'
-	return format_bytes(float(bytes) / (now - start))
+	return format_bytes(float(bytes) / dif)
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.08.24'
+cmdl_version = '2007.10.09'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -323,7 +326,9 @@ video_url_real = const_video_url_real_str % (video_url_id, video_url_t_param)
 
 # Retrieve video data
 try:
+	cond_print('Requesting video file... ')
 	video_data = perform_request(video_url_real)
+	cond_print('done.')
 	cond_print('Video data found at %s\n' % video_data.geturl())
 
 	if cmdl_opts.get_title:
