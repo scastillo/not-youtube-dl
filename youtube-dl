@@ -194,7 +194,7 @@ class FileDownloader(object):
 	ignoreerrors:	Do not stop on download errors.
 	ratelimit:	Download speed limit, in bytes/sec.
 	nooverwrites:	Prevent overwriting files.
-	retries:	Number of times to retry for HTTP error 503
+	retries:	Number of times to retry for HTTP error 5xx
 	continuedl:	Try to continue downloads if possible.
 	noprogress:	Do not print the progress bar.
 	"""
@@ -353,12 +353,12 @@ class FileDownloader(object):
 				(percent_str, data_len_str, speed_str, eta_str), skip_eol=True)
 
 	def report_resuming_byte(self, resume_len):
-		"""Report attemtp to resume at given byte."""
+		"""Report attempt to resume at given byte."""
 		self.to_stdout(u'[download] Resuming download at byte %s' % resume_len)
 	
 	def report_retry(self, count, retries):
-		"""Report retry in case of HTTP error 503"""
-		self.to_stdout(u'[download] Got HTTP error 503. Retrying (attempt %d of %d)...' % (count, retries))
+		"""Report retry in case of HTTP error 5xx"""
+		self.to_stdout(u'[download] Got server HTTP error. Retrying (attempt %d of %d)...' % (count, retries))
 	
 	def report_file_already_downloaded(self, file_name):
 		"""Report file has already been fully downloaded."""
@@ -404,15 +404,16 @@ class FileDownloader(object):
 			template_dict['ord'] = unicode('%05d' % self._num_downloads)
 			filename = self.params['outtmpl'] % template_dict
 		except (ValueError, KeyError), err:
-			self.trouble('ERROR: invalid output template or system charset: %s' % str(err))
+			self.trouble(u'ERROR: invalid system charset or erroneous output template')
+			return
 		if self.params.get('nooverwrites', False) and os.path.exists(filename):
-			self.to_stderr(u'WARNING: file exists: %s; skipping' % filename)
+			self.to_stderr(u'WARNING: file exists and will be skipped')
 			return
 
 		try:
 			self.pmkdir(filename)
 		except (OSError, IOError), err:
-			self.trouble('ERROR: unable to create directories: %s' % str(err))
+			self.trouble(u'ERROR: unable to create directories: %s' % str(err))
 			return
 
 		try:
@@ -420,17 +421,17 @@ class FileDownloader(object):
 		except (OSError, IOError), err:
 			raise UnavailableVideoError
 		except (urllib2.URLError, httplib.HTTPException, socket.error), err:
-			self.trouble('ERROR: unable to download video data: %s' % str(err))
+			self.trouble(u'ERROR: unable to download video data: %s' % str(err))
 			return
 		except (ContentTooShortError, ), err:
-			self.trouble('ERROR: content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
+			self.trouble(u'ERROR: content too short (expected %s bytes and served %s)' % (err.expected, err.downloaded))
 			return
 
 		if success:
 			try:
 				self.post_process(filename, info_dict)
 			except (PostProcessingError), err:
-				self.trouble('ERROR: postprocessing: %s' % str(err))
+				self.trouble(u'ERROR: postprocessing: %s' % str(err))
 				return
 
 	def download(self, url_list):
@@ -455,7 +456,7 @@ class FileDownloader(object):
 				break
 
 			if not suitable_found:
-				self.trouble('ERROR: no suitable InfoExtractor: %s' % url)
+				self.trouble(u'ERROR: no suitable InfoExtractor: %s' % url)
 
 		return self._download_retcode
 
@@ -495,7 +496,7 @@ class FileDownloader(object):
 			self.to_stdout(u'\r[rtmpdump] %s bytes' % os.path.getsize(filename))
 			return True
 		else:
-			self.trouble('\nERROR: rtmpdump exited with code %d' % retval)
+			self.trouble(u'\nERROR: rtmpdump exited with code %d' % retval)
 			return False
 
 	def _do_download(self, filename, url, player_url):
@@ -528,7 +529,7 @@ class FileDownloader(object):
 				data = urllib2.urlopen(request)
 				break
 			except (urllib2.HTTPError, ), err:
-				if err.code != 503 and err.code != 416:
+				if (err.code < 500 or err.code >= 600) and err.code != 416:
 					# Unexpected HTTP error
 					raise
 				elif err.code == 416:
@@ -538,7 +539,7 @@ class FileDownloader(object):
 						data = urllib2.urlopen(basic_request)
 						content_length = data.info()['Content-Length']
 					except (urllib2.HTTPError, ), err:
-						if err.code != 503:
+						if err.code < 500 or err.code >= 600:
 							raise
 					else:
 						# Examine the reported length
@@ -588,12 +589,13 @@ class FileDownloader(object):
 					(stream, filename) = sanitize_open(filename, open_mode)
 					self.report_destination(filename)
 				except (OSError, IOError), err:
-					self.trouble('ERROR: unable to open for writing: %s' % str(err))
+					self.trouble(u'ERROR: unable to open for writing: %s' % str(err))
 					return False
 			try:
 				stream.write(data_block)
 			except (IOError, OSError), err:
-				self.trouble('\nERROR: unable to write data: %s' % str(err))
+				self.trouble(u'\nERROR: unable to write data: %s' % str(err))
+				return False
 			block_size = self.best_block_size(after - before, data_block_len)
 
 			# Progress message
@@ -684,7 +686,7 @@ class InfoExtractor(object):
 class YoutubeIE(InfoExtractor):
 	"""Information extractor for youtube.com."""
 
-	_VALID_URL = r'^((?:http://)?(?:youtu\.be/|(?:\w+\.)?youtube\.com/(?:(?:v/)|(?:(?:watch(?:_popup)?(?:\.php)?)?[\?#](?:.+&)?v=))))?([0-9A-Za-z_-]+)(?(1).+)?$'
+	_VALID_URL = r'^((?:http://)?(?:youtu\.be/|(?:\w+\.)?youtube(?:-nocookie)?\.com/(?:(?:v/)|(?:(?:watch(?:_popup)?(?:\.php)?)?(?:\?|#!?)(?:.+&)?v=))))?([0-9A-Za-z_-]+)(?(1).+)?$'
 	_LANG_URL = r'http://www.youtube.com/?hl=en&persist_hl=1&gl=US&persist_gl=1&opt_out_ackd=1'
 	_LOGIN_URL = 'http://www.youtube.com/signup?next=/&gl=US&hl=en'
 	_AGE_URL = 'http://www.youtube.com/verify_age?next_url=/&gl=US&hl=en'
@@ -847,7 +849,7 @@ class YoutubeIE(InfoExtractor):
 				return
 		if 'token' not in video_info:
 			if 'reason' in video_info:
-				self._downloader.trouble(u'ERROR: YouTube said: %s' % video_info['reason'][0])
+				self._downloader.trouble(u'ERROR: YouTube said: %s' % video_info['reason'][0].decode('utf-8'))
 			else:
 				self._downloader.trouble(u'ERROR: "token" parameter not in video info for unknown reason')
 			return
@@ -1020,7 +1022,6 @@ class MetacafeIE(InfoExtractor):
 		self._downloader.increment_downloads()
 
 		simple_title = mobj.group(2).decode('utf-8')
-		video_extension = 'flv'
 
 		# Retrieve video webpage to extract further information
 		request = urllib2.Request('http://www.metacafe.com/watch/%s/' % video_id)
@@ -1034,20 +1035,33 @@ class MetacafeIE(InfoExtractor):
 		# Extract URL, uploader and title from webpage
 		self.report_extraction(video_id)
 		mobj = re.search(r'(?m)&mediaURL=([^&]+)', webpage)
-		if mobj is None:
-			self._downloader.trouble(u'ERROR: unable to extract media URL')
-			return
-		mediaURL = urllib.unquote(mobj.group(1))
-
-		# Extract gdaKey if available
-		mobj = re.search(r'(?m)&gdaKey=(.*?)&', webpage)
-		if mobj is None:
-			video_url = mediaURL
-			#self._downloader.trouble(u'ERROR: unable to extract gdaKey')
-			#return
+		if mobj is not None:
+			mediaURL = urllib.unquote(mobj.group(1))
+			video_extension = mediaURL[-3:]
+			
+			# Extract gdaKey if available
+			mobj = re.search(r'(?m)&gdaKey=(.*?)&', webpage)
+			if mobj is None:
+				video_url = mediaURL
+			else:
+				gdaKey = mobj.group(1)
+				video_url = '%s?__gda__=%s' % (mediaURL, gdaKey)
 		else:
-			gdaKey = mobj.group(1)
-			video_url = '%s?__gda__=%s' % (mediaURL, gdaKey)
+			mobj = re.search(r' name="flashvars" value="(.*?)"', webpage)
+			if mobj is None:
+				self._downloader.trouble(u'ERROR: unable to extract media URL')
+				return
+			vardict = parse_qs(mobj.group(1))
+			if 'mediaData' not in vardict:
+				self._downloader.trouble(u'ERROR: unable to extract media URL')
+				return
+			mobj = re.search(r'"mediaURL":"(http.*?)","key":"(.*?)"', vardict['mediaData'][0])
+			if mobj is None:
+				self._downloader.trouble(u'ERROR: unable to extract media URL')
+				return
+			mediaURL = mobj.group(1).replace('\\/', '/')
+			video_extension = mediaURL[-3:]
+			video_url = '%s?__gda__=%s' % (mediaURL, mobj.group(2))
 
 		mobj = re.search(r'(?im)<title>(.*) - Video</title>', webpage)
 		if mobj is None:
@@ -1144,7 +1158,7 @@ class DailymotionIE(InfoExtractor):
 		video_title = mobj.group(1).decode('utf-8')
 		video_title = sanitize_title(video_title)
 
-		mobj = re.search(r'(?im)<div class="dmco_html owner">.*?<a class="name" href="/.+?">(.+?)</a></div>', webpage)
+		mobj = re.search(r'(?im)<div class="dmco_html owner">.*?<a class="name" href="/.+?">(.+?)</a>', webpage)
 		if mobj is None:
 			self._downloader.trouble(u'ERROR: unable to extract uploader nickname')
 			return
@@ -2087,7 +2101,7 @@ if __name__ == '__main__':
 		# Parse command line
 		parser = optparse.OptionParser(
 			usage='Usage: %prog [options] url...',
-			version='2010.08.04',
+			version='2010.10.03',
 			conflict_handler='resolve',
 		)
 
