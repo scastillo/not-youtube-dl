@@ -40,7 +40,7 @@ import urllib2
 
 # Global constants
 const_video_url_str = 'http://www.youtube.com/watch?v=%s'
-const_video_url_re = re.compile(r'^((?:http://)?(?:www\d*\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=))?([0-9A-Za-z_-]+)(?(1)[&/].*)?$')
+const_video_url_re = re.compile(r'^((?:http://)?(?:\w+\.)?youtube\.com/(?:v/|(?:watch(?:\.php)?)?\?(?:.+&)?v=))?([0-9A-Za-z_-]+)(?(1)[&/].*)?$')
 const_login_url_str = 'http://www.youtube.com/login?next=/watch%%3Fv%%3D%s'
 const_login_post_str = 'current_form=loginForm&next=%%2Fwatch%%3Fv%%3D%s&username=%s&password=%s&action_login=Log+In'
 const_age_url_str = 'http://www.youtube.com/verify_age?next_url=/watch%%3Fv%%3D%s'
@@ -191,7 +191,7 @@ def calc_speed(start, now, bytes):
 
 # Create the command line options parser and parse command line
 cmdl_usage = 'usage: %prog [options] video_url'
-cmdl_version = '2007.06.06'
+cmdl_version = '2007.06.22'
 cmdl_parser = optparse.OptionParser(usage=cmdl_usage, version=cmdl_version, conflict_handler='resolve')
 cmdl_parser.add_option('-h', '--help', action='help', help='print this help text and exit')
 cmdl_parser.add_option('-v', '--version', action='version', help='print program version and exit')
@@ -369,7 +369,7 @@ try:
 		block_size = new_block_size(before, after, dl_bytes)
 
 	if video_len is not None and byte_counter != video_len:
-		error_advice_exit('server did not send the expected ammount of data')
+		error_advice_exit('server did not send the expected amount of data')
 
 	video_file.close()
 	cond_print('done.\n')
