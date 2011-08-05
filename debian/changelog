@@ -1,3 +1,17 @@
+youtube-dl (2011.08.04-1) unstable; urgency=low
+
+  * Imported Upstream version 2011.08.04. Highlight:
+    + Fix changes on Youtube's side. Closes: #636611, #624139, #636547.
+      Thanks for all those that were kind enough to notify me.
+    + Includes robustness fixes for youtube videos, including a fix (dated
+      2011-02-25, which I forgot to include) to cope with videos whose IDs
+      begin with an hyphen. Closes: #632922. Sorry, Matt Kraai, for
+      forgetting about this!
+  * debian: Add a README.source file describing how the package is
+    usually made.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 05 Aug 2011 12:25:55 -0300
+
 youtube-dl (2011.02.25b-1) unstable; urgency=low
 
   * New upstream release. Some highlights:
