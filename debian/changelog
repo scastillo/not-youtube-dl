@@ -1,3 +1,11 @@
+youtube-dl (2011.08.04-2) unstable; urgency=low
+
+  * debian/{clean,youtube-dl.1}: Don't keep old files hanging around.
+  * debian/control: We comply with policy 3.9.2.
+  * debian/rules: Fix references to Perl. Closes: #637107.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 09 Aug 2011 16:38:46 -0300
+
 youtube-dl (2011.08.04-1) unstable; urgency=low
 
   * Imported Upstream version 2011.08.04. Highlight:
