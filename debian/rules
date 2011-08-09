@@ -3,5 +3,5 @@
 	dh $@
 
 override_dh_installman:
-	pod2man debian/youtube-dl.pod > debian/youtube-dl.1
+	pod2man -r "youtube-dl" -c "User commands" debian/youtube-dl.pod > debian/youtube-dl.1
 	dh_installman
