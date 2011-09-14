@@ -1,3 +1,11 @@
+youtube-dl (2011.09.14-1) UNRELEASED; urgency=low
+
+  * Imported Upstream version 2011.09.14
+  * debian/control: Add fields for the VCS system.
+  * cosmetics: Run wrap-and-sort to make the packaging canonical.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 14 Sep 2011 02:36:04 -0300
+
 youtube-dl (2011.08.04-2) unstable; urgency=low
 
   * debian/{clean,youtube-dl.1}: Don't keep old files hanging around.
