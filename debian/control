@@ -21,7 +21,7 @@ Recommends:
  ffmpeg
 Suggests:
  rtmpdump
-Description: download videos from youtube
+Description: downloader of videos from youtube and other sites
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the
  videos served.
