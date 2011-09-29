@@ -31,5 +31,6 @@ Description: downloader of videos from youtube and other sites
  determine the best (or worst) quality video to grab. It supports
  downloading entire playlists and all videos from a given user.
  .
- Currently supported sites are video.google.com, Youtube, Photobucket,
- Dailymotion, Metacafe, Facebook, Yahoo!, and depositfiles.com.
+ Currently supported sites are: Comedy Central, Dailymotion, The Escapist,
+ Facebook, Metacafe, MyVideo, Photobucket, Vimeo, Yahoo!, Youtube, blip.tv,
+ depositfiles.com, and video.google.com.
