@@ -1,10 +1,24 @@
-youtube-dl (2011.09.14-1) UNRELEASED; urgency=low
+youtube-dl (2011.09.27-1) unstable; urgency=low
 
-  * Imported Upstream version 2011.09.14
-  * debian/control: Add fields for the VCS system.
-  * cosmetics: Run wrap-and-sort to make the packaging canonical.
+  * New upstream version. Highlights:
+    + Added support for vimeo (closes: #619023).
+    + Added support for blip.tv.
+    + Added support for myvideo.de.
+    + Added support for comedycentral.
+    + Added support for "The Escapist".
+    + Added ability to download worst quality video (closes:#609328).
+    + Added ability to get available formats for a video (--get-format).
+    + Added support to extract vorbis audio with --extract-audio.
+    + New command line options: --writedescription, --write-info-json,
+      --list-extractors, --skip-download, --get-format.  Not documented in
+      the manpage yet, patches welcome.
+  * debian/control:
+    + Add fields for the VCS system.
+    + cosmetics: Run wrap-and-sort to make the packaging canonical.
+  * debian/patches:
+    + Remove 01-prefer-open-formats.patch, integrated upstream.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 14 Sep 2011 02:36:04 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 29 Sep 2011 14:37:13 -0300
 
 youtube-dl (2011.08.04-2) unstable; urgency=low
 
