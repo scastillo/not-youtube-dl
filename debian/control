@@ -26,9 +26,9 @@ Description: downloader of videos from youtube and other sites
  YouTube.com and other sites that don't provide direct links to the
  videos served.
  .
- youtube-dl allows the user, among other things, to choose a specific
- video quality to download (if available) or let the program
- automatically determine the best quality video to grab. It supports
+ youtube-dl allows the user, among other things, to choose a specific video
+ quality to download (if available) or let the program automatically
+ determine the best (or worst) quality video to grab. It supports
  downloading entire playlists and all videos from a given user.
  .
  Currently supported sites are video.google.com, Youtube, Photobucket,
