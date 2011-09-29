@@ -1,7 +1,7 @@
 # youtube-dl
 
 ## USAGE
-youtube-dl [OPTIONS] URL
+youtube-dl [options] url [url...]
 
 ## DESCRIPTION
 **youtube-dl** is a small command-line program to download videos from
@@ -17,19 +17,33 @@ which means you can modify it, redistribute it or use it however you like.
     -i, --ignore-errors      continue on download errors
     -r, --rate-limit LIMIT   download rate limit (e.g. 50k or 44.6m)
     -R, --retries RETRIES    number of retries (default is 10)
+    --dump-user-agent        display the current browser identification
+    --list-extractors        List all supported extractors and the URLs they
+                             would handle
+
+### Video Selection:
     --playlist-start NUMBER  playlist video to start at (default is 1)
     --playlist-end NUMBER    playlist video to end at (default is last)
-    --dump-user-agent        display the current browser identification
+    --match-title REGEX      download only matching titles (regex or caseless
+                             sub-string)
+    --reject-title REGEX     skip download for matching titles (regex or
+                             caseless sub-string)
 
 ### Filesystem Options:
     -t, --title              use title in file name
     -l, --literal            use literal title in file name
     -A, --auto-number        number downloaded files starting from 00000
-    -o, --output TEMPLATE    output filename template
+    -o, --output TEMPLATE    output filename template. Use %(stitle)s to get the
+                             title, %(uploader)s for the uploader name,
+                             %(autonumber)s to get an automatically incremented
+                             number, %(ext)s for the filename extension, and %%
+                             for a literal percent
     -a, --batch-file FILE    file containing URLs to download ('-' for stdin)
     -w, --no-overwrites      do not overwrite files
     -c, --continue           resume partially downloaded files
-    --cookies FILE           file to dump cookie jar to
+    --no-continue            do not resume partially downloaded files (restart
+                             from beginning)
+    --cookies FILE           file to read cookies from and dump cookie jar in
     --no-part                do not use .part files
     --no-mtime               do not use the Last-modified header to set the file
                              modification time
@@ -38,12 +52,15 @@ which means you can modify it, redistribute it or use it however you like.
 
 ### Verbosity / Simulation Options:
     -q, --quiet              activates quiet mode
-    -s, --simulate           do not download video
+    -s, --simulate           do not download the video and do not write anything
+                             to disk
+    --skip-download          do not download the video
     -g, --get-url            simulate, quiet but print URL
     -e, --get-title          simulate, quiet but print title
     --get-thumbnail          simulate, quiet but print thumbnail URL
     --get-description        simulate, quiet but print video description
     --get-filename           simulate, quiet but print output filename
+    --get-format             simulate, quiet but print output format
     --no-progress            do not print progress bar
     --console-title          display progress in console titlebar
 
@@ -60,7 +77,10 @@ which means you can modify it, redistribute it or use it however you like.
 ### Post-processing Options:
     --extract-audio          convert video files to audio-only files (requires
                              ffmpeg and ffprobe)
-    --audio-format FORMAT    "best", "aac" or "mp3"; best by default
+    --audio-format FORMAT    "best", "aac", "vorbis" or "mp3"; best by default
+    --audio-quality QUALITY  ffmpeg audio bitrate specification, 128k by default
+    -k, --keep-video         keeps the video file on disk after the post-
+                             processing; the video is erased by default
 
 ## FAQ
 
@@ -68,7 +88,7 @@ which means you can modify it, redistribute it or use it however you like.
 
 Most people asking this question are not aware that youtube-dl now defaults to downloading the highest available quality as reported by YouTube, which will be 1080p or 720p in some cases, so you no longer need the -b option. For some specific videos, maybe YouTube does not report them to be available in a specific high quality format you''re interested in. In that case, simply request it with the -f option and youtube-dl will try to download it.
 
-### I get HTTP error 402 when trying to download a video. What''s this?
+### I get HTTP error 402 when trying to download a video. What's this?
 
 Apparently YouTube requires you to pass a CAPTCHA test if you download too much. We''re [considering to provide a way to let you solve the CAPTCHA](https://github.com/rg3/youtube-dl/issues/154), but at the moment, your best course of action is pointing a webbrowser to the youtube URL, solving the CAPTCHA, and restart youtube-dl.
 
