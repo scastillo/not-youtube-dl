@@ -116,6 +116,9 @@ Note that not all videos are available in all formats and that other
 sites supported by B<youtube-dl> may have different conventions for
 their video formats.
 
+By default, youtube-dl will download the best available format; if you want
+to download the worst format to save bandwidth and time, use C<-f> I<worst>.
+
 =item --all-formats
 
 Downloads all formats for which a video may be available.
