@@ -1,3 +1,9 @@
+youtube-dl (2011.10.19-2) unstable; urgency=low
+
+  * Add patch to fix downloading from facebook.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 22 Oct 2011 01:16:31 -0200
+
 youtube-dl (2011.10.19-1) unstable; urgency=low
 
   * Imported Upstream version 2011.10.19. Highlights:
