@@ -1,3 +1,13 @@
+youtube-dl (2011.10.19-3) unstable; urgency=low
+
+  * debian/control:
+   + Add python to B-D-Indep. Closes: #647407.
+     Thanks to Felix Geyer, Daniel T Chen, and Simon Paillard.
+   + Fix capitalization of YouTube. Closes: #649111.
+     Thanks to Filipus Klutiero.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 18 Nov 2011 19:28:01 -0200
+
 youtube-dl (2011.10.19-2) unstable; urgency=low
 
   * Add patch to fix downloading from facebook.
