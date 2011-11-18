@@ -22,7 +22,7 @@ Recommends:
  ffmpeg
 Suggests:
  rtmpdump
-Description: downloader of videos from youtube and other sites
+Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the
  videos served.
@@ -34,4 +34,4 @@ Description: downloader of videos from youtube and other sites
  .
  Currently supported sites are: CollegeHumor, Comedy Central, Dailymotion,
  Facebook, Metacafe, MyVideo, Photobucket, The Escapist, Vimeo, Yahoo!,
- Youtube, blip.tv, depositfiles.com, video.google.com, xvideos.
+ YouTube, blip.tv, depositfiles.com, video.google.com, xvideos.
