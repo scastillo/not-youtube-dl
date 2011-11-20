@@ -1,3 +1,10 @@
+youtube-dl (2011.10.19-4) unstable; urgency=low
+
+  * debian/{rules,control}:
+    + Remove build-dependency on python, as that's not really needed.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 20 Nov 2011 10:22:04 -0200
+
 youtube-dl (2011.10.19-3) unstable; urgency=low
 
   * debian/control:
