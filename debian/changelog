@@ -1,3 +1,13 @@
+youtube-dl (2012.01.05-1) UNRELEASED; urgency=low
+
+  * Imported Upstream version 2012.01.05.
+    + This version supports configuration files. (Closes: #429557).
+  * debian/patches: Drop patches already included upstream.
+  * debian/control: Add support for earlier versions of ffmpeg/ffprobe.
+    Thanks to Uwe Kleine-König for the suggestion. (Closes: #651060)
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 06 Jan 2012 13:48:47 -0200
+
 youtube-dl (2011.10.19-4) unstable; urgency=low
 
   * debian/{rules,control}:
