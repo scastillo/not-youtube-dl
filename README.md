@@ -28,6 +28,7 @@ which means you can modify it, redistribute it or use it however you like.
                              sub-string)
     --reject-title REGEX     skip download for matching titles (regex or
                              caseless sub-string)
+    --max-downloads NUMBER   Abort after downloading NUMBER files
 
 ### Filesystem Options:
     -t, --title              use title in file name
@@ -36,8 +37,10 @@ which means you can modify it, redistribute it or use it however you like.
     -o, --output TEMPLATE    output filename template. Use %(stitle)s to get the
                              title, %(uploader)s for the uploader name,
                              %(autonumber)s to get an automatically incremented
-                             number, %(ext)s for the filename extension, and %%
-                             for a literal percent
+                             number, %(ext)s for the filename extension,
+                             %(upload_date)s for the upload date (YYYYMMDD), and
+                             %% for a literal percent. Use - to output to
+                             stdout.
     -a, --batch-file FILE    file containing URLs to download ('-' for stdin)
     -w, --no-overwrites      do not overwrite files
     -c, --continue           resume partially downloaded files
@@ -67,6 +70,8 @@ which means you can modify it, redistribute it or use it however you like.
 ### Video Format Options:
     -f, --format FORMAT      video format code
     --all-formats            download all available video formats
+    --prefer-free-formats    prefer free video formats unless a specific one is
+                             requested
     --max-quality FORMAT     highest quality format to download
     -F, --list-formats       list all available formats (currently youtube only)
 
@@ -78,7 +83,8 @@ which means you can modify it, redistribute it or use it however you like.
 ### Post-processing Options:
     --extract-audio          convert video files to audio-only files (requires
                              ffmpeg and ffprobe)
-    --audio-format FORMAT    "best", "aac", "vorbis" or "mp3"; best by default
+    --audio-format FORMAT    "best", "aac", "vorbis", "mp3", "m4a", or "wav";
+                             best by default
     --audio-quality QUALITY  ffmpeg audio bitrate specification, 128k by default
     -k, --keep-video         keeps the video file on disk after the post-
                              processing; the video is erased by default
