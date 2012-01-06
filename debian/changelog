@@ -16,6 +16,7 @@ youtube-dl (2012.01.05-1) unstable; urgency=low
   * debian/patches: Drop patches already included upstream.
   * debian/control: Add support for earlier versions of ffmpeg/ffprobe.
     Thanks to Uwe Kleine-König for the suggestion. (Closes: #651060)
+  * debian/control: Update list of supported sites.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 06 Jan 2012 13:48:47 -0200
 
