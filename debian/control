@@ -34,4 +34,5 @@ Description: downloader of videos from YouTube and other sites
  .
  Currently supported sites are: CollegeHumor, Comedy Central, Dailymotion,
  Facebook, Metacafe, MyVideo, Photobucket, The Escapist, Vimeo, Yahoo!,
- YouTube, blip.tv, depositfiles.com, video.google.com, xvideos.
+ YouTube, blip.tv, depositfiles.com, video.google.com, xvideos, Soundcloud,
+ InfoQ, Mixcloud, OpenClassRoom.
