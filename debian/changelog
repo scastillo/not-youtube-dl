@@ -1,7 +1,18 @@
-youtube-dl (2012.01.05-1) UNRELEASED; urgency=low
+youtube-dl (2012.01.05-1) unstable; urgency=low
 
-  * Imported Upstream version 2012.01.05.
-    + This version supports configuration files. (Closes: #429557).
+  * Imported Upstream version 2012.01.05. Highlights:
+    + Fixed duplicated downloads from YouTube user page.
+    + Support configuration files. (Closes: #429557).
+    + Added support for Soundcloud.
+    + Added support for InfoQ.
+    + Added support for Mixcloud.
+    + Added support for OpenClassRoom.
+    + Support aac audio in mp4 container (as .m4a files).
+    + Support wav audio output.
+    + Added --max-downloads option. Not documented in the manpage yet,
+      patches welcome.
+    + Added --prefer-free-formats option. Not documented in the manpage
+      yet, patches welcome.
   * debian/patches: Drop patches already included upstream.
   * debian/control: Add support for earlier versions of ffmpeg/ffprobe.
     Thanks to Uwe Kleine-König for the suggestion. (Closes: #651060)
