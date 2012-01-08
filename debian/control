@@ -19,8 +19,7 @@ Depends:
  ${misc:Depends}
 Recommends:
  ffmpeg,
- ffmpeg (>= 4:0.6) | ffprobe
-Suggests:
+ ffmpeg (>= 4:0.6) | ffprobe,
  rtmpdump
 Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
