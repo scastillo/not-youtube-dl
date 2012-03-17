@@ -1,7 +1,7 @@
 # -*- pod -*-
 =head1 NAME
 
-youtube-dl - download videos from youtube.com
+youtube-dl - download videos from youtube.com or other video platforms
 
 =head1 SYNOPSIS
 
@@ -9,7 +9,13 @@ youtube-dl - download videos from youtube.com
 
 =head1 DESCRIPTION
 
-youtube-dl is a script to download videos from youtube.com.
+youtube-dl is a script to download videos from youtube.com or any other of
+the supported video platforms.
+
+Currently supported sites are: CollegeHumor, Comedy Central, Dailymotion,
+Facebook, Metacafe, MyVideo, Photobucket, The Escapist, Vimeo, Yahoo!,
+YouTube, blip.tv, depositfiles.com, video.google.com, xvideos, Soundcloud,
+InfoQ, Mixcloud, OpenClassRoom.
 
 Once it is installed in your system, you should be able to call it from
 the command line. Usage instructions are easy. Use youtube-dl followed
