@@ -10,8 +10,9 @@ youtube-dl (2012.02.27-1) unstable; urgency=low
   * Don't automatically sign tags with git-buildpackage.
   * Update the manpage to cite which sites youtube-dl supports.
     Thanks to Adrian Knoth for the patch (Closes: #657978)
+  * Update Standards-Version to 3.9.3 (no other changes).
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sat, 17 Mar 2012 13:32:28 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 17 Mar 2012 13:41:15 -0300
 
 youtube-dl (2012.01.05-2) unstable; urgency=low
 
