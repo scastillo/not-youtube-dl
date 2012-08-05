@@ -1,0 +1,35 @@
+From 4db27f7baedb3896aa5f3b2d4e57d959c8eeeb50 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Rog=C3=A9rio=20Brito?= <rbrito@ime.usp.br>
+Date: Sun, 5 Aug 2012 01:12:59 -0300
+Subject: [PATCH] Support downloading Youtube videos via tube.majestyc.net
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+A user requested (in Debian's bug tracking system) that support for
+tube.majestyc.net, a frontend for Youtube with accessibility functions
+(and other support for other assistive technologies), be added.
+
+This patch adds support for this.
+
+Signed-off-by: Rogério Brito <rbrito@ime.usp.br>
+---
+ youtube_dl/InfoExtractors.py |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/youtube_dl/InfoExtractors.py b/youtube_dl/InfoExtractors.py
+index ddb4aa1..9843215 100644
+--- a/youtube_dl/InfoExtractors.py
++++ b/youtube_dl/InfoExtractors.py
+@@ -95,7 +95,7 @@ class InfoExtractor(object):
+ class YoutubeIE(InfoExtractor):
+ 	"""Information extractor for youtube.com."""
+ 
+-	_VALID_URL = r'^((?:https?://)?(?:youtu\.be/|(?:\w+\.)?youtube(?:-nocookie)?\.com/)(?!view_play_list|my_playlists|artist|playlist)(?:(?:(?:v|embed|e)/)|(?:(?:watch(?:_popup)?(?:\.php)?)?(?:\?|#!?)(?:.+&)?v=))?)?([0-9A-Za-z_-]+)(?(1).+)?$'
++	_VALID_URL = r'^((?:https?://)?(?:youtu\.be/|(?:\w+\.)?youtube(?:-nocookie)?\.com|tube.majestyc.net/)(?!view_play_list|my_playlists|artist|playlist)(?:(?:(?:v|embed|e)/)|(?:(?:watch(?:_popup)?(?:\.php)?)?(?:\?|#!?)(?:.+&)?v=))?)?([0-9A-Za-z_-]+)(?(1).+)?$'
+ 	_LANG_URL = r'http://www.youtube.com/?hl=en&persist_hl=1&gl=US&persist_gl=1&opt_out_ackd=1'
+ 	_LOGIN_URL = 'https://www.youtube.com/signup?next=/&gl=US&hl=en'
+ 	_AGE_URL = 'http://www.youtube.com/verify_age?next_url=/&gl=US&hl=en'
+-- 
+1.7.10.4
+
