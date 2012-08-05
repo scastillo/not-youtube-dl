@@ -6,8 +6,6 @@ override_dh_installman:
 	pod2man -r "youtube-dl" -c "User commands" debian/youtube-dl.pod > debian/youtube-dl.1
 	dh_installman
 
-override_dh_auto_build:
-
 override_dh_python2:
 
 override_dh_pysupport:
