@@ -1,3 +1,10 @@
+youtube-dl (2012.02.27+gita171dbf-2) unstable; urgency=low
+
+  * Disable downloading from tube.majestyc.net for the moment.
+    (Closes: #683962)
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 05 Aug 2012 16:50:15 -0300
+
 youtube-dl (2012.02.27+gita171dbf-1) unstable; urgency=low
 
   * Imported Upstream version 2012.02.27+gita171dbf. Highlights:
