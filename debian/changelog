@@ -1,3 +1,19 @@
+youtube-dl (2012.02.27+gita171dbf-1) unstable; urgency=low
+
+  * Imported Upstream version 2012.02.27+gita171dbf. Highlights:
+    + Fixes for sites changing layouts:
+      - Vimeo. Closes: #682865.
+      - blip.tv. Closes: #671167.
+    + Redirects are now supported. Closes: #597797.
+  * debian/control:
+    + Allow use of libav-tools for transcoding instead of ffmpeg.
+    + Build-Depend-Indep on zip for upstream's build system.
+    + Bump depends on python >= 2.6, for new "zipped executables".
+  * debian/rules: We now have something to make.
+  * debian/patches: Add support for tube.majestyc.net. Closes: #612586.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 05 Aug 2012 01:45:05 -0300
+
 youtube-dl (2012.02.27-1) unstable; urgency=low
 
   * Imported Upstream version 2012.02.27. Highlights:
