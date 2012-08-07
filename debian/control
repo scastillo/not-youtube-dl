@@ -6,6 +6,7 @@ Build-Depends:
  debhelper (>= 7.0.50~)
 Build-Depends-Indep:
  perl,
+ python,
  zip
 Standards-Version: 3.9.3
 DM-Upload-Allowed: yes
