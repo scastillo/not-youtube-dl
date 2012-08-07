@@ -1,3 +1,9 @@
+youtube-dl (2012.02.27+gita171dbf-3) unstable; urgency=low
+
+  * Add python to build-depends-indep. (Closes: #647407)
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 06 Aug 2012 22:11:25 -0300
+
 youtube-dl (2012.02.27+gita171dbf-2) unstable; urgency=low
 
   * Disable downloading from tube.majestyc.net for the moment.
