@@ -1,3 +1,15 @@
+youtube-dl (2012.09.27-1) unstable; urgency=low
+
+  * Imported Upstream version 2012.09.27:
+    + Fixes changes in youtube that prevented youtube-dl from working.
+      Thanks Alex Wauck and Josh Triplett for notifying me of the breakage.
+      (Closes: #688997)
+    + Incorporates my patch for downloading from tube.majestyc.net.
+      (Closes: #683962)
+  * debian/patches: Remove unneeded patches.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 28 Sep 2012 02:27:37 -0300
+
 youtube-dl (2012.02.27+gita171dbf-3) unstable; urgency=low
 
   * Add python to build-depends-indep. (Closes: #647407)
