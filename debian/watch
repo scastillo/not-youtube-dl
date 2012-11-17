@@ -1,2 +1,3 @@
 version=3
-http://githubredir.debian.net/github/rg3/youtube-dl (?:.*/)?(\d+\.\d+\.\d+)\.tar\.gz
+opts=dversionmangle=s/\+dfsg\d+$// \
+  http://githubredir.debian.net/github/rg3/youtube-dl (?:.*/)?(\d+\.\d+\.\d+)\.tar\.gz
