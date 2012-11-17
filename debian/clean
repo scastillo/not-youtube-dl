@@ -1,1 +1,2 @@
 debian/youtube-dl.1
+youtube_dl/*.pyc
