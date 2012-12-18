@@ -2,8 +2,4 @@
 %:
 	dh $@
 
-override_dh_python2:
-
-override_dh_pysupport:
-
 override_dh_auto_test:
