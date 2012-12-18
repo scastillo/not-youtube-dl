@@ -1,0 +1,14 @@
+__youtube-dl()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    opts="--help --version --update --ignore-errors --rate-limit --retries --buffer-size --no-resize-buffer --dump-user-agent --user-agent --list-extractors --playlist-start --playlist-end --match-title --reject-title --max-downloads --title --id --literal --auto-number --output --restrict-filenames --batch-file --no-overwrites --continue --no-continue --cookies --no-part --no-mtime --write-description --write-info-json --quiet --simulate --skip-download --get-url --get-title --get-thumbnail --get-description --get-filename --get-format --no-progress --console-title --verbose --format --all-formats --prefer-free-formats --max-quality --list-formats --write-srt --srt-lang --username --password --netrc --extract-audio --audio-format --audio-quality --keep-video"
+
+    if [[ ${cur} == * ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F __youtube-dl youtube-dl

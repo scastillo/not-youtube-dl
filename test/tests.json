@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Youtube",
+    "url":  "http://www.youtube.com/watch?v=BaW_jenozKc",
+    "file":  "BaW_jenozKc.mp4"
+  },
+  {
+    "name": "Dailymotion",
+    "md5":  "392c4b85a60a90dc4792da41ce3144eb",
+    "url":  "http://www.dailymotion.com/video/x33vw9_tutoriel-de-youtubeur-dl-des-video_tech",
+    "file":  "x33vw9.mp4"
+  },
+  {
+    "name": "Metacafe",
+    "addIEs": ["Youtube"],
+    "url":  "http://www.metacafe.com/watch/yt-_aUehQsCQtM/the_electric_company_short_i_pbs_kids_go/",
+    "file":  "_aUehQsCQtM.flv"
+  },
+  {
+    "name": "BlipTV",
+    "md5":  "b2d849efcf7ee18917e4b4d9ff37cafe",
+    "url":  "http://blip.tv/cbr/cbr-exclusive-gotham-city-imposters-bats-vs-jokerz-short-3-5796352",
+    "file":  "5779306.m4v"
+  },
+  {
+    "name": "XVideos",
+    "md5":  "1d0c835822f0a71a7bf011855db929d0",
+    "url":  "http://www.xvideos.com/video939581/funny_porns_by_s_-1",
+    "file":  "939581.flv"
+  },
+  {
+    "name": "Vimeo",
+    "md5":  "60540a4ec7cc378ec84b919c0aed5023",
+    "url":  "http://vimeo.com/14160053",
+    "file": "14160053.mp4"
+  },
+  {
+    "name": "Soundcloud",
+    "md5":  "ebef0a451b909710ed1d7787dddbf0d7",
+    "url":  "http://soundcloud.com/ethmusic/lostin-powers-she-so-heavy",
+    "file":  "62986583.mp3"
+  },
+  {
+    "name": "StanfordOpenClassroom",
+    "md5":  "544a9468546059d4e80d76265b0443b8",
+    "url":  "http://openclassroom.stanford.edu/MainFolder/VideoPage.php?course=PracticalUnix&video=intro-environment&speed=100",
+    "file":  "PracticalUnix_intro-environment.mp4"
+  },
+  {
+    "name": "XNXX",
+    "md5":  "0831677e2b4761795f68d417e0b7b445",
+    "url":  "http://video.xnxx.com/video1135332/lida_naked_funny_actress_5_",
+    "file":  "1135332.flv"
+  },
+  {
+    "name": "Youku",
+    "url": "http://v.youku.com/v_show/id_XNDgyMDQ2NTQw.html",
+    "file": "XNDgyMDQ2NTQw_part00.flv",
+    "md5": "ffe3f2e435663dc2d1eea34faeff5b5b",
+    "params": { "test": false }
+  }
+]
