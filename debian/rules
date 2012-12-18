@@ -9,26 +9,4 @@ override_dh_installman:
 override_dh_python2:
 
 override_dh_pysupport:
-
-
-FULL_VERSION	:= $(shell dpkg-parsechangelog | grep ^Version: | sed -e 's/^.*: //g')
-TAR_VERSION	:= $(shell echo $(FULL_VERSION) | sed -e 's/-.*//g')
-SOURCE		:= $(shell dpkg-parsechangelog | grep ^Source: | sed -e 's/^.*: //g')
-
-ORIGDIR	= $(SOURCE)-$(TAR_VERSION)
-TARNAME	= $(SOURCE)_$(TAR_VERSION).orig.tar.gz
-
-get-orig-source:
-	rm -rf repack
-	mkdir -p repack/$(ORIGDIR)
-
-	uscan --noconf --force-download --rename --download-current-version --destdir=repack/
-	cd repack; tar zxf $(TARNAME)
-
-	# Remove problematic files
-	rm -f repack/$(ORIGDIR)/youtube-dl.exe
-
-	tar -C repack --numeric-owner --owner 0 --group 0 -czf ../$(TARNAME) $(ORIGDIR)
-	rm -rf repack
-
 override_dh_auto_test:
