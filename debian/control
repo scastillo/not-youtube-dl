@@ -3,7 +3,8 @@ Section: web
 Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
- debhelper (>= 7.0.50~)
+ debhelper (>= 7.0.50~),
+ pandoc
 Build-Depends-Indep:
  perl,
  python,
