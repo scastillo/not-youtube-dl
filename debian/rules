@@ -2,4 +2,7 @@
 %:
 	dh $@
 
+override_dh_auto_install:
+	dh_install
+
 override_dh_auto_test:
