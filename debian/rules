@@ -30,3 +30,5 @@ get-orig-source:
 
 	tar -C repack --numeric-owner --owner 0 --group 0 -czf ../$(TARNAME) $(ORIGDIR)
 	rm -rf repack
+
+override_dh_auto_test:
