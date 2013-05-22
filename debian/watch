@@ -1,2 +1,3 @@
 version=3
-  https://github.com/rg3/youtube-dl/downloads/ /downloads/rg3/youtube-dl/youtube-dl\.(\d+\.\d+\.\d+)\.tar\.gz
+opts=dversionmangle=s/\+dfsg\d*$// \
+https://github.com/rg3/youtube-dl/tags .*/(?:v||youtube-dl-)(\d.*)\.(?:tgz|tbz2|txz|tar\.(?:gz|bz2|xz))
