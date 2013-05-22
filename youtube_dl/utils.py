@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import errno
 import gzip
 import io
+import json
 import locale
 import os
 import re
 import sys
+import traceback
 import zlib
 import email.utils
 import json
+import datetime
 
 try:
     import urllib.request as compat_urllib_request
@@ -50,6 +54,12 @@ try:
     import http.client as compat_http_client
 except ImportError: # Python 2
     import httplib as compat_http_client
+
+try:
+    from subprocess import DEVNULL
+    compat_subprocess_get_DEVNULL = lambda: DEVNULL
+except ImportError:
+    compat_subprocess_get_DEVNULL = lambda: open(os.path.devnull, 'w')
 
 try:
     from urllib.parse import parse_qs as compat_parse_qs
@@ -147,6 +157,7 @@ std_headers = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-us,en;q=0.5',
 }
+
 def preferredencoding():
     """Get preferred encoding.
 
@@ -168,6 +179,17 @@ else:
     def compat_print(s):
         assert type(s) == type(u'')
         print(s)
+
+# In Python 2.x, json.dump expects a bytestream.
+# In Python 3.x, it writes to a character stream
+if sys.version_info < (3,0):
+    def write_json_file(obj, fn):
+        with open(fn, 'wb') as f:
+            json.dump(obj, f)
+else:
+    def write_json_file(obj, fn):
+        with open(fn, 'w', encoding='utf-8') as f:
+            json.dump(obj, f)
 
 def htmlentity_transform(matchobj):
     """Transforms an HTML entity to a character.
@@ -195,10 +217,11 @@ def htmlentity_transform(matchobj):
     return (u'&%s;' % entity)
 
 compat_html_parser.locatestarttagend = re.compile(r"""<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s+(?:(?<=['"\s])[^\s/>][^\s/=>]*(?:\s*=+\s*(?:'[^']*'|"[^"]*"|(?!['"])[^>\s]*))?\s*)*)?\s*""", re.VERBOSE) # backport bugfix
-class IDParser(compat_html_parser.HTMLParser):
-    """Modified HTMLParser that isolates a tag with the specified id"""
-    def __init__(self, id):
-        self.id = id
+class AttrParser(compat_html_parser.HTMLParser):
+    """Modified HTMLParser that isolates a tag with the specified attribute"""
+    def __init__(self, attribute, value):
+        self.attribute = attribute
+        self.value = value
         self.result = None
         self.started = False
         self.depth = {}
@@ -223,7 +246,7 @@ class IDParser(compat_html_parser.HTMLParser):
         attrs = dict(attrs)
         if self.started:
             self.find_startpos(None)
-        if 'id' in attrs and attrs['id'] == self.id:
+        if self.attribute in attrs and attrs[self.attribute] == self.value:
             self.result = [tag]
             self.started = True
             self.watch_startpos = True
@@ -259,10 +282,20 @@ class IDParser(compat_html_parser.HTMLParser):
             lines[-1] = lines[-1][:self.result[2][1]-self.result[1][1]]
         lines[-1] = lines[-1][:self.result[2][1]]
         return '\n'.join(lines).strip()
+# Hack for https://github.com/rg3/youtube-dl/issues/662
+if sys.version_info < (2, 7, 3):
+    AttrParser.parse_endtag = (lambda self, i:
+        i + len("</scr'+'ipt>")
+        if self.rawdata[i:].startswith("</scr'+'ipt>")
+        else compat_html_parser.HTMLParser.parse_endtag(self, i))
 
 def get_element_by_id(id, html):
-    """Return the content of the tag with the specified id in the passed HTML document"""
-    parser = IDParser(id)
+    """Return the content of the tag with the specified ID in the passed HTML document"""
+    return get_element_by_attribute("id", id, html)
+
+def get_element_by_attribute(attribute, value, html):
+    """Return the content of the tag with the specified attribute in the passed HTML document"""
+    parser = AttrParser(attribute, value)
     try:
         parser.loads(html)
     except compat_html_parser.HTMLParseError:
@@ -274,12 +307,13 @@ def clean_html(html):
     """Clean an HTML snippet into a readable string"""
     # Newline vs <br />
     html = html.replace('\n', ' ')
-    html = re.sub('\s*<\s*br\s*/?\s*>\s*', '\n', html)
+    html = re.sub(r'\s*<\s*br\s*/?\s*>\s*', '\n', html)
+    html = re.sub(r'<\s*/\s*p\s*>\s*<\s*p[^>]*>', '\n', html)
     # Strip html tags
     html = re.sub('<.*?>', '', html)
     # Replace html entities
     html = unescapeHTML(html)
-    return html
+    return html.strip()
 
 
 def sanitize_open(filename, open_mode):
@@ -297,16 +331,24 @@ def sanitize_open(filename, open_mode):
             if sys.platform == 'win32':
                 import msvcrt
                 msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-            return (sys.stdout, filename)
+            return (sys.stdout.buffer if hasattr(sys.stdout, 'buffer') else sys.stdout, filename)
         stream = open(encodeFilename(filename), open_mode)
         return (stream, filename)
     except (IOError, OSError) as err:
-        # In case of error, try to remove win32 forbidden chars
-        filename = re.sub(u'[/<>:"\\|\\\\?\\*]', u'#', filename)
+        if err.errno in (errno.EACCES,):
+            raise
 
-        # An exception here should be caught in the caller
-        stream = open(encodeFilename(filename), open_mode)
-        return (stream, filename)
+        # In case of error, try to remove win32 forbidden chars
+        alt_filename = os.path.join(
+                        re.sub(u'[/<>:"\\|\\\\?\\*]', u'#', path_part)
+                        for path_part in os.path.split(filename)
+                       )
+        if alt_filename == filename:
+            raise
+        else:
+            # An exception here should be caught in the caller
+            stream = open(encodeFilename(filename), open_mode)
+            return (stream, alt_filename)
 
 
 def timeconvert(timestr):
@@ -383,7 +425,55 @@ def encodeFilename(s):
         # match Windows 9x series as well. Besides, NT 4 is obsolete.)
         return s
     else:
-        return s.encode(sys.getfilesystemencoding(), 'ignore')
+        encoding = sys.getfilesystemencoding()
+        if encoding is None:
+            encoding = 'utf-8'
+        return s.encode(encoding, 'ignore')
+
+def decodeOption(optval):
+    if optval is None:
+        return optval
+    if isinstance(optval, bytes):
+        optval = optval.decode(preferredencoding())
+
+    assert isinstance(optval, compat_str)
+    return optval
+
+def formatSeconds(secs):
+    if secs > 3600:
+        return '%d:%02d:%02d' % (secs // 3600, (secs % 3600) // 60, secs % 60)
+    elif secs > 60:
+        return '%d:%02d' % (secs // 60, secs % 60)
+    else:
+        return '%d' % secs
+
+def make_HTTPS_handler(opts):
+    if sys.version_info < (3,2):
+        # Python's 2.x handler is very simplistic
+        return compat_urllib_request.HTTPSHandler()
+    else:
+        import ssl
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.set_default_verify_paths()
+        
+        context.verify_mode = (ssl.CERT_NONE
+                               if opts.no_check_certificate
+                               else ssl.CERT_REQUIRED)
+        return compat_urllib_request.HTTPSHandler(context=context)
+
+class ExtractorError(Exception):
+    """Error during info extraction."""
+    def __init__(self, msg, tb=None):
+        """ tb, if given, is the original traceback (so that it can be printed out). """
+        super(ExtractorError, self).__init__(msg)
+        self.traceback = tb
+        self.exc_info = sys.exc_info()  # preserve original exception
+
+    def format_traceback(self):
+        if self.traceback is None:
+            return None
+        return u''.join(traceback.format_tb(self.traceback))
+
 
 class DownloadError(Exception):
     """Download Error exception.
@@ -392,7 +482,10 @@ class DownloadError(Exception):
     configured to continue on errors. They will contain the appropriate
     error message.
     """
-    pass
+    def __init__(self, msg, exc_info=None):
+        """ exc_info, if given, is the original exception that caused the trouble (as returned by sys.exc_info()). """
+        super(DownloadError, self).__init__(msg)
+        self.exc_info = exc_info
 
 
 class SameFileError(Exception):
@@ -410,7 +503,8 @@ class PostProcessingError(Exception):
     This exception may be raised by PostProcessor's .run() method to
     indicate an error in the postprocessing task.
     """
-    pass
+    def __init__(self, msg):
+        self.msg = msg
 
 class MaxDownloadsReached(Exception):
     """ --max-downloads limit has been reached. """
@@ -440,14 +534,6 @@ class ContentTooShortError(Exception):
     def __init__(self, downloaded, expected):
         self.downloaded = downloaded
         self.expected = expected
-
-
-class Trouble(Exception):
-    """Trouble helper exception
-
-    This is an exception to be handled with
-    FileDownloader.trouble
-    """
 
 class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
     """Handler for HTTP requests and responses.
@@ -483,14 +569,19 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
         return ret
 
     def http_request(self, req):
-        for h in std_headers:
+        for h,v in std_headers.items():
             if h in req.headers:
                 del req.headers[h]
-            req.add_header(h, std_headers[h])
+            req.add_header(h, v)
         if 'Youtubedl-no-compression' in req.headers:
             if 'Accept-encoding' in req.headers:
                 del req.headers['Accept-encoding']
             del req.headers['Youtubedl-no-compression']
+        if 'Youtubedl-user-agent' in req.headers:
+            if 'User-agent' in req.headers:
+                del req.headers['User-agent']
+            req.headers['User-agent'] = req.headers['Youtubedl-user-agent']
+            del req.headers['Youtubedl-user-agent']
         return req
 
     def http_response(self, req, resp):
@@ -509,3 +600,70 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
 
     https_request = http_request
     https_response = http_response
+
+def unified_strdate(date_str):
+    """Return a string with the date in the format YYYYMMDD"""
+    upload_date = None
+    #Replace commas
+    date_str = date_str.replace(',',' ')
+    # %z (UTC offset) is only supported in python>=3.2
+    date_str = re.sub(r' (\+|-)[\d]*$', '', date_str)
+    format_expressions = ['%d %B %Y', '%B %d %Y', '%b %d %Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d %H:%M:%S']
+    for expression in format_expressions:
+        try:
+            upload_date = datetime.datetime.strptime(date_str, expression).strftime('%Y%m%d')
+        except:
+            pass
+    return upload_date
+
+def date_from_str(date_str):
+    """
+    Return a datetime object from a string in the format YYYYMMDD or
+    (now|today)[+-][0-9](day|week|month|year)(s)?"""
+    today = datetime.date.today()
+    if date_str == 'now'or date_str == 'today':
+        return today
+    match = re.match('(now|today)(?P<sign>[+-])(?P<time>\d+)(?P<unit>day|week|month|year)(s)?', date_str)
+    if match is not None:
+        sign = match.group('sign')
+        time = int(match.group('time'))
+        if sign == '-':
+            time = -time
+        unit = match.group('unit')
+        #A bad aproximation?
+        if unit == 'month':
+            unit = 'day'
+            time *= 30
+        elif unit == 'year':
+            unit = 'day'
+            time *= 365
+        unit += 's'
+        delta = datetime.timedelta(**{unit: time})
+        return today + delta
+    return datetime.datetime.strptime(date_str, "%Y%m%d").date()
+    
+class DateRange(object):
+    """Represents a time interval between two dates"""
+    def __init__(self, start=None, end=None):
+        """start and end must be strings in the format accepted by date"""
+        if start is not None:
+            self.start = date_from_str(start)
+        else:
+            self.start = datetime.datetime.min.date()
+        if end is not None:
+            self.end = date_from_str(end)
+        else:
+            self.end = datetime.datetime.max.date()
+        if self.start > self.end:
+            raise ValueError('Date range: "%s" , the start date must be before the end date' % self)
+    @classmethod
+    def day(cls, day):
+        """Returns a range that only contains the given day"""
+        return cls(day,day)
+    def __contains__(self, date):
+        """Check if the date is in the range"""
+        if not isinstance(date, datetime.date):
+            date = date_from_str(date)
+        return self.start <= date <= self.end
+    def __str__(self):
+        return '%s - %s' % ( self.start.isoformat(), self.end.isoformat())
