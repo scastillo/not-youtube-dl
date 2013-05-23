@@ -29,12 +29,16 @@
     "simulate": false, 
     "skip_download": false, 
     "subtitleslang": null, 
+    "subtitlesformat": "srt",
     "test": true, 
     "updatetime": true, 
     "usenetrc": false, 
     "username": null, 
     "verbose": true, 
     "writedescription": false, 
-    "writeinfojson": false, 
-    "writesubtitles": false
+    "writeinfojson": true, 
+    "writesubtitles": false,
+    "onlysubtitles": false,
+    "allsubtitles": false,
+    "listssubtitles": false
 }
