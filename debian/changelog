@@ -1,12 +1,13 @@
-youtube-dl (2013.05.14-1~1.gbpc7b4d7) UNRELEASED; urgency=low
+youtube-dl (2013.05.14-1~2.gbpc924a4) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @c7b4d76a372777e3af76ecf9966a8ab9952e52f4 **
+  ** SNAPSHOT build @c924a4596d685b1d61cf7f28e242e2e492678b1f **
 
   * Imported Upstream version 2013.05.14
   * debian/watch:
     + Update to track github tags. Thanks to Bart Martens for the rewrite.
   * debian/README.source:
     + Update my own instructions.
+  * Imported Upstream version 2013.05.23
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 May 2013 21:01:15 -0300
 
