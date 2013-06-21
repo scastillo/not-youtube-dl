@@ -53,8 +53,7 @@ class TestYoutubeLists(unittest.TestCase):
         dl = FakeDownloader()
         ie = YoutubePlaylistIE(dl)
         result = ie.extract('PLBB231211A4F62143')[0]
-        self.assertEqual(result['title'], 'Team Fortress 2')
-        self.assertTrue(len(result['entries']) > 40)
+        self.assertTrue(len(result['entries']) > 25)
 
     def test_youtube_playlist_long(self):
         dl = FakeDownloader()
@@ -104,6 +103,12 @@ class TestYoutubeLists(unittest.TestCase):
         ie = YoutubeUserIE(dl)
         result = ie.extract('https://www.youtube.com/user/TheLinuxFoundation')[0]
         self.assertTrue(len(result['entries']) >= 320)
+
+    def test_youtube_safe_search(self):
+        dl = FakeDownloader()
+        ie = YoutubePlaylistIE(dl)
+        result = ie.extract('PLtPgu7CB4gbY9oDN3drwC3cMbJggS7dKl')[0]
+        self.assertEqual(len(result['entries']), 2)
 
 if __name__ == '__main__':
     unittest.main()
