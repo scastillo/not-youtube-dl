@@ -1,6 +1,6 @@
-youtube-dl (2013.06.21-1~1.gbpaf4437) UNRELEASED; urgency=low
+youtube-dl (2013.06.21-1~2.gbp3c8dfe) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @af4437a63aad80c6b92ae0089cddfc68bef35911 **
+  ** SNAPSHOT build @3c8dfeaaafba7e791790f1c95fc2120afb6ddd59 **
 
   * Imported Upstream version 2013.05.14
   * debian/watch:
@@ -17,6 +17,8 @@ youtube-dl (2013.06.21-1~1.gbpaf4437) UNRELEASED; urgency=low
   * debian/control: Remove B-D on pandoc.
   * debian/control: Remove B-D-I on perl.
   * debian/control: Remove obsolete DMUA flag.
+  * debian/rules: Move incorrectly installed file to its right place.
+  * debian/rules: Remove egg-info directory in the clean target.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 May 2013 21:01:15 -0300
 
