@@ -1,6 +1,6 @@
-youtube-dl (2013.05.23-1~0.gbpc924a4) UNRELEASED; urgency=low
+youtube-dl (2013.05.23-1~1.gbpb559da) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @c924a4596d685b1d61cf7f28e242e2e492678b1f **
+  ** SNAPSHOT build @b559da0987abed92b05a784938d25c722b86dc70 **
 
   * Imported Upstream version 2013.05.14
   * debian/watch:
@@ -8,6 +8,10 @@ youtube-dl (2013.05.23-1~0.gbpc924a4) UNRELEASED; urgency=low
   * debian/README.source:
     + Update my own instructions.
   * Imported Upstream version 2013.05.23
+  * debian/watch: Download version specific for distributors.
+  * debian/control: Bump build-dep on debhelper to >= 9.
+  * debian/compat: Use level 9 of debhelper.
+  * Imported Upstream version 2013.06.21
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 May 2013 21:01:15 -0300
 
