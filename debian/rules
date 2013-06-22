@@ -5,3 +5,7 @@
 override_dh_install:
 	mv debian/youtube-dl/usr/etc debian/youtube-dl/
 	dh_install
+
+override_dh_clean:
+	dh_clean
+	rm -rf youtube_dl.egg-info
