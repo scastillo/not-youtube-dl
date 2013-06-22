@@ -3,12 +3,10 @@ Section: web
 Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
- debhelper (>= 9),
- pandoc
+ debhelper (>= 9)
 Build-Depends-Indep:
  perl,
  python,
- zip
 Standards-Version: 3.9.3
 DM-Upload-Allowed: yes
 Homepage: http://rg3.github.com/youtube-dl/
