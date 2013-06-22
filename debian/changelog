@@ -1,6 +1,6 @@
-youtube-dl (2013.05.23-1~1.gbpb559da) UNRELEASED; urgency=low
+youtube-dl (2013.06.21-1~1.gbpaf4437) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @b559da0987abed92b05a784938d25c722b86dc70 **
+  ** SNAPSHOT build @af4437a63aad80c6b92ae0089cddfc68bef35911 **
 
   * Imported Upstream version 2013.05.14
   * debian/watch:
@@ -12,6 +12,11 @@ youtube-dl (2013.05.23-1~1.gbpb559da) UNRELEASED; urgency=low
   * debian/control: Bump build-dep on debhelper to >= 9.
   * debian/compat: Use level 9 of debhelper.
   * Imported Upstream version 2013.06.21
+  * debian/install: Remove, as we let setup.py install things. (Closes: #699043)
+  * debian/rules: Simplify rules file with use of buildsystem.
+  * debian/control: Remove B-D on pandoc.
+  * debian/control: Remove B-D-I on perl.
+  * debian/control: Remove obsolete DMUA flag.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 May 2013 21:01:15 -0300
 
