@@ -1,3 +1,14 @@
+youtube-dl (2013.06.21-2) unstable; urgency=low
+
+  * debian/control:
+    + Add missing Build-Dependency on python-pkg-resources.
+      Thanks to Sven Joachim <svenjoac@gmx.de> for the hint (Closes: #713835)
+  * debian/rules:
+    + Fix misplaced README.txt.gz.
+      Thanks to Sven Joachim <svenjoac@gmx.de> for the patch (Closes: #713834)
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 23 Jun 2013 18:59:25 -0300
+
 youtube-dl (2013.06.21-1) unstable; urgency=low
 
   * New upstream version.
