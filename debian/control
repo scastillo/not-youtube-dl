@@ -3,7 +3,8 @@ Section: web
 Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
- debhelper (>= 9)
+ debhelper (>= 9),
+ python-pkg-resources
 Build-Depends-Indep:
  python
 Standards-Version: 3.9.3
