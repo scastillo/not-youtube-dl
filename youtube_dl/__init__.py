@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
-from __future__ import absolute_import
-
 __authors__  = (
     'Ricardo Garcia Gonzalez',
     'Danny Colligan',
@@ -48,7 +45,7 @@ from .utils import *
 from .update import update_self
 from .version import __version__
 from .FileDownloader import *
-from .InfoExtractors import gen_extractors
+from .extractor import gen_extractors
 from .PostProcessor import *
 
 def parseOpts(overrideArguments=None):
@@ -200,7 +197,7 @@ def parseOpts(overrideArguments=None):
             action='store_true', dest='listsubtitles',
             help='lists all available subtitles for the video (currently youtube only)', default=False)
     video_format.add_option('--sub-format',
-            action='store', dest='subtitlesformat', metavar='LANG',
+            action='store', dest='subtitlesformat', metavar='FORMAT',
             help='subtitle format [srt/sbv] (default=srt) (currently youtube only)', default='srt')
     video_format.add_option('--sub-lang', '--srt-lang',
             action='store', dest='subtitleslang', metavar='LANG',
@@ -423,7 +420,7 @@ def _real_main(argv=None):
     if opts.usenetrc and (opts.username is not None or opts.password is not None):
         parser.error(u'using .netrc conflicts with giving username/password')
     if opts.password is not None and opts.username is None:
-        parser.error(u'account username missing')
+        print(u'WARNING: account username missing')
     if opts.outtmpl is not None and (opts.usetitle or opts.autonumber or opts.useid):
         parser.error(u'using output template conflicts with using title, video ID or auto number')
     if opts.usetitle and opts.useid:

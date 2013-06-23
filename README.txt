@@ -1,7 +1,7 @@
 NAME
 ====
 
-youtube-dl
+youtube-dl - download videos from youtube.com or other video platforms
 
 SYNOPSIS
 ========
@@ -136,7 +136,7 @@ Video Format Options:
                                video (currently youtube only)
     --list-subs                lists all available subtitles for the video
                                (currently youtube only)
-    --sub-format LANG          subtitle format [srt/sbv] (default=srt)
+    --sub-format FORMAT        subtitle format [srt/sbv] (default=srt)
                                (currently youtube only)
     --sub-lang LANG            language of the subtitles to download (optional)
                                use IETF language tags like 'en'

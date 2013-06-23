@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import
-
 import math
 import io
 import os
@@ -18,7 +13,7 @@ if os.name == 'nt':
     import ctypes
 
 from .utils import *
-from .InfoExtractors import get_info_extractor
+from .extractor import get_info_extractor
 
 
 class FileDownloader(object):
