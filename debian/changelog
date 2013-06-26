@@ -1,8 +1,26 @@
-youtube-dl (2013.06.26-1~1.gbpbddc9f) UNRELEASED; urgency=low
+youtube-dl (2013.06.33-1~0.gbpcff207) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @bddc9fc577d16b1428924bf8a5c37ef1d9295f14 **
+  ** SNAPSHOT build @cff2072584b7b8d467b00ea0f5703021921c48c7 **
 
   * Imported Upstream version 2013.06.26
+  * Imported Upstream version 2013.06.33. Highlights:
+    + VimeoIE: allow to download password protected videos.
+    + YoutubeIE: A lot of work for downloading VEVO videos.
+    + StatigrIE: Add support for Statigr.am.
+    + added an IE and test for break.com
+    + Modularize the code so that each site has its code in a
+      respective file (usable as python modules, as, for instance,
+      youtube as `youtube_dl.extractor.youtube`).
+    + Modularize the code so that the downloading class is split into two:
+      - YoutubeDL is the class that coordinates everything.
+      - FileDownloader gets a filename and an info dict and downloads the
+        video.
+    + VevoIE: Add specific code for VEVO.
+    + add JukeboxIE
+    + Fix downloading from Google+ videos (new details URL format).
+    + add support for tudou.com
+  * debian/control:
+    + Add mplayer{,2} as recommends.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Sun, 23 Jun 2013 20:10:54 -0300
 
