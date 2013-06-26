@@ -147,6 +147,7 @@ Authentication Options:
     -u, --username USERNAME    account username
     -p, --password PASSWORD    account password
     -n, --netrc                use .netrc authentication data
+    --video-password PASSWORD  video password (vimeo only)
 
 Post-processing Options:
 ------------------------
