@@ -58,7 +58,7 @@ class YoutubeIE(InfoExtractor):
         '18': 'mp4',
         '22': 'mp4',
         '37': 'mp4',
-        '38': 'video', # You actually don't know if this will be MOV, AVI or whatever
+        '38': 'mp4',
         '43': 'webm',
         '44': 'webm',
         '45': 'webm',
@@ -129,12 +129,13 @@ class YoutubeIE(InfoExtractor):
         """Indicate the download will use the RTMP protocol."""
         self.to_screen(u'RTMP download detected')
 
-    @staticmethod
-    def _decrypt_signature(s):
+    def _decrypt_signature(self, s):
         """Decrypt the key the two subkeys must have a length of 43"""
         (a,b) = s.split('.')
         if len(a) != 43 or len(b) != 43:
-            raise ExtractorError(u'Unable to decrypt signature, subkeys lengths not valid')
+            raise ExtractorError(u'Unable to decrypt signature, subkeys lengths %d.%d not supported; retrying might work' % (len(a), len(b)))
+        if self._downloader.params.get('verbose'):
+            self.to_screen('encrypted signature length %d.%d' % (len(a), len(b)))
         b = ''.join([b[:8],a[0],b[9:18],b[-4],b[19:39], b[18]])[0:40]
         a = a[-40:]
         s_dec = '.'.join((a,b))[::-1]
@@ -484,11 +485,15 @@ class YoutubeIE(InfoExtractor):
 
         try:
             mobj = re.search(r';ytplayer.config = ({.*?});', video_webpage)
+            if not mobj:
+                raise ValueError('Could not find vevo ID')
             info = json.loads(mobj.group(1))
             args = info['args']
-            if args.get('ptk','') == 'vevo' or 'dashmpd':
-                # Vevo videos with encrypted signatures
-                self.to_screen(u'%s: Vevo video detected.' % video_id)
+            # Easy way to know if the 's' value is in url_encoded_fmt_stream_map
+            # this signatures are encrypted
+            m_s = re.search(r'[&,]s=', args['url_encoded_fmt_stream_map'])
+            if m_s is not None:
+                self.to_screen(u'%s: Encrypted signatures detected.' % video_id)
                 video_info['url_encoded_fmt_stream_map'] = [args['url_encoded_fmt_stream_map']]
         except ValueError:
             pass
