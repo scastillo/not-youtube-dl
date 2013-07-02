@@ -16,8 +16,8 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/youtube-dl.git
 Package: youtube-dl
 Architecture: all
 Depends:
- python (>= 2.6),
  ${misc:Depends}
+ ${python:Depends}
 Recommends:
  libav-tools | ffmpeg,
  libav-tools | ffmpeg (>= 4:0.6) | ffprobe,
