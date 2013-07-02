@@ -1,6 +1,4 @@
-youtube-dl (2013.06.34-1~2.gbp0df66e) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @0df66e1d82103ce67aa6f58bd6e27af4b4e06d99 **
+youtube-dl (2013.06.34-1) unstable; urgency=low
 
   * Imported Upstream version 2013.06.26
   * Imported Upstream version 2013.06.33. Highlights:
