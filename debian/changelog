@@ -4,7 +4,7 @@ youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
 
   * Imported Upstream version 2013.06.26
   * Imported Upstream version 2013.06.33. Highlights:
-    + VimeoIE: allow to download password protected videos.
+    + VimeoIE: allow to download password protected videos. (Closes: #523326)
     + YoutubeIE: A lot of work for downloading VEVO videos.
     + Add support for Statigr.am.
     + Add support for break.com.
