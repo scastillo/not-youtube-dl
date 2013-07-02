@@ -6,6 +6,7 @@ from .bliptv import BlipTVIE, BlipTVUserIE
 from .breakcom import BreakIE
 from .collegehumor import CollegeHumorIE
 from .comedycentral import ComedyCentralIE
+from .cspan import CSpanIE
 from .dailymotion import DailymotionIE
 from .depositfiles import DepositFilesIE
 from .eighttracks import EightTracksIE
@@ -49,6 +50,7 @@ from .vbox7 import Vbox7IE
 from .vevo import VevoIE
 from .vimeo import VimeoIE
 from .vine import VineIE
+from .wimp import WimpIE
 from .worldstarhiphop import WorldStarHipHopIE
 from .xhamster import XHamsterIE
 from .xnxx import XNXXIE
@@ -132,6 +134,8 @@ def gen_extractors():
         VevoIE(),
         JukeboxIE(),
         TudouIE(),
+        CSpanIE(),
+        WimpIE(),
         GenericIE()
     ]
 
