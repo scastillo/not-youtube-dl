@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --buildsystem=python_distutils
+	dh $@ --with python2 --buildsystem=python_distutils
 
 override_dh_install:
 	mv debian/youtube-dl/usr/etc debian/youtube-dl/
