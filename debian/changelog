@@ -13,8 +13,8 @@ youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
     + Add specific code for VEVO videos.
     + Modularize the code so that each site has its code in a
       respective file (usable as python modules, as, for instance,
-      youtube as `youtube_dl.extractor.youtube`).
-    + Modularize the code so that the downloading class is split into two:
+      `youtube_dl.extractor.youtube`).
+    + Modularize the code so that the downloading class is split in two:
       - YoutubeDL is the class that coordinates everything.
       - FileDownloader gets a filename and an info dict and downloads the
         video.
