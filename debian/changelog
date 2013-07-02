@@ -26,7 +26,7 @@ youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
     + Add support for CSpan. (Closes: #659623)
     + Improve support for Youtube's crypto signing fields.
   * debian/control:
-    + Add mplayer{,2} as recommends.
+    + Add mplayer{,2} as recommends, needed for mms:// or rtsp:// schemes.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Sun, 23 Jun 2013 20:10:54 -0300
 
