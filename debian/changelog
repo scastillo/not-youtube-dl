@@ -29,7 +29,9 @@ youtube-dl (2013.06.34-1~2.gbp0df66e) UNRELEASED; urgency=low
     + Add mplayer{,2} as recommends, needed for mms:// or rtsp:// schemes.
     + Make explicit version of Python that we require.
   * debian/rules: Use python2 plugin with debhelper.
-  * debian/control: Make determination of python versions automatic.
+  * debian/control:
+    + Make determination of python versions automatic.
+    + Fix syntax error in Depends: field.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Sun, 23 Jun 2013 20:10:54 -0300
 
