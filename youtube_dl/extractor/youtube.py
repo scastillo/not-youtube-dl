@@ -131,15 +131,24 @@ class YoutubeIE(InfoExtractor):
 
     def _decrypt_signature(self, s):
         """Decrypt the key the two subkeys must have a length of 43"""
-        (a,b) = s.split('.')
-        if len(a) != 43 or len(b) != 43:
-            raise ExtractorError(u'Unable to decrypt signature, subkeys lengths %d.%d not supported; retrying might work' % (len(a), len(b)))
-        if self._downloader.params.get('verbose'):
-            self.to_screen('encrypted signature length %d.%d' % (len(a), len(b)))
-        b = ''.join([b[:8],a[0],b[9:18],b[-4],b[19:39], b[18]])[0:40]
-        a = a[-40:]
-        s_dec = '.'.join((a,b))[::-1]
-        return s_dec
+
+        if len(s) == 88:
+            return s[48] + s[81:67:-1] + s[82] + s[66:62:-1] + s[85] + s[61:48:-1] + s[67] + s[47:12:-1] + s[3] + s[11:3:-1] + s[2] + s[12]
+        elif len(s) == 87:
+            return s[62] + s[82:62:-1] + s[83] + s[61:52:-1] + s[0] + s[51:2:-1]
+        elif len(s) == 86:
+            return s[2:63] + s[82] + s[64:82] + s[63]
+        elif len(s) == 85:
+            return s[76] + s[82:76:-1] + s[83] + s[75:60:-1] + s[0] + s[59:50:-1] + s[1] + s[49:2:-1]
+        elif len(s) == 84:
+            return s[83:36:-1] + s[2] + s[35:26:-1] + s[3] + s[25:3:-1] + s[26]
+        elif len(s) == 83:
+            return s[52] + s[81:55:-1] + s[2] + s[54:52:-1] + s[82] + s[51:36:-1] + s[55] + s[35:2:-1] + s[36]
+        elif len(s) == 82:
+            return s[36] + s[79:67:-1] + s[81] + s[66:40:-1] + s[33] + s[39:36:-1] + s[40] + s[35] + s[0] + s[67] + s[32:0:-1] + s[34]
+
+        else:
+            raise ExtractorError(u'Unable to decrypt signature, subkeys length %d not supported; retrying might work' % (len(s)))
 
     def _get_available_subtitles(self, video_id):
         self.report_video_subtitles_download(video_id)
@@ -454,14 +463,13 @@ class YoutubeIE(InfoExtractor):
             if video_subtitles:
                 (sub_error, sub_lang, sub) = video_subtitles[0]
                 if sub_error:
-                    # We try with the automatic captions
-                    video_subtitles = self._request_automatic_caption(video_id, video_webpage)
-                    (sub_error_auto, sub_lang, sub) = video_subtitles[0]
-                    if sub is not None:
-                        pass
-                    else:
-                        # We report the original error
-                        self._downloader.report_warning(sub_error)
+                    self._downloader.report_warning(sub_error)
+        
+        if self._downloader.params.get('writeautomaticsub', False):
+            video_subtitles = self._request_automatic_caption(video_id, video_webpage)
+            (sub_error, sub_lang, sub) = video_subtitles[0]
+            if sub_error:
+                self._downloader.report_warning(sub_error)
 
         if self._downloader.params.get('allsubtitles', False):
             video_subtitles = self._extract_all_subtitles(video_id)
@@ -510,6 +518,12 @@ class YoutubeIE(InfoExtractor):
                     if 'sig' in url_data:
                         url += '&signature=' + url_data['sig'][0]
                     elif 's' in url_data:
+                        if self._downloader.params.get('verbose'):
+                            s = url_data['s'][0]
+                            player = self._search_regex(r'html5player-(.+?)\.js', video_webpage,
+                                'html5 player', fatal=False)
+                            self.to_screen('encrypted signature length %d (%d.%d), itag %s, html5 player %s' %
+                                (len(s), len(s.split('.')[0]), len(s.split('.')[1]), url_data['itag'][0], player))
                         signature = self._decrypt_signature(url_data['s'][0])
                         url += '&signature=' + signature
                     if 'ratebypass' not in url:
