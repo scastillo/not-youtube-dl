@@ -1,13 +1,16 @@
-youtube-dl (2013.06.33-1~0.gbpcff207) UNRELEASED; urgency=low
+youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @cff2072584b7b8d467b00ea0f5703021921c48c7 **
+  ** SNAPSHOT build @11c4ce5827158ef3f817f2536e220d95e0576e6e **
 
   * Imported Upstream version 2013.06.26
   * Imported Upstream version 2013.06.33. Highlights:
     + VimeoIE: allow to download password protected videos.
     + YoutubeIE: A lot of work for downloading VEVO videos.
-    + StatigrIE: Add support for Statigr.am.
-    + added an IE and test for break.com
+    + Add support for Statigr.am.
+    + Add support for break.com.
+    + Add support for tudou.com. (Closes: #657148)
+    + Add support for Jukebox.
+    + Add specific code for VEVO videos.
     + Modularize the code so that each site has its code in a
       respective file (usable as python modules, as, for instance,
       youtube as `youtube_dl.extractor.youtube`).
@@ -15,10 +18,13 @@ youtube-dl (2013.06.33-1~0.gbpcff207) UNRELEASED; urgency=low
       - YoutubeDL is the class that coordinates everything.
       - FileDownloader gets a filename and an info dict and downloads the
         video.
-    + VevoIE: Add specific code for VEVO.
-    + add JukeboxIE
-    + Fix downloading from Google+ videos (new details URL format).
-    + add support for tudou.com
+    + Fix downloading from Google+ videos (new URL format).
+  * Imported Upstream version 2013.06.34. Highlights:
+    + Add support for downloading automatic transcribed subtitles.
+    + Add support for downloading subtitles in WebVTT (vtt) format.
+    + Add support for Wimp.com.
+    + Add support for CSpan. (Closes: #659623)
+    + Improve support for Youtube's crypto signing fields.
   * debian/control:
     + Add mplayer{,2} as recommends.
 
