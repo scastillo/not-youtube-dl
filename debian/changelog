@@ -1,6 +1,6 @@
-youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
+youtube-dl (2013.06.34-1~2.gbp0df66e) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @11c4ce5827158ef3f817f2536e220d95e0576e6e **
+  ** SNAPSHOT build @0df66e1d82103ce67aa6f58bd6e27af4b4e06d99 **
 
   * Imported Upstream version 2013.06.26
   * Imported Upstream version 2013.06.33. Highlights:
@@ -27,6 +27,9 @@ youtube-dl (2013.06.34-1~1.gbp11c4ce) UNRELEASED; urgency=low
     + Improve support for Youtube's crypto signing fields.
   * debian/control:
     + Add mplayer{,2} as recommends, needed for mms:// or rtsp:// schemes.
+  * debian/control: Make explicit version of Python that we require.
+  * debian/rules: Use python2 plugin with debhelper.
+  * debian/control: Make determination of python versions automatic.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Sun, 23 Jun 2013 20:10:54 -0300
 
