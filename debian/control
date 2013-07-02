@@ -16,7 +16,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/youtube-dl.git
 Package: youtube-dl
 Architecture: all
 Depends:
- ${misc:Depends}
+ ${misc:Depends},
  ${python:Depends}
 Recommends:
  libav-tools | ffmpeg,
