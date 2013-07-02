@@ -27,7 +27,7 @@ youtube-dl (2013.06.34-1~2.gbp0df66e) UNRELEASED; urgency=low
     + Improve support for Youtube's crypto signing fields.
   * debian/control:
     + Add mplayer{,2} as recommends, needed for mms:// or rtsp:// schemes.
-  * debian/control: Make explicit version of Python that we require.
+    + Make explicit version of Python that we require.
   * debian/rules: Use python2 plugin with debhelper.
   * debian/control: Make determination of python versions automatic.
 
