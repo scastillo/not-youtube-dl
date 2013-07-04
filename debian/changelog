@@ -1,6 +1,4 @@
-youtube-dl (2013.07.02-1~1.gbpfeb502) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @feb5020b37d7d3ba4005a8bac6f4efece4ce4b8c **
+youtube-dl (2013.07.02-1) unstable; urgency=low
 
   * Imported Upstream version 2013.07.02. Highlights:
     + Add support for hotnewhiphop.com.
@@ -16,8 +14,11 @@ youtube-dl (2013.07.02-1~1.gbpfeb502) UNRELEASED; urgency=low
     + Minor improvements to the generic fallback information extractor.
     + Change the default naming of videos to the template:
       `%(title)s-%(id)s.%(ext)s`
+  * debian/control:
+    + Revise that package complies with standars version 3.9.4.
+      (No changes needed)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 04 Jul 2013 08:48:57 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 04 Jul 2013 10:00:59 -0300
 
 youtube-dl (2013.06.34-1) unstable; urgency=low
 
