@@ -2,7 +2,20 @@ youtube-dl (2013.07.02-1~1.gbpfeb502) UNRELEASED; urgency=low
 
   ** SNAPSHOT build @feb5020b37d7d3ba4005a8bac6f4efece4ce4b8c **
 
-  * Imported Upstream version 2013.07.02.
+  * Imported Upstream version 2013.07.02. Highlights:
+    + Add support for hotnewhiphop.com.
+    + Add support for auengine.com.
+    + Add support for gamespot.com.
+    + Add support for RingTV.
+    + Add support for wat.tv.
+    + Add support for traileraddict.com.
+    + Add support for tu.tv.
+    + Add support for instagram.com.
+    + Improve support for encrypted signatures in Youtube.
+    + Improve support for videos from ArteTv.
+    + Minor improvements to the generic fallback information extractor.
+    + Change the default naming of videos to the template:
+      `%(title)s-%(id)s.%(ext)s`
 
  -- Rogério Brito <rbrito@ime.usp.br>  Thu, 04 Jul 2013 08:48:57 -0300
 
