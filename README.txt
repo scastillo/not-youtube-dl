@@ -25,19 +25,13 @@ OPTIONS
     --version                  print program version and exit
     -U, --update               update this program to latest version
     -i, --ignore-errors        continue on download errors
-    -r, --rate-limit LIMIT     maximum download rate (e.g. 50k or 44.6m)
-    -R, --retries RETRIES      number of retries (default is 10)
-    --buffer-size SIZE         size of download buffer (e.g. 1024 or 16k)
-                               (default is 1024)
-    --no-resize-buffer         do not automatically adjust the buffer size. By
-                               default, the buffer size is automatically resized
-                               from an initial value of SIZE.
     --dump-user-agent          display the current browser identification
     --user-agent UA            specify a custom user agent
     --referer REF              specify a custom referer, use if the video access
                                is restricted to one domain
     --list-extractors          List all supported extractors and the URLs they
                                would handle
+    --extractor-descriptions   Output descriptions of all supported extractors
     --proxy URL                Use the specified HTTP/HTTPS proxy
     --no-check-certificate     Suppress HTTPS certificate validation.
 
@@ -58,6 +52,17 @@ Video Selection:
     --date DATE                download only videos uploaded in this date
     --datebefore DATE          download only videos uploaded before this date
     --dateafter DATE           download only videos uploaded after this date
+
+Download Options:
+-----------------
+
+    -r, --rate-limit LIMIT     maximum download rate (e.g. 50k or 44.6m)
+    -R, --retries RETRIES      number of retries (default is 10)
+    --buffer-size SIZE         size of download buffer (e.g. 1024 or 16k)
+                               (default is 1024)
+    --no-resize-buffer         do not automatically adjust the buffer size. By
+                               default, the buffer size is automatically resized
+                               from an initial value of SIZE.
 
 Filesystem Options:
 -------------------
@@ -205,9 +210,7 @@ lowercase S. Allowed names are:
 -   playlist_index: The index of the video in the playlist, a five-digit
     number.
 
-The current default template is %(id)s.%(ext)s, but that will be
-switchted to %(title)s-%(id)s.%(ext)s (which can be requested with -t at
-the moment).
+The current default template is %(title)s-%(id)s.%(ext)s.
 
 In some cases, you don't want special characters such as 中, spaces, or
 &, such as when transferring the downloaded filename to a Windows system
@@ -244,14 +247,14 @@ Most people asking this question are not aware that youtube-dl now
 defaults to downloading the highest available quality as reported by
 YouTube, which will be 1080p or 720p in some cases, so you no longer
 need the -b option. For some specific videos, maybe YouTube does not
-report them to be available in a specific high quality format you''re
+report them to be available in a specific high quality format you're
 interested in. In that case, simply request it with the -f option and
 youtube-dl will try to download it.
 
 I get HTTP error 402 when trying to download a video. What's this?
 
 Apparently YouTube requires you to pass a CAPTCHA test if you download
-too much. We''re considering to provide a way to let you solve the
+too much. We're considering to provide a way to let you solve the
 CAPTCHA, but at the moment, your best course of action is pointing a
 webbrowser to the youtube URL, solving the CAPTCHA, and restart
 youtube-dl.

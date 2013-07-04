@@ -11,8 +11,17 @@ from ..utils import (
 )
 
 class YahooIE(InfoExtractor):
-    """Information extractor for screen.yahoo.com."""
+    IE_DESC = u'Yahoo screen'
     _VALID_URL = r'http://screen\.yahoo\.com/.*?-(?P<id>\d*?)\.html'
+    _TEST = {
+        u'url': u'http://screen.yahoo.com/julian-smith-travis-legg-watch-214727115.html',
+        u'file': u'214727115.flv',
+        u'md5': u'2e717f169c1be93d84d3794a00d4a325',
+        u'info_dict': {
+            u"title": u"Julian Smith & Travis Legg Watch Julian Smith"
+        },
+        u'skip': u'Requires rtmpdump'
+    }
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -79,8 +88,7 @@ class YahooIE(InfoExtractor):
         return info_dict
 
 class YahooSearchIE(SearchInfoExtractor):
-    """Information Extractor for Yahoo! Video search queries."""
-
+    IE_DESC = u'Yahoo screen search'
     _MAX_RESULTS = 1000
     IE_NAME = u'screen.yahoo:search'
     _SEARCH_KEY = 'yvsearch'

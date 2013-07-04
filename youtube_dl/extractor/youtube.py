@@ -23,8 +23,7 @@ from ..utils import (
 
 
 class YoutubeIE(InfoExtractor):
-    """Information extractor for youtube.com."""
-
+    IE_DESC = u'YouTube.com'
     _VALID_URL = r"""^
                      (
                          (?:https?://)?                                       # http(s):// (optional)
@@ -34,7 +33,7 @@ class YoutubeIE(InfoExtractor):
                          (?:                                                  # the various things that can precede the ID:
                              (?:(?:v|embed|e)/)                               # v/ or embed/ or e/
                              |(?:                                             # or the v= param in all its forms
-                                 (?:watch(?:_popup)?(?:\.php)?)?              # preceding watch(_popup|.php) or nothing (like /?v=xxxx)
+                                 (?:watch|movie(?:_popup)?(?:\.php)?)?              # preceding watch(_popup|.php) or nothing (like /?v=xxxx)
                                  (?:\?|\#!?)                                  # the params delimiter ? or # or #!
                                  (?:.*?&)?                                    # any other preceding param (like /?s=tuff&v=xxxx)
                                  v=
@@ -81,6 +80,44 @@ class YoutubeIE(InfoExtractor):
         '46': '1080x1920',
     }
     IE_NAME = u'youtube'
+    _TESTS = [
+        {
+            u"url":  u"http://www.youtube.com/watch?v=BaW_jenozKc",
+            u"file":  u"BaW_jenozKc.mp4",
+            u"info_dict": {
+                u"title": u"youtube-dl test video \"'/\\ä↭𝕐",
+                u"uploader": u"Philipp Hagemeister",
+                u"uploader_id": u"phihag",
+                u"upload_date": u"20121002",
+                u"description": u"test chars:  \"'/\\ä↭𝕐\n\nThis is a test video for youtube-dl.\n\nFor more information, contact phihag@phihag.de ."
+            }
+        },
+        {
+            u"url":  u"http://www.youtube.com/watch?v=1ltcDfZMA3U",
+            u"file":  u"1ltcDfZMA3U.flv",
+            u"note": u"Test VEVO video (#897)",
+            u"info_dict": {
+                u"upload_date": u"20070518",
+                u"title": u"Maps - It Will Find You",
+                u"description": u"Music video by Maps performing It Will Find You.",
+                u"uploader": u"MuteUSA",
+                u"uploader_id": u"MuteUSA"
+            }
+        },
+        {
+            u"url":  u"http://www.youtube.com/watch?v=UxxajLWwzqY",
+            u"file":  u"UxxajLWwzqY.mp4",
+            u"note": u"Test generic use_cipher_signature video (#897)",
+            u"info_dict": {
+                u"upload_date": u"20120506",
+                u"title": u"Icona Pop - I Love It (feat. Charli XCX) [OFFICIAL VIDEO]",
+                u"description": u"md5:b085c9804f5ab69f4adea963a2dceb3c",
+                u"uploader": u"IconaPop",
+                u"uploader_id": u"IconaPop"
+            }
+        }
+    ]
+
 
     @classmethod
     def suitable(cls, url):
@@ -130,7 +167,7 @@ class YoutubeIE(InfoExtractor):
         self.to_screen(u'RTMP download detected')
 
     def _decrypt_signature(self, s):
-        """Decrypt the key the two subkeys must have a length of 43"""
+        """Turn the encrypted s field into a working signature"""
 
         if len(s) == 88:
             return s[48] + s[81:67:-1] + s[82] + s[66:62:-1] + s[85] + s[61:48:-1] + s[67] + s[47:12:-1] + s[3] + s[11:3:-1] + s[2] + s[12]
@@ -148,7 +185,7 @@ class YoutubeIE(InfoExtractor):
             return s[36] + s[79:67:-1] + s[81] + s[66:40:-1] + s[33] + s[39:36:-1] + s[40] + s[35] + s[0] + s[67] + s[32:0:-1] + s[34]
 
         else:
-            raise ExtractorError(u'Unable to decrypt signature, subkeys length %d not supported; retrying might work' % (len(s)))
+            raise ExtractorError(u'Unable to decrypt signature, key length %d not supported; retrying might work' % (len(s)))
 
     def _get_available_subtitles(self, video_id):
         self.report_video_subtitles_download(video_id)
@@ -364,6 +401,9 @@ class YoutubeIE(InfoExtractor):
         return video_id
 
     def _real_extract(self, url):
+        if re.match(r'(?:https?://)?[^/]+/watch\?feature=[a-z_]+$', url):
+            self._downloader.report_warning(u'Did you forget to quote the URL? Remember that & is a meta-character in most shells, so you want to put the URL in quotes, like  youtube-dl \'http://www.youtube.com/watch?feature=foo&v=BaW_jenozKc\' (or simply  youtube-dl BaW_jenozKc  ).')
+
         # Extract original video URL from URL with redirection, like age verification, using next_url parameter
         mobj = re.search(self._NEXT_URL_RE, url)
         if mobj:
@@ -401,7 +441,7 @@ class YoutubeIE(InfoExtractor):
                 break
         if 'token' not in video_info:
             if 'reason' in video_info:
-                raise ExtractorError(u'YouTube said: %s' % video_info['reason'][0])
+                raise ExtractorError(u'YouTube said: %s' % video_info['reason'][0], expected=True)
             else:
                 raise ExtractorError(u'"token" parameter not in video info for unknown reason')
 
@@ -545,7 +585,7 @@ class YoutubeIE(InfoExtractor):
             if req_format is None or req_format == 'best':
                 video_url_list = [(existing_formats[0], url_map[existing_formats[0]])] # Best quality
             elif req_format == 'worst':
-                video_url_list = [(existing_formats[len(existing_formats)-1], url_map[existing_formats[len(existing_formats)-1]])] # worst quality
+                video_url_list = [(existing_formats[-1], url_map[existing_formats[-1]])] # worst quality
             elif req_format in ('-1', 'all'):
                 video_url_list = [(f, url_map[f]) for f in existing_formats] # All formats
             else:
@@ -588,8 +628,7 @@ class YoutubeIE(InfoExtractor):
         return results
 
 class YoutubePlaylistIE(InfoExtractor):
-    """Information Extractor for YouTube playlists."""
-
+    IE_DESC = u'YouTube.com playlists'
     _VALID_URL = r"""(?:
                         (?:https?://)?
                         (?:\w+\.)?
@@ -656,8 +695,7 @@ class YoutubePlaylistIE(InfoExtractor):
 
 
 class YoutubeChannelIE(InfoExtractor):
-    """Information Extractor for YouTube channels."""
-
+    IE_DESC = u'YouTube.com channels'
     _VALID_URL = r"^(?:https?://)?(?:youtu\.be|(?:\w+\.)?youtube(?:-nocookie)?\.com)/channel/([0-9A-Za-z_-]+)"
     _TEMPLATE_URL = 'http://www.youtube.com/channel/%s/videos?sort=da&flow=list&view=0&page=%s&gl=US&hl=en'
     _MORE_PAGES_INDICATOR = 'yt-uix-load-more'
@@ -715,8 +753,7 @@ class YoutubeChannelIE(InfoExtractor):
 
 
 class YoutubeUserIE(InfoExtractor):
-    """Information Extractor for YouTube users."""
-
+    IE_DESC = u'YouTube.com user videos (URL or "ytuser" keyword)'
     _VALID_URL = r'(?:(?:(?:https?://)?(?:\w+\.)?youtube\.com/user/)|ytuser:)([A-Za-z0-9_-]+)'
     _TEMPLATE_URL = 'http://gdata.youtube.com/feeds/api/users/%s'
     _GDATA_PAGE_SIZE = 50
@@ -772,7 +809,7 @@ class YoutubeUserIE(InfoExtractor):
         return [self.playlist_result(url_results, playlist_title = username)]
 
 class YoutubeSearchIE(SearchInfoExtractor):
-    """Information Extractor for YouTube search queries."""
+    IE_DESC = u'YouTube.com searches'
     _API_URL = 'https://gdata.youtube.com/feeds/api/videos?q=%s&start-index=%i&max-results=50&v=2&alt=jsonc'
     _MAX_RESULTS = 1000
     IE_NAME = u'youtube:search'
@@ -812,3 +849,18 @@ class YoutubeSearchIE(SearchInfoExtractor):
             video_ids = video_ids[:n]
         videos = [self.url_result('http://www.youtube.com/watch?v=%s' % id, 'Youtube') for id in video_ids]
         return self.playlist_result(videos, query)
+
+
+class YoutubeShowIE(InfoExtractor):
+    IE_DESC = u'YouTube.com (multi-season) shows'
+    _VALID_URL = r'https?://www\.youtube\.com/show/(.*)'
+    IE_NAME = u'youtube:show'
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        show_name = mobj.group(1)
+        webpage = self._download_webpage(url, show_name, u'Downloading show webpage')
+        # There's one playlist for each season of the show
+        m_seasons = list(re.finditer(r'href="(/playlist\?list=.*?)"', webpage))
+        self.to_screen(u'%s: Found %s seasons' % (show_name, len(m_seasons)))
+        return [self.url_result('https://www.youtube.com' + season.group(1), 'YoutubePlaylist') for season in m_seasons]
