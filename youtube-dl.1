@@ -22,19 +22,13 @@ redistribute it or use it however you like.
 \-\-version\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ print\ program\ version\ and\ exit
 \-U,\ \-\-update\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ update\ this\ program\ to\ latest\ version
 \-i,\ \-\-ignore\-errors\ \ \ \ \ \ \ \ continue\ on\ download\ errors
-\-r,\ \-\-rate\-limit\ LIMIT\ \ \ \ \ maximum\ download\ rate\ (e.g.\ 50k\ or\ 44.6m)
-\-R,\ \-\-retries\ RETRIES\ \ \ \ \ \ number\ of\ retries\ (default\ is\ 10)
-\-\-buffer\-size\ SIZE\ \ \ \ \ \ \ \ \ size\ of\ download\ buffer\ (e.g.\ 1024\ or\ 16k)
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (default\ is\ 1024)
-\-\-no\-resize\-buffer\ \ \ \ \ \ \ \ \ do\ not\ automatically\ adjust\ the\ buffer\ size.\ By
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ default,\ the\ buffer\ size\ is\ automatically\ resized
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ from\ an\ initial\ value\ of\ SIZE.
 \-\-dump\-user\-agent\ \ \ \ \ \ \ \ \ \ display\ the\ current\ browser\ identification
 \-\-user\-agent\ UA\ \ \ \ \ \ \ \ \ \ \ \ specify\ a\ custom\ user\ agent
 \-\-referer\ REF\ \ \ \ \ \ \ \ \ \ \ \ \ \ specify\ a\ custom\ referer,\ use\ if\ the\ video\ access
 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ is\ restricted\ to\ one\ domain
 \-\-list\-extractors\ \ \ \ \ \ \ \ \ \ List\ all\ supported\ extractors\ and\ the\ URLs\ they
 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ would\ handle
+\-\-extractor\-descriptions\ \ \ Output\ descriptions\ of\ all\ supported\ extractors
 \-\-proxy\ URL\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Use\ the\ specified\ HTTP/HTTPS\ proxy
 \-\-no\-check\-certificate\ \ \ \ \ Suppress\ HTTPS\ certificate\ validation.
 \f[]
@@ -57,6 +51,19 @@ redistribute it or use it however you like.
 \-\-date\ DATE\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ download\ only\ videos\ uploaded\ in\ this\ date
 \-\-datebefore\ DATE\ \ \ \ \ \ \ \ \ \ download\ only\ videos\ uploaded\ before\ this\ date
 \-\-dateafter\ DATE\ \ \ \ \ \ \ \ \ \ \ download\ only\ videos\ uploaded\ after\ this\ date
+\f[]
+.fi
+.SS Download Options:
+.IP
+.nf
+\f[C]
+\-r,\ \-\-rate\-limit\ LIMIT\ \ \ \ \ maximum\ download\ rate\ (e.g.\ 50k\ or\ 44.6m)
+\-R,\ \-\-retries\ RETRIES\ \ \ \ \ \ number\ of\ retries\ (default\ is\ 10)
+\-\-buffer\-size\ SIZE\ \ \ \ \ \ \ \ \ size\ of\ download\ buffer\ (e.g.\ 1024\ or\ 16k)
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (default\ is\ 1024)
+\-\-no\-resize\-buffer\ \ \ \ \ \ \ \ \ do\ not\ automatically\ adjust\ the\ buffer\ size.\ By
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ default,\ the\ buffer\ size\ is\ automatically\ resized
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ from\ an\ initial\ value\ of\ SIZE.
 \f[]
 .fi
 .SS Filesystem Options:
@@ -225,9 +232,7 @@ video.
 \f[C]playlist_index\f[]: The index of the video in the playlist, a
 five\-digit number.
 .PP
-The current default template is \f[C]%(id)s.%(ext)s\f[], but that will
-be switchted to \f[C]%(title)s\-%(id)s.%(ext)s\f[] (which can be
-requested with \f[C]\-t\f[] at the moment).
+The current default template is \f[C]%(title)s\-%(id)s.%(ext)s\f[].
 .PP
 In some cases, you don\[aq]t want special characters such as 中, spaces,
 or &, such as when transferring the downloaded filename to a Windows
@@ -269,18 +274,17 @@ $\ youtube\-dl\ \-\-dateafter\ 20000101\ \-\-datebefore\ 20100101\ #will\ only\ 
 Most people asking this question are not aware that youtube\-dl now
 defaults to downloading the highest available quality as reported by
 YouTube, which will be 1080p or 720p in some cases, so you no longer
-need the \-b option.
+need the \f[C]\-b\f[] option.
 For some specific videos, maybe YouTube does not report them to be
-available in a specific high quality format you\[aq]\[aq]re interested
-in.
-In that case, simply request it with the \-f option and youtube\-dl will
-try to download it.
+available in a specific high quality format you\[aq]re interested in.
+In that case, simply request it with the \f[C]\-f\f[] option and
+youtube\-dl will try to download it.
 .SS I get HTTP error 402 when trying to download a video. What\[aq]s
 this?
 .PP
 Apparently YouTube requires you to pass a CAPTCHA test if you download
 too much.
-We\[aq]\[aq]re considering to provide a way to let you solve the
+We\[aq]re considering to provide a way to let you solve the
 CAPTCHA (https://github.com/rg3/youtube-dl/issues/154), but at the
 moment, your best course of action is pointing a webbrowser to the
 youtube URL, solving the CAPTCHA, and restart youtube\-dl.

@@ -2,15 +2,15 @@ import re
 
 from .common import InfoExtractor
 
-class StatigramIE(InfoExtractor):
-    _VALID_URL = r'(?:http://)?(?:www\.)?statigr\.am/p/([^/]+)'
+class InstagramIE(InfoExtractor):
+    _VALID_URL = r'(?:http://)?instagram.com/p/(.*?)/'
     _TEST = {
-        u'url': u'http://statigr.am/p/484091715184808010_284179915',
-        u'file': u'484091715184808010_284179915.mp4',
-        u'md5': u'deda4ff333abe2e118740321e992605b',
+        u'url': u'http://instagram.com/p/aye83DjauH/#',
+        u'file': u'aye83DjauH.mp4',
+        u'md5': u'0d2da106a9d2631273e192b372806516',
         u'info_dict': {
-            u"uploader_id": u"videoseconds", 
-            u"title": u"Instagram photo by @videoseconds"
+            u"uploader_id": u"naomipq", 
+            u"title": u"Video by naomipq"
         }
     }
 
@@ -19,17 +19,17 @@ class StatigramIE(InfoExtractor):
         video_id = mobj.group(1)
         webpage = self._download_webpage(url, video_id)
         video_url = self._html_search_regex(
-            r'<meta property="og:video:secure_url" content="(.+?)">',
+            r'<meta property="og:video" content="(.+?)"',
             webpage, u'video URL')
         thumbnail_url = self._html_search_regex(
             r'<meta property="og:image" content="(.+?)" />',
             webpage, u'thumbnail URL', fatal=False)
         html_title = self._html_search_regex(
             r'<title>(.+?)</title>',
-            webpage, u'title')
-        title = re.sub(r'(?: *\(Videos?\))? \| Statigram$', '', html_title)
-        uploader_id = self._html_search_regex(
-            r'@([^ ]+)', title, u'uploader name', fatal=False)
+            webpage, u'title', flags=re.DOTALL)
+        title = re.sub(u'(?: *\(Videos?\))? \u2022 Instagram$', '', html_title).strip()
+        uploader_id = self._html_search_regex(r'content="(.*?)\'s video on Instagram',
+            webpage, u'uploader name', fatal=False)
         ext = 'mp4'
 
         return [{

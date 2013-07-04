@@ -16,10 +16,17 @@ from ..utils import (
 
 
 class StanfordOpenClassroomIE(InfoExtractor):
-    """Information extractor for Stanford's Open ClassRoom"""
-
-    _VALID_URL = r'^(?:https?://)?openclassroom.stanford.edu(?P<path>/?|(/MainFolder/(?:HomePage|CoursePage|VideoPage)\.php([?]course=(?P<course>[^&]+)(&video=(?P<video>[^&]+))?(&.*)?)?))$'
     IE_NAME = u'stanfordoc'
+    IE_DESC = u'Stanford Open ClassRoom'
+    _VALID_URL = r'^(?:https?://)?openclassroom.stanford.edu(?P<path>/?|(/MainFolder/(?:HomePage|CoursePage|VideoPage)\.php([?]course=(?P<course>[^&]+)(&video=(?P<video>[^&]+))?(&.*)?)?))$'
+    _TEST = {
+        u'url': u'http://openclassroom.stanford.edu/MainFolder/VideoPage.php?course=PracticalUnix&video=intro-environment&speed=100',
+        u'file': u'PracticalUnix_intro-environment.mp4',
+        u'md5': u'544a9468546059d4e80d76265b0443b8',
+        u'info_dict': {
+            u"title": u"Intro Environment"
+        }
+    }
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
