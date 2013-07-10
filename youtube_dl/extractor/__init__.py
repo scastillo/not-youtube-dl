@@ -1,15 +1,18 @@
-
+from .archiveorg import ArchiveOrgIE
 from .ard import ARDIE
 from .arte import ArteTvIE
 from .auengine import AUEngineIE
 from .bandcamp import BandcampIE
 from .bliptv import BlipTVIE, BlipTVUserIE
 from .breakcom import BreakIE
+from .brightcove import BrightcoveIE
 from .collegehumor import CollegeHumorIE
 from .comedycentral import ComedyCentralIE
 from .cspan import CSpanIE
 from .dailymotion import DailymotionIE
 from .depositfiles import DepositFilesIE
+from .dotsub import DotsubIE
+from .dreisat import DreiSatIE
 from .eighttracks import EightTracksIE
 from .escapist import EscapistIE
 from .facebook import FacebookIE
@@ -55,6 +58,7 @@ from .tumblr import TumblrIE
 from .tutv import TutvIE
 from .ustream import UstreamIE
 from .vbox7 import Vbox7IE
+from .veoh import VeohIE
 from .vevo import VevoIE
 from .vimeo import VimeoIE
 from .vine import VineIE
@@ -68,7 +72,15 @@ from .yahoo import YahooIE, YahooSearchIE
 from .youjizz import YouJizzIE
 from .youku import YoukuIE
 from .youporn import YouPornIE
-from .youtube import YoutubeIE, YoutubePlaylistIE, YoutubeSearchIE, YoutubeUserIE, YoutubeChannelIE, YoutubeShowIE
+from .youtube import (
+    YoutubeIE,
+    YoutubePlaylistIE,
+    YoutubeSearchIE,
+    YoutubeUserIE,
+    YoutubeChannelIE,
+    YoutubeShowIE,
+    YoutubeSubscriptionsIE,
+)
 from .zdf import ZDFIE
 
 

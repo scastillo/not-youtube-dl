@@ -4,6 +4,7 @@ import json
 import netrc
 import re
 import socket
+import itertools
 
 from .common import InfoExtractor, SearchInfoExtractor
 from ..utils import (
@@ -19,6 +20,7 @@ from ..utils import (
     ExtractorError,
     unescapeHTML,
     unified_strdate,
+    orderedSet,
 )
 
 
@@ -115,23 +117,31 @@ class YoutubeIE(InfoExtractor):
                 u"uploader": u"IconaPop",
                 u"uploader_id": u"IconaPop"
             }
-        }
+        },
+        {
+            u"url":  u"https://www.youtube.com/watch?v=07FYdnEawAQ",
+            u"file":  u"07FYdnEawAQ.mp4",
+            u"note": u"Test VEVO video with age protection (#956)",
+            u"info_dict": {
+                u"upload_date": u"20130703",
+                u"title": u"Justin Timberlake - Tunnel Vision (Explicit)",
+                u"description": u"md5:64249768eec3bc4276236606ea996373",
+                u"uploader": u"justintimberlakeVEVO",
+                u"uploader_id": u"justintimberlakeVEVO"
+            }
+        },
     ]
 
 
     @classmethod
     def suitable(cls, url):
         """Receives a URL and returns True if suitable for this IE."""
-        if YoutubePlaylistIE.suitable(url): return False
+        if YoutubePlaylistIE.suitable(url) or YoutubeSubscriptionsIE.suitable(url): return False
         return re.match(cls._VALID_URL, url, re.VERBOSE) is not None
 
     def report_lang(self):
         """Report attempt to set language."""
         self.to_screen(u'Setting language')
-
-    def report_login(self):
-        """Report attempt to log in."""
-        self.to_screen(u'Logging in')
 
     def report_video_webpage_download(self, video_id):
         """Report attempt to download video webpage."""
@@ -180,7 +190,7 @@ class YoutubeIE(InfoExtractor):
         elif len(s) == 84:
             return s[83:36:-1] + s[2] + s[35:26:-1] + s[3] + s[25:3:-1] + s[26]
         elif len(s) == 83:
-            return s[52] + s[81:55:-1] + s[2] + s[54:52:-1] + s[82] + s[51:36:-1] + s[55] + s[35:2:-1] + s[36]
+            return s[:81]
         elif len(s) == 82:
             return s[36] + s[79:67:-1] + s[81] + s[66:40:-1] + s[33] + s[39:36:-1] + s[40] + s[35] + s[0] + s[67] + s[32:0:-1] + s[34]
 
@@ -294,26 +304,6 @@ class YoutubeIE(InfoExtractor):
         if self._downloader is None:
             return
 
-        username = None
-        password = None
-        downloader_params = self._downloader.params
-
-        # Attempt to use provided username and password or .netrc data
-        if downloader_params.get('username', None) is not None:
-            username = downloader_params['username']
-            password = downloader_params['password']
-        elif downloader_params.get('usenetrc', False):
-            try:
-                info = netrc.netrc().authenticators(self._NETRC_MACHINE)
-                if info is not None:
-                    username = info[0]
-                    password = info[2]
-                else:
-                    raise netrc.NetrcParseError('No authenticators for %s' % self._NETRC_MACHINE)
-            except (IOError, netrc.NetrcParseError) as err:
-                self._downloader.report_warning(u'parsing .netrc: %s' % compat_str(err))
-                return
-
         # Set language
         request = compat_urllib_request.Request(self._LANG_URL)
         try:
@@ -322,6 +312,8 @@ class YoutubeIE(InfoExtractor):
         except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
             self._downloader.report_warning(u'unable to set language: %s' % compat_str(err))
             return
+
+        (username, password) = self._get_login_info()
 
         # No authentication to be performed
         if username is None:
@@ -430,15 +422,35 @@ class YoutubeIE(InfoExtractor):
 
         # Get video info
         self.report_video_info_webpage_download(video_id)
-        for el_type in ['&el=embedded', '&el=detailpage', '&el=vevo', '']:
-            video_info_url = ('https://www.youtube.com/get_video_info?&video_id=%s%s&ps=default&eurl=&gl=US&hl=en'
-                    % (video_id, el_type))
+        if re.search(r'player-age-gate-content">', video_webpage) is not None:
+            self.report_age_confirmation()
+            age_gate = True
+            # We simulate the access to the video from www.youtube.com/v/{video_id}
+            # this can be viewed without login into Youtube
+            data = compat_urllib_parse.urlencode({'video_id': video_id,
+                                                  'el': 'embedded',
+                                                  'gl': 'US',
+                                                  'hl': 'en',
+                                                  'eurl': 'https://youtube.googleapis.com/v/' + video_id,
+                                                  'asv': 3,
+                                                  'sts':'1588',
+                                                  })
+            video_info_url = 'https://www.youtube.com/get_video_info?' + data
             video_info_webpage = self._download_webpage(video_info_url, video_id,
                                     note=False,
                                     errnote='unable to download video info webpage')
             video_info = compat_parse_qs(video_info_webpage)
-            if 'token' in video_info:
-                break
+        else:
+            age_gate = False
+            for el_type in ['&el=embedded', '&el=detailpage', '&el=vevo', '']:
+                video_info_url = ('https://www.youtube.com/get_video_info?&video_id=%s%s&ps=default&eurl=&gl=US&hl=en'
+                        % (video_id, el_type))
+                video_info_webpage = self._download_webpage(video_info_url, video_id,
+                                        note=False,
+                                        errnote='unable to download video info webpage')
+                video_info = compat_parse_qs(video_info_webpage)
+                if 'token' in video_info:
+                    break
         if 'token' not in video_info:
             if 'reason' in video_info:
                 raise ExtractorError(u'YouTube said: %s' % video_info['reason'][0], expected=True)
@@ -471,7 +483,12 @@ class YoutubeIE(InfoExtractor):
         video_title = compat_urllib_parse.unquote_plus(video_info['title'][0])
 
         # thumbnail image
-        if 'thumbnail_url' not in video_info:
+        # We try first to get a high quality image:
+        m_thumb = re.search(r'<span itemprop="thumbnail".*?href="(.*?)">',
+                            video_webpage, re.DOTALL)
+        if m_thumb is not None:
+            video_thumbnail = m_thumb.group(1)
+        elif 'thumbnail_url' not in video_info:
             self._downloader.report_warning(u'unable to extract video thumbnail')
             video_thumbnail = ''
         else:   # don't panic if we can't find it
@@ -560,9 +577,15 @@ class YoutubeIE(InfoExtractor):
                     elif 's' in url_data:
                         if self._downloader.params.get('verbose'):
                             s = url_data['s'][0]
-                            player = self._search_regex(r'html5player-(.+?)\.js', video_webpage,
-                                'html5 player', fatal=False)
-                            self.to_screen('encrypted signature length %d (%d.%d), itag %s, html5 player %s' %
+                            if age_gate:
+                                player_version = self._search_regex(r'ad3-(.+?)\.swf',
+                                    video_info['ad3_module'][0], 'flash player',
+                                    fatal=False)
+                                player = 'flash player %s' % player_version
+                            else:
+                                player = u'html5 player %s' % self._search_regex(r'html5player-(.+?)\.js', video_webpage,
+                                    'html5 player', fatal=False)
+                            self.to_screen('encrypted signature length %d (%d.%d), itag %s, %s' %
                                 (len(s), len(s.split('.')[0]), len(s.split('.')[1]), url_data['itag'][0], player))
                         signature = self._decrypt_signature(url_data['s'][0])
                         url += '&signature=' + signature
@@ -690,7 +713,7 @@ class YoutubePlaylistIE(InfoExtractor):
 
         videos = [v[1] for v in sorted(videos)]
 
-        url_results = [self.url_result(url, 'Youtube') for url in videos]
+        url_results = [self.url_result(vurl, 'Youtube') for vurl in videos]
         return [self.playlist_result(url_results, playlist_id, playlist_title)]
 
 
@@ -748,7 +771,7 @@ class YoutubeChannelIE(InfoExtractor):
         self._downloader.to_screen(u'[youtube] Channel %s: Found %i videos' % (channel_id, len(video_ids)))
 
         urls = ['http://www.youtube.com/watch?v=%s' % id for id in video_ids]
-        url_entries = [self.url_result(url, 'Youtube') for url in urls]
+        url_entries = [self.url_result(eurl, 'Youtube') for eurl in urls]
         return [self.playlist_result(url_entries, channel_id)]
 
 
@@ -805,7 +828,7 @@ class YoutubeUserIE(InfoExtractor):
             pagenum += 1
 
         urls = ['http://www.youtube.com/watch?v=%s' % video_id for video_id in video_ids]
-        url_results = [self.url_result(url, 'Youtube') for url in urls]
+        url_results = [self.url_result(rurl, 'Youtube') for rurl in urls]
         return [self.playlist_result(url_results, playlist_title = username)]
 
 class YoutubeSearchIE(SearchInfoExtractor):
@@ -864,3 +887,40 @@ class YoutubeShowIE(InfoExtractor):
         m_seasons = list(re.finditer(r'href="(/playlist\?list=.*?)"', webpage))
         self.to_screen(u'%s: Found %s seasons' % (show_name, len(m_seasons)))
         return [self.url_result('https://www.youtube.com' + season.group(1), 'YoutubePlaylist') for season in m_seasons]
+
+
+class YoutubeSubscriptionsIE(YoutubeIE):
+    """It's a subclass of YoutubeIE because we need to login"""
+    IE_DESC = u'YouTube.com subscriptions feed, "ytsubs" keyword(requires authentication)'
+    _VALID_URL = r'https?://www\.youtube\.com/feed/subscriptions|:ytsubs(?:criptions)?'
+    IE_NAME = u'youtube:subscriptions'
+    _FEED_TEMPLATE = 'http://www.youtube.com/feed_ajax?action_load_system_feed=1&feed_name=subscriptions&paging=%s'
+    _PAGING_STEP = 30
+
+    # Overwrite YoutubeIE properties we don't want
+    _TESTS = []
+    @classmethod
+    def suitable(cls, url):
+        return re.match(cls._VALID_URL, url) is not None
+
+    def _real_initialize(self):
+        (username, password) = self._get_login_info()
+        if username is None:
+            raise ExtractorError(u'No login info available, needed for downloading the Youtube subscriptions.', expected=True)
+        super(YoutubeSubscriptionsIE, self)._real_initialize()
+
+    def _real_extract(self, url):
+        feed_entries = []
+        # The step argument is available only in 2.7 or higher
+        for i in itertools.count(0):
+            paging = i*self._PAGING_STEP
+            info = self._download_webpage(self._FEED_TEMPLATE % paging, 'feed',
+                                          u'Downloading page %s' % i)
+            info = json.loads(info)
+            feed_html = info['feed_html']
+            m_ids = re.finditer(r'"/watch\?v=(.*?)"', feed_html)
+            ids = orderedSet(m.group(1) for m in m_ids)
+            feed_entries.extend(self.url_result(id, 'Youtube') for id in ids)
+            if info['paging'] is None:
+                break
+        return self.playlist_result(feed_entries, playlist_title='Youtube Subscriptions')
