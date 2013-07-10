@@ -1,3 +1,11 @@
+youtube-dl (2013.07.10-1~1.gbp179629) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @179629569ec7a2eda04957287c17fab7e55b1a7f **
+
+  * Imported Upstream version 2013.07.10
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 10 Jul 2013 18:15:38 -0300
+
 youtube-dl (2013.07.02-1) unstable; urgency=low
 
   * Imported Upstream version 2013.07.02. Highlights:
