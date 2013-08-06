@@ -14,6 +14,7 @@ from ..utils import (
     clean_html,
     compiled_regex_type,
     ExtractorError,
+    unescapeHTML,
 )
 
 class InfoExtractor(object):
@@ -125,6 +126,11 @@ class InfoExtractor(object):
 
     def _download_webpage_handle(self, url_or_request, video_id, note=None, errnote=None):
         """ Returns a tuple (page content as string, URL handle) """
+
+        # Strip hashes from the URL (#1038)
+        if isinstance(url_or_request, (compat_str, str)):
+            url_or_request = url_or_request.partition('#')[0]
+
         urlh = self._request_webpage(url_or_request, video_id, note, errnote)
         content_type = urlh.headers.get('Content-Type', '')
         m = re.match(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+\s*;\s*charset=(.+)', content_type)
@@ -169,11 +175,6 @@ class InfoExtractor(object):
         self.to_screen(u'Logging in')
 
     #Methods for following #608
-    #They set the correct value of the '_type' key
-    def video_result(self, video_info):
-        """Returns a video"""
-        video_info['_type'] = 'video'
-        return video_info
     def url_result(self, url, ie=None):
         """Returns a url that points to a page that should be processed"""
         #TODO: ie should be the class used for getting the info
@@ -261,6 +262,31 @@ class InfoExtractor(object):
                 self._downloader.report_warning(u'parsing .netrc: %s' % compat_str(err))
         
         return (username, password)
+
+    # Helper functions for extracting OpenGraph info
+    @staticmethod
+    def _og_regex(prop):
+        return r'<meta.+?property=[\'"]og:%s[\'"].+?content=(?:"(.+?)"|\'(.+?)\')' % re.escape(prop)
+
+    def _og_search_property(self, prop, html, name=None, **kargs):
+        if name is None:
+            name = 'OpenGraph %s' % prop
+        escaped = self._search_regex(self._og_regex(prop), html, name, flags=re.DOTALL, **kargs)
+        return unescapeHTML(escaped)
+
+    def _og_search_thumbnail(self, html, **kargs):
+        return self._og_search_property('image', html, u'thumbnail url', fatal=False, **kargs)
+
+    def _og_search_description(self, html, **kargs):
+        return self._og_search_property('description', html, fatal=False, **kargs)
+
+    def _og_search_title(self, html, **kargs):
+        return self._og_search_property('title', html, **kargs)
+
+    def _og_search_video_url(self, html, name='video url', **kargs):
+        return self._html_search_regex([self._og_regex('video:secure_url'),
+                                        self._og_regex('video')],
+                                       html, name, **kargs)
 
 class SearchInfoExtractor(InfoExtractor):
     """
