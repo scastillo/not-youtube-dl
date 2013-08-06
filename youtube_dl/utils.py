@@ -36,6 +36,11 @@ except ImportError: # Python 2
     from urlparse import urlparse as compat_urllib_parse_urlparse
 
 try:
+    import urllib.parse as compat_urlparse
+except ImportError: # Python 2
+    import urlparse as compat_urlparse
+
+try:
     import http.cookiejar as compat_cookiejar
 except ImportError: # Python 2
     import cookielib as compat_cookiejar
@@ -197,6 +202,20 @@ else:
     def write_json_file(obj, fn):
         with open(fn, 'w', encoding='utf-8') as f:
             json.dump(obj, f)
+
+if sys.version_info >= (2,7):
+    def find_xpath_attr(node, xpath, key, val):
+        """ Find the xpath xpath[@key=val] """
+        assert re.match(r'^[a-zA-Z]+$', key)
+        assert re.match(r'^[a-zA-Z@]*$', val)
+        expr = xpath + u"[@%s='%s']" % (key, val)
+        return node.find(expr)
+else:
+    def find_xpath_attr(node, xpath, key, val):
+        for f in node.findall(xpath):
+            if f.attrib.get(key) == val:
+                return f
+        return None
 
 def htmlentity_transform(matchobj):
     """Transforms an HTML entity to a character.
@@ -631,12 +650,12 @@ def unified_strdate(date_str):
             pass
     return upload_date
 
-def determine_ext(url):
+def determine_ext(url, default_ext=u'unknown_video'):
     guess = url.partition(u'?')[0].rpartition(u'.')[2]
     if re.match(r'^[A-Za-z0-9]+$', guess):
         return guess
     else:
-        return u'unknown_video'
+        return default_ext
 
 def date_from_str(date_str):
     """

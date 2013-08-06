@@ -1,9 +1,12 @@
 import re
 import json
+import itertools
 
 from .common import InfoExtractor
 from ..utils import (
     compat_urllib_request,
+    get_element_by_attribute,
+    get_element_by_id,
 
     ExtractorError,
 )
@@ -39,9 +42,6 @@ class DailymotionIE(InfoExtractor):
         # Extract URL, uploader and title from webpage
         self.report_extraction(video_id)
 
-        video_title = self._html_search_regex(r'<meta property="og:title" content="(.*?)" />',
-                                              webpage, 'title')
-
         video_uploader = self._search_regex([r'(?im)<span class="owner[^\"]+?">[^<]+?<a [^>]+?>([^<]+?)</a>',
                                              # Looking for official user
                                              r'<(?:span|a) .*?rel="author".*?>([^<]+?)</'],
@@ -76,7 +76,35 @@ class DailymotionIE(InfoExtractor):
             'url':      video_url,
             'uploader': video_uploader,
             'upload_date':  video_upload_date,
-            'title':    video_title,
+            'title':    self._og_search_title(webpage),
             'ext':      video_extension,
             'thumbnail': info['thumbnail_url']
         }]
+
+
+class DailymotionPlaylistIE(InfoExtractor):
+    _VALID_URL = r'(?:https?://)?(?:www\.)?dailymotion\.[a-z]{2,3}/playlist/(?P<id>.+?)/'
+    _MORE_PAGES_INDICATOR = r'<div class="next">.*?<a.*?href="/playlist/.+?".*?>.*?</a>.*?</div>'
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        playlist_id =  mobj.group('id')
+        video_ids = []
+
+        for pagenum in itertools.count(1):
+            webpage = self._download_webpage('https://www.dailymotion.com/playlist/%s/%s' % (playlist_id, pagenum),
+                                             playlist_id, u'Downloading page %s' % pagenum)
+
+            playlist_el = get_element_by_attribute(u'class', u'video_list', webpage)
+            video_ids.extend(re.findall(r'data-id="(.+?)" data-ext-id', playlist_el))
+
+            if re.search(self._MORE_PAGES_INDICATOR, webpage, re.DOTALL) is None:
+                break
+
+        entries = [self.url_result('http://www.dailymotion.com/video/%s' % video_id, 'Dailymotion')
+                   for video_id in video_ids]
+        return {'_type': 'playlist',
+                'id': playlist_id,
+                'title': get_element_by_id(u'playlist_name', webpage),
+                'entries': entries,
+                }

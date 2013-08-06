@@ -129,7 +129,7 @@ def parseOpts(overrideArguments=None):
     general.add_option('-v', '--version',
             action='version', help='print program version and exit')
     general.add_option('-U', '--update',
-            action='store_true', dest='update_self', help='update this program to latest version')
+            action='store_true', dest='update_self', help='update this program to latest version. Make sure that you have sufficient permissions (run with sudo if needed)')
     general.add_option('-i', '--ignore-errors',
             action='store_true', dest='ignoreerrors', help='continue on download errors', default=False)
     general.add_option('--dump-user-agent',
@@ -398,6 +398,8 @@ def _real_main(argv=None):
             batchurls = batchfd.readlines()
             batchurls = [x.strip() for x in batchurls]
             batchurls = [x for x in batchurls if len(x) > 0 and not re.search(r'^[#/;]', x)]
+            if opts.verbose:
+                sys.stderr.write(u'[debug] Batch file urls: ' + repr(batchurls) + u'\n')
         except IOError:
             sys.exit(u'ERROR: batch file could not be read')
     all_urls = batchurls + args
@@ -580,7 +582,7 @@ def _real_main(argv=None):
         })
 
     if opts.verbose:
-        ydl.to_screen(u'[debug] youtube-dl version ' + __version__)
+        sys.stderr.write(u'[debug] youtube-dl version ' + __version__ + u'\n')
         try:
             sp = subprocess.Popen(
                 ['git', 'rev-parse', '--short', 'HEAD'],
@@ -589,11 +591,14 @@ def _real_main(argv=None):
             out, err = sp.communicate()
             out = out.decode().strip()
             if re.match('[0-9a-f]+', out):
-                ydl.to_screen(u'[debug] Git HEAD: ' + out)
+                sys.stderr.write(u'[debug] Git HEAD: ' + out + u'\n')
         except:
-            sys.exc_clear()
-        ydl.to_screen(u'[debug] Python version %s - %s' %(platform.python_version(), platform.platform()))
-        ydl.to_screen(u'[debug] Proxy map: ' + str(proxy_handler.proxies))
+            try:
+                sys.exc_clear()
+            except:
+                pass
+        sys.stderr.write(u'[debug] Python version %s - %s' %(platform.python_version(), platform.platform()) + u'\n')
+        sys.stderr.write(u'[debug] Proxy map: ' + str(proxy_handler.proxies) + u'\n')
 
     ydl.add_default_info_extractors()
 
