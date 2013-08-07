@@ -3,7 +3,46 @@ youtube-dl (2013.08.08-1~1.gbp8a5ee6) UNRELEASED; urgency=low
   ** SNAPSHOT build @8a5ee64c617eef3a94a3044bffb9793cfe118218 **
 
   * Imported Upstream version 2013.08.02
-  * Imported Upstream version 2013.08.08
+  * Imported Upstream version 2013.08.08. Highlights:
+    + Improve GenericIE for compatibility with more sites.
+    + Youtube:
+      - Add/improve support cryptographic signatures of lengths 79, 81, 83,
+        84, 85, 86, 87, 90, 92. (Closes: #718391, #717537, #716987)
+      - Support signatures with more than 2 parts.
+      - Add support for downloading recommended videos (via :ytrec)
+      - Support downloading videos from the user's "Watch Later" playlist.
+      - Add better support for "age protected videos".
+      - Add explicit support for 3D videos.
+    + Add support for:
+      - IGNE
+      - criterion.com
+      - Canalplus
+      - Livestream
+      - freesound.org
+      - thisav
+      - CondeNast
+      - ex.fm
+      - video.sina.com.cn
+      - 56.com
+      - Weibo
+      - roxwell.com
+      - kankan.com
+      - Ooyala
+      - videofy.me
+      - muzu.tv
+    + Improve support for:
+      - ComedyCentral.
+      - Instagram.
+      - MTV.
+      - Metacafe: support AnyClip videos.
+      - Soundcloud.
+      - traileraddict.
+      - keek.
+      - videos from VEVO (they just keep changing stuff to prevent people
+        downloading music videos).
+    + Fix support for:
+      - CollegeHumor.
+      - Break
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 07 Aug 2013 20:26:16 -0300
 
