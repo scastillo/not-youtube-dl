@@ -1,6 +1,4 @@
-youtube-dl (2013.08.08-1~1.gbp8a5ee6) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @8a5ee64c617eef3a94a3044bffb9793cfe118218 **
+youtube-dl (2013.08.08-1) unstable; urgency=low
 
   * Imported Upstream version 2013.08.02
   * Imported Upstream version 2013.08.08. Highlights:
@@ -43,8 +41,9 @@ youtube-dl (2013.08.08-1~1.gbp8a5ee6) UNRELEASED; urgency=low
     + Fix support for:
       - CollegeHumor.
       - Break
+  * debian/control: Update long description with list of supported sites.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 07 Aug 2013 20:26:16 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 07 Aug 2013 20:40:48 -0300
 
 youtube-dl (2013.07.10-1) unstable; urgency=low
 
