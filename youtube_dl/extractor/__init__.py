@@ -45,9 +45,11 @@ from .livestream import LivestreamIE
 from .metacafe import MetacafeIE
 from .mixcloud import MixcloudIE
 from .mtv import MTVIE
+from .muzu import MuzuTVIE
 from .myspass import MySpassIE
 from .myvideo import MyVideoIE
 from .nba import NBAIE
+from .ooyala import OoyalaIE
 from .photobucket import PhotobucketIE
 from .pornotube import PornotubeIE
 from .rbmaradio import RBMARadioIE
@@ -72,6 +74,7 @@ from .ustream import UstreamIE
 from .vbox7 import Vbox7IE
 from .veoh import VeohIE
 from .vevo import VevoIE
+from .videofyme import VideofyMeIE
 from .vimeo import VimeoIE, VimeoChannelIE
 from .vine import VineIE
 from .c56 import C56IE
