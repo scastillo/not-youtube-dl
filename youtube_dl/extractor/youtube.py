@@ -338,13 +338,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         elif len(s) == 88:
             return s[48] + s[81:67:-1] + s[82] + s[66:62:-1] + s[85] + s[61:48:-1] + s[67] + s[47:12:-1] + s[3] + s[11:3:-1] + s[2] + s[12]
         elif len(s) == 87:
-            return s[4:23] + s[86] + s[24:85]
+            return s[83:53:-1] + s[3] + s[52:40:-1] + s[86] + s[39:10:-1] + s[0] + s[9:3:-1] + s[53]
         elif len(s) == 86:
             return s[83:85] + s[26] + s[79:46:-1] + s[85] + s[45:36:-1] + s[30] + s[35:30:-1] + s[46] + s[29:26:-1] + s[82] + s[25:1:-1]
         elif len(s) == 85:
             return s[2:8] + s[0] + s[9:21] + s[65] + s[22:65] + s[84] + s[66:82] + s[21]
         elif len(s) == 84:
-            return s[83:36:-1] + s[2] + s[35:26:-1] + s[3] + s[25:3:-1] + s[26]
+            return s[83:27:-1] + s[0] + s[26:5:-1] + s[2:0:-1] + s[27]
         elif len(s) == 83:
             return s[:15] + s[80] + s[16:80] + s[15]
         elif len(s) == 82:
@@ -718,8 +718,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             s = url_data['s'][0]
                             if age_gate:
                                 player_version = self._search_regex(r'ad3-(.+?)\.swf',
-                                    video_info['ad3_module'][0], 'flash player',
-                                    fatal=False)
+                                    video_info['ad3_module'][0] if 'ad3_module' in video_info else 'NOT FOUND',
+                                    'flash player', fatal=False)
                                 player = 'flash player %s' % player_version
                             else:
                                 player = u'html5 player %s' % self._search_regex(r'html5player-(.+?)\.js', video_webpage,
