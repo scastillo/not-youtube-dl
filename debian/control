@@ -33,7 +33,21 @@ Description: downloader of videos from YouTube and other sites
  determine the best (or worst) quality video to grab. It supports
  downloading entire playlists and all videos from a given user.
  .
- Currently supported sites are: CollegeHumor, Comedy Central, Dailymotion,
- Facebook, Metacafe, MyVideo, Photobucket, The Escapist, Vimeo, Yahoo!,
- YouTube, blip.tv, depositfiles.com, video.google.com, xvideos, Soundcloud,
- InfoQ, Mixcloud, OpenClassRoom.
+ Currently supported sites (or features of sites) are:
+ .
+ 1up.com, 3sat, 56.com, 8tracks, archive.org, ARD, arte.tv, AUEngine,
+ Bandcamp, blip.tv, blip.tv:user, Break, Brightcove, canalplus.fr,
+ CollegeHumor, ComedyCentral, CondeNast, Criterion, CSpan, dailymotion,
+ DailymotionPlaylist, DepositFiles, Dotsub, eHow, Escapist, exfm, facebook,
+ Flickr, Freesound, FunnyOrDie, GameSpot, Gametrailers, generic,
+ HotNewHipHop, Howcast, Hypem, ign.com, Ina, InfoQ, Instagram, Jukebox,
+ justin.tv, Kankan, keek, liveleak, Livestream, metacafe, mixcloud (CURRENTLY
+ BROKEN), MTV, muzu.tv, MySpass, myvideo, NBA, Ooyala, photobucket,
+ plus.google, Pornotube, RBMARadio, RedTube, RingTV, Roxwel,
+ screen.yahoo:search, Sina, soundcloud, soundcloud:set, Spiegel, stanfordoc,
+ Statigram, Steam, Teamcoco, TED, TF1, ThisAV, TrailerAddict, Tudou, Tumblr,
+ Tutv, ustream, Vbox7, Veoh, Vevo, video.google:search, videofy.me, vimeo,
+ vimeo:channel, Vine, wat.tv, Weibo, Wimp, WorldStarHipHop, XHamster, XNXX,
+ XVideos, Yahoo, YouJizz, Youku, YouPorn, youtube, youtube:channel,
+ youtube:favorites, youtube:playlist, youtube:recommended, youtube:search,
+ youtube:show, youtube:subscriptions, youtube:user, youtube:watch_later, ZDF.
