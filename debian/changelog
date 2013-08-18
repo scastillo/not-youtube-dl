@@ -1,6 +1,4 @@
-youtube-dl (2013.08.17-1~1.gbp964037) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @964037ab68599390f87213a7dd6b45c3b105c2bb **
+youtube-dl (2013.08.17-1) unstable; urgency=low
 
   * Imported Upstream version 2013.08.17. Highlights:
     + Add/improve support cryptographic signatures of lengths 83, 85, 86, 87, 89.
@@ -15,7 +13,7 @@ youtube-dl (2013.08.17-1~1.gbp964037) UNRELEASED; urgency=low
     and Abu Dhabi Media with EMI licensing its content to the group
     without taking an ownership stake."
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 18 Aug 2013 07:25:54 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 18 Aug 2013 08:03:58 -0300
 
 youtube-dl (2013.08.08-1) unstable; urgency=low
 
