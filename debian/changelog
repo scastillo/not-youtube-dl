@@ -1,6 +1,4 @@
-youtube-dl (2013.08.29-1~1.gbpa316b1) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @a316b1d93c357b5edf19d5e3100526a94191c029 **
+youtube-dl (2013.08.29-1) unstable; urgency=low
 
   * Imported Upstream version 2013.08.29. Highlights:
     + Fix subtitle downloading. (Closes: #721257)
@@ -19,10 +17,13 @@ youtube-dl (2013.08.29-1~1.gbpa316b1) UNRELEASED; urgency=low
         kankan.com.
     + Allow embedding of subtitles in mp4 videos.
     + Allow the use to specify languages for subtitles.
-  * debian/changelog: Fix long line in the previous uploaded entry, to
-    please lintian and other tools.
+  * debian/changelog:
+    + Fix long line in the previous uploaded entry, to please lintian and
+      other tools.
+  * debian/control:
+    + Remove upper limit on the python version that we support.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 29 Aug 2013 19:09:56 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 29 Aug 2013 21:36:16 -0300
 
 youtube-dl (2013.08.17-1) unstable; urgency=low
 
