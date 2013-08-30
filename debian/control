@@ -7,7 +7,7 @@ Build-Depends:
  python-pkg-resources
 Build-Depends-Indep:
  python
-X-Python-Version: >= 2.6, << 2.8
+X-Python-Version: >= 2.6
 Standards-Version: 3.9.4
 Homepage: http://rg3.github.com/youtube-dl/
 Vcs-Git: git://anonscm.debian.org/collab-maint/youtube-dl.git
