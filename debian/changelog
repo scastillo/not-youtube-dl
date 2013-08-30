@@ -1,8 +1,34 @@
+youtube-dl (2013.08.29-1~1.gbpa316b1) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @a316b1d93c357b5edf19d5e3100526a94191c029 **
+
+  * Imported Upstream version 2013.08.29. Highlights:
+    + Fix subtitle downloading. (Closes: #721257)
+    + Add/improve support cryptographic signatures of lengths 80, 82, 84,
+      86, 88 on youtube.
+    + Add/improve support for the following sites:
+      - Youtube: Add support for DASH videos. See:
+        https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
+      - Slashdot: tv.slashdot.org
+      - News sites: CNN, NBC news, PBS.
+      - MIT sites: video.mit.edu, techtv.mit.edu
+      - Other sites: Youporn, hark.com, AddAnime, RTLnow, jeuxvideo.com,
+        VOXnow, collegehumor, the generic extractor, Vimeo, funnyordie,
+        statigram, utv.unistra.fr, canalc2.tv, XHamster, 220.ro,
+        trilulilu.ro, canalplus, appletrailers, addanime, orf.at,
+        kankan.com.
+    + Allow embedding of subtitles in mp4 videos.
+    + Allow the use to specify languages for subtitles.
+  * debian/changelog: Fix long line in the previous uploaded entry, to
+    please lintian and other tools.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 29 Aug 2013 19:09:56 -0300
+
 youtube-dl (2013.08.17-1) unstable; urgency=low
 
   * Imported Upstream version 2013.08.17. Highlights:
-    + Add/improve support cryptographic signatures of lengths 83, 85, 86, 87, 89.
-      (Closes: #719309).
+    + Add/improve support cryptographic signatures of lengths 83, 85, 86, 87,
+      89. (Closes: #719309).
 
     Fixing the signature of the lengths listed above makes it to download
     many music videos (including those from VEVO). For those (like me)
