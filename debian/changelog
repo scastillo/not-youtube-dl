@@ -4,6 +4,7 @@ youtube-dl (2013.10.01-1~1.gbp782e27) UNRELEASED; urgency=low
 
   * The "In a hurry release".
   * Imported Upstream version 2013.10.01.
+    + Closes: #724321, #722343, #722298.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Thu, 03 Oct 2013 01:20:54 -0300
 
