@@ -1,12 +1,10 @@
-youtube-dl (2013.10.01-1~1.gbp782e27) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @782e271dfe61ed8d5dbf100286ad876068ea585c **
+youtube-dl (2013.10.01-1) unstable; urgency=low
 
   * The "In a hurry release".
   * Imported Upstream version 2013.10.01.
     + Closes: #724321, #722343, #722298.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 03 Oct 2013 01:20:54 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 03 Oct 2013 01:28:58 -0300
 
 youtube-dl (2013.08.29-1) unstable; urgency=low
 
