@@ -2,7 +2,7 @@ youtube-dl (2013.10.04-1~1.gbp0a55ea) UNRELEASED; urgency=low
 
   ** SNAPSHOT build @0a55ea74a5189ae5ba16d182df9a75995d367009 **
 
-  * Imported Upstream version 2013.10.04.
+  * Imported Upstream version 2013.10.04. Closes: #723592.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 04 Oct 2013 09:25:56 -0300
 
