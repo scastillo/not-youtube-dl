@@ -38,8 +38,9 @@ OPTIONS
     --proxy URL                Use the specified HTTP/HTTPS proxy
     --no-check-certificate     Suppress HTTPS certificate validation.
     --cache-dir None           Location in the filesystem where youtube-dl can
-                               store downloaded information permanently.
-                               ~/.youtube-dl/cache by default
+                               store downloaded information permanently. By
+                               default $XDG_CACHE_HOME/youtube-dl or ~/.cache
+                               /youtube-dl .
     --no-cache-dir             Disable filesystem caching
 
 Video Selection:
@@ -59,6 +60,7 @@ Video Selection:
     --date DATE                download only videos uploaded in this date
     --datebefore DATE          download only videos uploaded before this date
     --dateafter DATE           download only videos uploaded after this date
+    --no-playlist              download only the currently playing video
 
 Download Options:
 -----------------

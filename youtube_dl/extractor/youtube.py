@@ -23,9 +23,11 @@ from ..utils import (
     compat_urllib_error,
     compat_urllib_parse,
     compat_urllib_request,
+    compat_urlparse,
     compat_str,
 
     clean_html,
+    get_cachedir,
     get_element_by_id,
     ExtractorError,
     unescapeHTML,
@@ -420,8 +422,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         # Read from filesystem cache
         func_id = '%s_%s_%d' % (player_type, player_id, slen)
         assert os.path.basename(func_id) == func_id
-        cache_dir = self._downloader.params.get('cachedir',
-                                                u'~/.youtube-dl/cache')
+        cache_dir = get_cachedir(self._downloader.params)
 
         cache_enabled = cache_dir is not None
         if cache_enabled:
@@ -1086,7 +1087,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         elif len(s) == 83:
             return s[80:63:-1] + s[0] + s[62:0:-1] + s[63]
         elif len(s) == 82:
-            return s[80:73:-1] + s[81] + s[72:54:-1] + s[2] + s[53:43:-1] + s[0] + s[42:2:-1] + s[43] + s[1] + s[54]
+            return s[12] + s[79:12:-1] + s[80] + s[11::-1]
         elif len(s) == 81:
             return s[56] + s[79:56:-1] + s[41] + s[55:41:-1] + s[80] + s[40:34:-1] + s[0] + s[33:29:-1] + s[34] + s[28:9:-1] + s[29] + s[8:0:-1] + s[9]
         elif len(s) == 80:
@@ -1333,9 +1334,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             self._downloader.report_warning(u'unable to extract uploader nickname')
 
         # title
-        if 'title' not in video_info:
-            raise ExtractorError(u'Unable to extract video title')
-        video_title = compat_urllib_parse.unquote_plus(video_info['title'][0])
+        if 'title' in video_info:
+            video_title = compat_urllib_parse.unquote_plus(video_info['title'][0])
+        else:
+            self._downloader.report_warning(u'Unable to extract video title')
+            video_title = u'_'
 
         # thumbnail image
         # We try first to get a high quality image:
@@ -1390,7 +1393,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             args = info['args']
             # Easy way to know if the 's' value is in url_encoded_fmt_stream_map
             # this signatures are encrypted
-            if 'url_encoded_fmt_stream_map':
+            if 'url_encoded_fmt_stream_map' not in args:
                 raise ValueError(u'No stream_map present')  # caught below
             m_s = re.search(r'[&,]s=', args['url_encoded_fmt_stream_map'])
             if m_s is not None:
@@ -1525,9 +1528,19 @@ class YoutubePlaylistIE(InfoExtractor):
         mobj = re.match(self._VALID_URL, url, re.VERBOSE)
         if mobj is None:
             raise ExtractorError(u'Invalid URL: %s' % url)
+        playlist_id = mobj.group(1) or mobj.group(2)
+
+        # Check if it's a video-specific URL
+        query_dict = compat_urlparse.parse_qs(compat_urlparse.urlparse(url).query)
+        if 'v' in query_dict:
+            video_id = query_dict['v'][0]
+            if self._downloader.params.get('noplaylist'):
+                self.to_screen(u'Downloading just video %s because of --no-playlist' % video_id)
+                return self.url_result('https://www.youtube.com/watch?v=' + video_id, 'Youtube')
+            else:
+                self.to_screen(u'Downloading playlist PL%s - add --no-playlist to just download video %s' % (playlist_id, video_id))
 
         # Download playlist videos from API
-        playlist_id = mobj.group(1) or mobj.group(2)
         videos = []
 
         for page_num in itertools.count(1):

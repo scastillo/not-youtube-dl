@@ -168,8 +168,8 @@ def parseOpts(overrideArguments=None):
     general.add_option('--proxy', dest='proxy', default=None, help='Use the specified HTTP/HTTPS proxy', metavar='URL')
     general.add_option('--no-check-certificate', action='store_true', dest='no_check_certificate', default=False, help='Suppress HTTPS certificate validation.')
     general.add_option(
-        '--cache-dir', dest='cachedir', default=u'~/.youtube-dl/cache',
-        help='Location in the filesystem where youtube-dl can store downloaded information permanently. %default by default')
+        '--cache-dir', dest='cachedir', default=get_cachedir(),
+        help='Location in the filesystem where youtube-dl can store downloaded information permanently. By default $XDG_CACHE_HOME/youtube-dl or ~/.cache/youtube-dl .')
     general.add_option(
         '--no-cache-dir', action='store_const', const=None, dest='cachedir',
         help='Disable filesystem caching')
@@ -187,6 +187,7 @@ def parseOpts(overrideArguments=None):
     selection.add_option('--date', metavar='DATE', dest='date', help='download only videos uploaded in this date', default=None)
     selection.add_option('--datebefore', metavar='DATE', dest='datebefore', help='download only videos uploaded before this date', default=None)
     selection.add_option('--dateafter', metavar='DATE', dest='dateafter', help='download only videos uploaded after this date', default=None)
+    selection.add_option('--no-playlist', action='store_true', dest='noplaylist', help='download only the currently playing video', default=False)
 
 
     authentication.add_option('-u', '--username',
@@ -369,9 +370,13 @@ def parseOpts(overrideArguments=None):
     else:
         xdg_config_home = os.environ.get('XDG_CONFIG_HOME')
         if xdg_config_home:
-            userConfFile = os.path.join(xdg_config_home, 'youtube-dl.conf')
+            userConfFile = os.path.join(xdg_config_home, 'youtube-dl', 'config')
+            if not os.path.isfile(userConfFile):
+                userConfFile = os.path.join(xdg_config_home, 'youtube-dl.conf')
         else:
-            userConfFile = os.path.join(os.path.expanduser('~'), '.config', 'youtube-dl.conf')
+            userConfFile = os.path.join(os.path.expanduser('~'), '.config', 'youtube-dl', 'config')
+            if not os.path.isfile(userConfFile):
+                userConfFile = os.path.join(os.path.expanduser('~'), '.config', 'youtube-dl.conf')
         systemConf = _readOptions('/etc/youtube-dl.conf')
         userConf = _readOptions(userConfFile)
         commandLineConf = sys.argv[1:]
@@ -599,6 +604,7 @@ def _real_main(argv=None):
         'progress_with_newline': opts.progress_with_newline,
         'playliststart': opts.playliststart,
         'playlistend': opts.playlistend,
+        'noplaylist': opts.noplaylist,
         'logtostderr': opts.outtmpl == '-',
         'consoletitle': opts.consoletitle,
         'nopart': opts.nopart,
