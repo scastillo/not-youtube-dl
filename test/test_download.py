@@ -1,42 +1,30 @@
 #!/usr/bin/env python
 
-import errno
+# Allow direct execution
+import os
+import sys
+import unittest
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from test.helper import get_params, get_testcases, global_setup, try_rm, md5
+global_setup()
+
+
 import hashlib
 import io
-import os
 import json
-import unittest
-import sys
 import socket
-import binascii
-
-# Allow direct execution
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import youtube_dl.YoutubeDL
-from youtube_dl.utils import *
-
-PARAMETERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parameters.json")
+from youtube_dl.utils import (
+    compat_str,
+    compat_urllib_error,
+    DownloadError,
+    ExtractorError,
+    UnavailableVideoError,
+)
 
 RETRIES = 3
-
-# General configuration (from __init__, not very elegant...)
-jar = compat_cookiejar.CookieJar()
-cookie_processor = compat_urllib_request.HTTPCookieProcessor(jar)
-proxy_handler = compat_urllib_request.ProxyHandler()
-opener = compat_urllib_request.build_opener(proxy_handler, cookie_processor, YoutubeDLHandler())
-compat_urllib_request.install_opener(opener)
-socket.setdefaulttimeout(10)
-
-def _try_rm(filename):
-    """ Remove a file if it exists """
-    try:
-        os.remove(filename)
-    except OSError as ose:
-        if ose.errno != errno.ENOENT:
-            raise
-
-md5 = lambda s: hashlib.md5(s.encode('utf-8')).hexdigest()
 
 class YoutubeDL(youtube_dl.YoutubeDL):
     def __init__(self, *args, **kwargs):
@@ -54,17 +42,12 @@ def _file_md5(fn):
     with open(fn, 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
 
-from helper import get_testcases
 defs = get_testcases()
-
-with io.open(PARAMETERS_FILE, encoding='utf-8') as pf:
-    parameters = json.load(pf)
 
 
 class TestDownload(unittest.TestCase):
     maxDiff = None
     def setUp(self):
-        self.parameters = parameters
         self.defs = defs
 
 ### Dynamically generate tests
@@ -84,8 +67,7 @@ def generator(test_case):
             print_skipping(test_case['skip'])
             return
 
-        params = self.parameters.copy()
-        params.update(test_case.get('params', {}))
+        params = get_params(test_case.get('params', {}))
 
         ydl = YoutubeDL(params)
         ydl.add_default_info_extractors()
@@ -97,9 +79,9 @@ def generator(test_case):
 
         test_cases = test_case.get('playlist', [test_case])
         for tc in test_cases:
-            _try_rm(tc['file'])
-            _try_rm(tc['file'] + '.part')
-            _try_rm(tc['file'] + '.info.json')
+            try_rm(tc['file'])
+            try_rm(tc['file'] + '.part')
+            try_rm(tc['file'] + '.info.json')
         try:
             for retry in range(1, RETRIES + 1):
                 try:
@@ -145,9 +127,9 @@ def generator(test_case):
                     self.assertTrue(key in info_dict.keys() and info_dict[key])
         finally:
             for tc in test_cases:
-                _try_rm(tc['file'])
-                _try_rm(tc['file'] + '.part')
-                _try_rm(tc['file'] + '.info.json')
+                try_rm(tc['file'])
+                try_rm(tc['file'] + '.part')
+                try_rm(tc['file'] + '.info.json')
 
     return test_template
 
