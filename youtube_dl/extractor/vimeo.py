@@ -11,13 +11,14 @@ from ..utils import (
     get_element_by_attribute,
     ExtractorError,
     std_headers,
+    unsmuggle_url,
 )
 
 class VimeoIE(InfoExtractor):
     """Information extractor for vimeo.com."""
 
     # _VALID_URL matches Vimeo URLs
-    _VALID_URL = r'(?P<proto>https?://)?(?:(?:www|player)\.)?vimeo(?P<pro>pro)?\.com/(?:(?:(?:groups|album)/[^/]+)|(?:.*?)/)?(?P<direct_link>play_redirect_hls\?clip_id=)?(?:videos?/)?(?P<id>[0-9]+)(?:[?].*)?$'
+    _VALID_URL = r'(?P<proto>https?://)?(?:(?:www|player)\.)?vimeo(?P<pro>pro)?\.com/(?:(?:(?:groups|album)/[^/]+)|(?:.*?)/)?(?P<direct_link>play_redirect_hls\?clip_id=)?(?:videos?/)?(?P<id>[0-9]+)/?(?:[?].*)?$'
     _NETRC_MACHINE = 'vimeo'
     IE_NAME = u'vimeo'
     _TESTS = [
@@ -53,7 +54,7 @@ class VimeoIE(InfoExtractor):
                 u'title': u'Kathy Sierra: Building the minimum Badass User, Business of Software',
                 u'uploader': u'The BLN & Business of Software',
             },
-        },
+        }
     ]
 
     def _login(self):
@@ -98,6 +99,12 @@ class VimeoIE(InfoExtractor):
         self._login()
 
     def _real_extract(self, url, new_video=True):
+        url, data = unsmuggle_url(url)
+        headers = std_headers
+        if data is not None:
+            headers = headers.copy()
+            headers.update(data)
+
         # Extract ID from URL
         mobj = re.match(self._VALID_URL, url)
         if mobj is None:
@@ -112,7 +119,7 @@ class VimeoIE(InfoExtractor):
             url = 'https://vimeo.com/' + video_id
 
         # Retrieve video webpage to extract further information
-        request = compat_urllib_request.Request(url, None, std_headers)
+        request = compat_urllib_request.Request(url, None, headers)
         webpage = self._download_webpage(request, video_id)
 
         # Now we begin extracting as much information as we can from what we
@@ -172,46 +179,45 @@ class VimeoIE(InfoExtractor):
 
         # Vimeo specific: extract video codec and quality information
         # First consider quality, then codecs, then take everything
-        # TODO bind to format param
-        codecs = [('h264', 'mp4'), ('vp8', 'flv'), ('vp6', 'flv')]
+        codecs = [('vp6', 'flv'), ('vp8', 'flv'), ('h264', 'mp4')]
         files = { 'hd': [], 'sd': [], 'other': []}
         config_files = config["video"].get("files") or config["request"].get("files")
         for codec_name, codec_extension in codecs:
-            if codec_name in config_files:
-                if 'hd' in config_files[codec_name]:
-                    files['hd'].append((codec_name, codec_extension, 'hd'))
-                elif 'sd' in config_files[codec_name]:
-                    files['sd'].append((codec_name, codec_extension, 'sd'))
+            for quality in config_files.get(codec_name, []):
+                format_id = '-'.join((codec_name, quality)).lower()
+                key = quality if quality in files else 'other'
+                video_url = None
+                if isinstance(config_files[codec_name], dict):
+                    file_info = config_files[codec_name][quality]
+                    video_url = file_info.get('url')
                 else:
-                    files['other'].append((codec_name, codec_extension, config_files[codec_name][0]))
+                    file_info = {}
+                if video_url is None:
+                    video_url = "http://player.vimeo.com/play_redirect?clip_id=%s&sig=%s&time=%s&quality=%s&codecs=%s&type=moogaloop_local&embed_location=" \
+                        %(video_id, sig, timestamp, quality, codec_name.upper())
 
-        for quality in ('hd', 'sd', 'other'):
-            if len(files[quality]) > 0:
-                video_quality = files[quality][0][2]
-                video_codec = files[quality][0][0]
-                video_extension = files[quality][0][1]
-                self.to_screen(u'%s: Downloading %s file at %s quality' % (video_id, video_codec.upper(), video_quality))
-                break
-        else:
+                files[key].append({
+                    'ext': codec_extension,
+                    'url': video_url,
+                    'format_id': format_id,
+                    'width': file_info.get('width'),
+                    'height': file_info.get('height'),
+                })
+        formats = []
+        for key in ('other', 'sd', 'hd'):
+            formats += files[key]
+        if len(formats) == 0:
             raise ExtractorError(u'No known codec found')
-
-        video_url = None
-        if isinstance(config_files[video_codec], dict):
-            video_url = config_files[video_codec][video_quality].get("url")
-        if video_url is None:
-            video_url = "http://player.vimeo.com/play_redirect?clip_id=%s&sig=%s&time=%s&quality=%s&codecs=%s&type=moogaloop_local&embed_location=" \
-                        %(video_id, sig, timestamp, video_quality, video_codec.upper())
 
         return [{
             'id':       video_id,
-            'url':      video_url,
             'uploader': video_uploader,
             'uploader_id': video_uploader_id,
             'upload_date':  video_upload_date,
             'title':    video_title,
-            'ext':      video_extension,
             'thumbnail':    video_thumbnail,
             'description':  video_description,
+            'formats': formats,
         }]
 
 

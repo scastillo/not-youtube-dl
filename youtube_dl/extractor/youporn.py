@@ -26,7 +26,8 @@ class YouPornIE(InfoExtractor):
             u"upload_date": u"20101221", 
             u"description": u"Love & Sex Answers: http://bit.ly/DanAndJenn -- Is It Unhealthy To Masturbate Daily?", 
             u"uploader": u"Ask Dan And Jennifer", 
-            u"title": u"Sex Ed: Is It Safe To Masturbate Daily?"
+            u"title": u"Sex Ed: Is It Safe To Masturbate Daily?",
+            u"age_limit": 18,
         }
     }
 
@@ -51,6 +52,7 @@ class YouPornIE(InfoExtractor):
         req = compat_urllib_request.Request(url)
         req.add_header('Cookie', 'age_verified=1')
         webpage = self._download_webpage(req, video_id)
+        age_limit = self._rta_search(webpage)
 
         # Get JSON parameters
         json_params = self._search_regex(r'var currentVideo = new Video\((.*)\);', webpage, u'JSON parameters')
@@ -115,7 +117,8 @@ class YouPornIE(InfoExtractor):
                 'ext': extension,
                 'format': format,
                 'thumbnail': thumbnail,
-                'description': video_description
+                'description': video_description,
+                'age_limit': age_limit,
             })
 
         if self._downloader.params.get('listformats', None):

@@ -35,6 +35,8 @@ class InfoExtractor(object):
     title:          Video title, unescaped.
     ext:            Video filename extension.
 
+    Instead of url and ext, formats can also specified.
+
     The following fields are optional:
 
     format:         The video format, defaults to ext (used for --get-format)
@@ -52,8 +54,23 @@ class InfoExtractor(object):
     view_count:     How many users have watched the video on the platform.
     urlhandle:      [internal] The urlHandle to be used to download the file,
                     like returned by urllib.request.urlopen
+    age_limit:      Age restriction for the video, as an integer (years)
+    formats:        A list of dictionaries for each format available, it must
+                    be ordered from worst to best quality. Potential fields:
+                    * url       Mandatory. The URL of the video file
+                    * ext       Will be calculated from url if missing
+                    * format    A human-readable description of the format
+                                ("mp4 container with h264/opus").
+                                Calculated from the format_id, width, height 
+                                and format_note fields if missing.
+                    * format_id A short description of the format
+                                ("mp4_h264_opus" or "19")
+                    * format_note Additional info about the format
+                                ("3D" or "DASH video")
+                    * width     Width of the video, if known
+                    * height    Height of the video, if known
 
-    The fields should all be Unicode strings.
+    Unless mentioned otherwise, the fields should be Unicode strings.
 
     Subclasses of this one should re-define the _real_initialize() and
     _real_extract() methods and define a _VALID_URL regexp.
@@ -305,6 +322,15 @@ class InfoExtractor(object):
                                         self._og_regex('video')],
                                        html, name, **kargs)
 
+    def _rta_search(self, html):
+        # See http://www.rtalabel.org/index.php?content=howtofaq#single
+        if re.search(r'(?ix)<meta\s+name="rating"\s+'
+                     r'     content="RTA-5042-1996-1400-1577-RTA"',
+                     html):
+            return 18
+        return 0
+
+
 class SearchInfoExtractor(InfoExtractor):
     """
     Base class for paged search queries extractors.
@@ -342,7 +368,7 @@ class SearchInfoExtractor(InfoExtractor):
 
     def _get_n_results(self, query, n):
         """Get a specified number of results for a query"""
-        raise NotImplementedError("This method must be implemented by sublclasses")
+        raise NotImplementedError("This method must be implemented by subclasses")
 
     @property
     def SEARCH_KEY(self):
