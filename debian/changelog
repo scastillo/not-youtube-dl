@@ -2,7 +2,17 @@ youtube-dl (2013.10.23-1~1.gbp54477c) UNRELEASED; urgency=low
 
   ** SNAPSHOT build @54477c858fa2504360964e675faf953d78ac57e6 **
 
-  * Imported Upstream version 2013.10.23
+  * Imported Upstream version 2013.10.23.
+    + Fix time display for > 60 minutes. Closes: #724834.
+    + All adult-related sites should respect the age being set via the
+      `--age-limit` option (which can be put in a global configuration file
+      under the /etc directory), thus making youtube-dl safe for Debian Edu
+      and Debian Jr. Closes: #715407.
+    + Document that the output template accepts specification of
+      downloaded formats. In particular:
+      - This avoids resuming downloads with different formats.
+        Closes: #689294.
+      - Allows downloading all available formats. Closes: #643831.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 23 Oct 2013 21:25:08 -0200
 
