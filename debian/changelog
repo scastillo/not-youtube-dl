@@ -1,6 +1,6 @@
-youtube-dl (2013.10.23-1~1.gbp54477c) UNRELEASED; urgency=low
+youtube-dl (2013.10.23-1~2.gbp80f960) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @54477c858fa2504360964e675faf953d78ac57e6 **
+  ** SNAPSHOT build @80f96043cb349c4235e242e323556f561d147911 **
 
   * Imported Upstream version 2013.10.23.
     + Fix time display for > 60 minutes. Closes: #724834.
@@ -9,10 +9,11 @@ youtube-dl (2013.10.23-1~1.gbp54477c) UNRELEASED; urgency=low
       under the /etc directory), thus making youtube-dl safe for Debian Edu
       and Debian Jr. Closes: #715407.
     + Document that the output template accepts specification of
-      downloaded formats. In particular:
-      - This avoids resuming downloads with different formats.
-        Closes: #689294.
+      downloaded formats (template: %(format)s). In particular, this:
+      - Avoids resuming downloads with different formats. Closes: #689294.
       - Allows downloading all available formats. Closes: #643831.
+  * debian/control:
+    + Update long description with list of supported sites.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 23 Oct 2013 21:25:08 -0200
 
