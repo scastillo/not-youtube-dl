@@ -133,7 +133,7 @@ def parseOpts(overrideArguments=None):
 
     def _hide_login_info(opts):
         opts = list(opts)
-        for private_opt in ['-p', '--password', '-u', '--username']:
+        for private_opt in ['-p', '--password', '-u', '--username', '--video-password']:
             try:
                 i = opts.index(private_opt)
                 opts[i+1] = '<PRIVATE>'
@@ -316,6 +316,9 @@ def parseOpts(overrideArguments=None):
     verbosity.add_option('--dump-intermediate-pages',
             action='store_true', dest='dump_intermediate_pages', default=False,
             help='print downloaded pages to debug problems(very verbose)')
+    verbosity.add_option('--write-pages',
+            action='store_true', dest='write_pages', default=False,
+            help='Write downloaded pages to files in the current directory')
     verbosity.add_option('--youtube-print-sig-code',
             action='store_true', dest='youtube_print_sig_code', default=False,
             help=optparse.SUPPRESS_HELP)
@@ -336,7 +339,8 @@ def parseOpts(overrideArguments=None):
                   '%(uploader)s for the uploader name, %(uploader_id)s for the uploader nickname if different, '
                   '%(autonumber)s to get an automatically incremented number, '
                   '%(ext)s for the filename extension, '
-                  '%(format)s for the format description (like "22 - 1280x720" or "HD")'
+                  '%(format)s for the format description (like "22 - 1280x720" or "HD"),'
+                  '%(format_id)s for the unique id of the format (like Youtube\'s itags: "137"),'
                   '%(upload_date)s for the upload date (YYYYMMDD), '
                   '%(extractor)s for the provider (youtube, metacafe, etc), '
                   '%(id)s for the video id , %(playlist)s for the playlist the video is in, '
@@ -345,7 +349,7 @@ def parseOpts(overrideArguments=None):
                   'for example with -o \'/my/downloads/%(uploader)s/%(title)s-%(id)s.%(ext)s\' .'))
     filesystem.add_option('--autonumber-size',
             dest='autonumber_size', metavar='NUMBER',
-            help='Specifies the number of digits in %(autonumber)s when it is present in output filename template or --autonumber option is given')
+            help='Specifies the number of digits in %(autonumber)s when it is present in output filename template or --auto-number option is given')
     filesystem.add_option('--restrict-filenames',
             action='store_true', dest='restrictfilenames',
             help='Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames', default=False)
@@ -354,7 +358,7 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option('-w', '--no-overwrites',
             action='store_true', dest='nooverwrites', help='do not overwrite files', default=False)
     filesystem.add_option('-c', '--continue',
-            action='store_true', dest='continue_dl', help='resume partially downloaded files', default=True)
+            action='store_true', dest='continue_dl', help='force resume of partially downloaded files. By default, youtube-dl will resume downloads if possible.', default=True)
     filesystem.add_option('--no-continue',
             action='store_false', dest='continue_dl',
             help='do not resume partially downloaded files (restart from beginning)')
@@ -651,6 +655,7 @@ def _real_main(argv=None):
         'prefer_free_formats': opts.prefer_free_formats,
         'verbose': opts.verbose,
         'dump_intermediate_pages': opts.dump_intermediate_pages,
+        'write_pages': opts.write_pages,
         'test': opts.test,
         'keepvideo': opts.keepvideo,
         'min_filesize': opts.min_filesize,

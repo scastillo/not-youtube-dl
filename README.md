@@ -79,24 +79,27 @@ which means you can modify it, redistribute it or use it however you like.
                                different, %(autonumber)s to get an automatically
                                incremented number, %(ext)s for the filename
                                extension, %(format)s for the format description
-                               (like "22 - 1280x720" or "HD")%(upload_date)s for
-                               the upload date (YYYYMMDD), %(extractor)s for the
-                               provider (youtube, metacafe, etc), %(id)s for the
-                               video id , %(playlist)s for the playlist the
-                               video is in, %(playlist_index)s for the position
-                               in the playlist and %% for a literal percent. Use
-                               - to output to stdout. Can also be used to
-                               download to a different directory, for example
-                               with -o '/my/downloads/%(uploader)s/%(title)s-%(i
-                               d)s.%(ext)s' .
+                               (like "22 - 1280x720" or "HD"),%(format_id)s for
+                               the unique id of the format (like Youtube's
+                               itags: "137"),%(upload_date)s for the upload date
+                               (YYYYMMDD), %(extractor)s for the provider
+                               (youtube, metacafe, etc), %(id)s for the video id
+                               , %(playlist)s for the playlist the video is in,
+                               %(playlist_index)s for the position in the
+                               playlist and %% for a literal percent. Use - to
+                               output to stdout. Can also be used to download to
+                               a different directory, for example with -o '/my/d
+                               ownloads/%(uploader)s/%(title)s-%(id)s.%(ext)s' .
     --autonumber-size NUMBER   Specifies the number of digits in %(autonumber)s
                                when it is present in output filename template or
-                               --autonumber option is given
+                               --auto-number option is given
     --restrict-filenames       Restrict filenames to only ASCII characters, and
                                avoid "&" and spaces in filenames
     -a, --batch-file FILE      file containing URLs to download ('-' for stdin)
     -w, --no-overwrites        do not overwrite files
-    -c, --continue             resume partially downloaded files
+    -c, --continue             force resume of partially downloaded files. By
+                               default, youtube-dl will resume downloads if
+                               possible.
     --no-continue              do not resume partially downloaded files (restart
                                from beginning)
     --cookies FILE             file to read cookies from and dump cookie jar in
@@ -126,6 +129,8 @@ which means you can modify it, redistribute it or use it however you like.
     -v, --verbose              print various debugging information
     --dump-intermediate-pages  print downloaded pages to debug problems(very
                                verbose)
+    --write-pages              Write downloaded pages to files in the current
+                               directory
 
 ## Video Format Options:
     -f, --format FORMAT        video format code, specifiy the order of
