@@ -1,11 +1,9 @@
-youtube-dl (2013.11.11-2~1.gbp4ac978) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @4ac9786eb3f0912486829e27d6e6de14aa21eb38 **
+youtube-dl (2013.11.11-2) unstable; urgency=low
 
   * debian/control: Add dependency on python-pkg-resources.
     Closes: #729416. Thanks Josh Triplett.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 12 Nov 2013 16:23:14 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 12 Nov 2013 16:34:16 -0200
 
 youtube-dl (2013.11.11-1) unstable; urgency=low
 
