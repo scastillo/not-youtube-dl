@@ -1,3 +1,24 @@
+youtube-dl (2013.11.11-1~1.gbp710500) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @71050031bb901b19a829cc44763bf68e67b1f648 **
+
+  * Imported Upstream version 2013.11.11. Highlights:
+    + Add support for many sites (see long description of the package).
+    + Fix support for many sites (Closes: #728424).
+    + Improve support for many sites (including CNN, Youtube).
+    + Improve support for download of subtitles.
+    + Allow to download tracks marked as not 'streamable' via rtmpdump in
+      soundcloud.
+    + Avoid reencoding videos that are downloaded via HTTP Live Streaming
+      (Apple's version of DASH). These videos have to be downloaded with
+      ffmpeg (or avconv), as youtube-dl doesn't have a downloader for that
+      particular protocol.
+      .
+      See https://en.wikipedia.org/wiki/HTTP_Live_Streaming for more
+      information.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 11 Nov 2013 22:28:01 -0200
+
 youtube-dl (2013.10.23-1) unstable; urgency=low
 
   * Imported Upstream version 2013.10.23.
