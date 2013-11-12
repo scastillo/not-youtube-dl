@@ -16,6 +16,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/youtube-dl.git
 Package: youtube-dl
 Architecture: all
 Depends:
+ python-pkg-resources,
  ${misc:Depends},
  ${python:Depends}
 Recommends:
