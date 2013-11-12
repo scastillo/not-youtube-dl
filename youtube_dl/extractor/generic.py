@@ -25,7 +25,7 @@ class GenericIE(InfoExtractor):
         {
             u'url': u'http://www.hodiho.fr/2013/02/regis-plante-sa-jeep.html',
             u'file': u'13601338388002.mp4',
-            u'md5': u'85b90ccc9d73b4acd9138d3af4c27f89',
+            u'md5': u'6e15c93721d7ec9e9ca3fdbf07982cfd',
             u'info_dict': {
                 u"uploader": u"www.hodiho.fr",
                 u"title": u"R\u00e9gis plante sa Jeep"
@@ -33,6 +33,7 @@ class GenericIE(InfoExtractor):
         },
         # embedded vimeo video
         {
+            u'add_ie': ['Vimeo'],
             u'url': u'http://skillsmatter.com/podcast/home/move-semanticsperfect-forwarding-and-rvalue-references',
             u'file': u'22444065.mp4',
             u'md5': u'2903896e23df39722c33f015af0666e2',
@@ -41,7 +42,35 @@ class GenericIE(InfoExtractor):
                 u"uploader_id": u"skillsmatter",
                 u"uploader": u"Skills Matter",
             }
-        }
+        },
+        # bandcamp page with custom domain
+        {
+            u'add_ie': ['Bandcamp'],
+            u'url': u'http://bronyrock.com/track/the-pony-mash',
+            u'file': u'3235767654.mp3',
+            u'info_dict': {
+                u'title': u'The Pony Mash',
+                u'uploader': u'M_Pallante',
+            },
+            u'skip': u'There is a limit of 200 free downloads / month for the test song',
+        },
+        # embedded brightcove video
+        # it also tests brightcove videos that need to set the 'Referer' in the
+        # http requests
+        {
+            u'add_ie': ['Brightcove'],
+            u'url': u'http://www.bfmtv.com/video/bfmbusiness/cours-bourse/cours-bourse-l-analyse-technique-154522/',
+            u'info_dict': {
+                u'id': u'2765128793001',
+                u'ext': u'mp4',
+                u'title': u'Le cours de bourse : l’analyse technique',
+                u'description': u'md5:7e9ad046e968cb2d1114004aba466fd9',
+                u'uploader': u'BFM BUSINESS',
+            },
+            u'params': {
+                u'skip_download': True,
+            },
+        },
     ]
 
     def report_download_webpage(self, video_id):
@@ -134,10 +163,9 @@ class GenericIE(InfoExtractor):
 
         self.report_extraction(video_id)
         # Look for BrightCove:
-        m_brightcove = re.search(r'<object[^>]+?class=([\'"])[^>]*?BrightcoveExperience.*?\1.+?</object>', webpage, re.DOTALL)
-        if m_brightcove is not None:
+        bc_url = BrightcoveIE._extract_brightcove_url(webpage)
+        if bc_url is not None:
             self.to_screen(u'Brightcove video detected.')
-            bc_url = BrightcoveIE._build_brighcove_url(m_brightcove.group())
             return self.url_result(bc_url, 'Brightcove')
 
         # Look for embedded Vimeo player
@@ -150,10 +178,16 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded YouTube player
         mobj = re.search(
-            r'<iframe[^>]+?src="(https?://(?:www\.)?youtube.com/embed/.+?)"', webpage)
+            r'<iframe[^>]+?src=(["\'])(?P<url>https?://(?:www\.)?youtube.com/embed/.+?)\1', webpage)
         if mobj:
-            surl = unescapeHTML(mobj.group(1))
+            surl = unescapeHTML(mobj.group(u'url'))
             return self.url_result(surl, 'Youtube')
+
+        # Look for Bandcamp pages with custom domain
+        mobj = re.search(r'<meta property="og:url"[^>]*?content="(.*?bandcamp\.com.*?)"', webpage)
+        if mobj is not None:
+            burl = unescapeHTML(mobj.group(1))
+            return self.url_result(burl, 'Bandcamp')
 
         # Start with something easy: JW Player in SWFObject
         mobj = re.search(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)

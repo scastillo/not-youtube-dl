@@ -9,6 +9,7 @@ from .arte import (
     ArteTVFutureIE,
 )
 from .auengine import AUEngineIE
+from .bambuser import BambuserIE, BambuserChannelIE
 from .bandcamp import BandcampIE
 from .bliptv import BlipTVIE, BlipTVUserIE
 from .bloomberg import BloombergIE
@@ -37,8 +38,10 @@ from .defense import DefenseGouvFrIE
 from .ebaumsworld import EbaumsWorldIE
 from .ehow import EHowIE
 from .eighttracks import EightTracksIE
+from .eitb import EitbIE
 from .escapist import EscapistIE
 from .exfm import ExfmIE
+from .extremetube import ExtremeTubeIE
 from .facebook import FacebookIE
 from .faz import FazIE
 from .fktv import (
@@ -72,6 +75,7 @@ from .jeuxvideo import JeuxVideoIE
 from .jukebox import JukeboxIE
 from .justintv import JustinTVIE
 from .kankan import KankanIE
+from .keezmovies import KeezMoviesIE
 from .kickstarter import KickStarterIE
 from .keek import KeekIE
 from .liveleak import LiveLeakIE
@@ -80,8 +84,10 @@ from .metacafe import MetacafeIE
 from .metacritic import MetacriticIE
 from .mit import TechTVMITIE, MITIE
 from .mixcloud import MixcloudIE
+from .mofosex import MofosexIE
 from .mtv import MTVIE
 from .muzu import MuzuTVIE
+from .myspace import MySpaceIE
 from .myspass import MySpassIE
 from .myvideo import MyVideoIE
 from .naver import NaverIE
@@ -94,6 +100,7 @@ from .ooyala import OoyalaIE
 from .orf import ORFIE
 from .pbs import PBSIE
 from .photobucket import PhotobucketIE
+from .pornhub import PornHubIE
 from .pornotube import PornotubeIE
 from .rbmaradio import RBMARadioIE
 from .redtube import RedTubeIE
@@ -109,6 +116,8 @@ from .slideshare import SlideshareIE
 from .sohu import SohuIE
 from .soundcloud import SoundcloudIE, SoundcloudSetIE, SoundcloudUserIE
 from .southparkstudios import SouthParkStudiosIE
+from .space import SpaceIE
+from .spankwire import SpankwireIE
 from .spiegel import SpiegelIE
 from .stanfordoc import StanfordOpenClassroomIE
 from .statigram import StatigramIE
@@ -121,6 +130,7 @@ from .tf1 import TF1IE
 from .thisav import ThisAVIE
 from .traileraddict import TrailerAddictIE
 from .trilulilu import TriluliluIE
+from .tube8 import Tube8IE
 from .tudou import TudouIE
 from .tumblr import TumblrIE
 from .tutv import TutvIE
@@ -137,6 +147,7 @@ from .videofyme import VideofyMeIE
 from .videopremium import VideoPremiumIE
 from .vimeo import VimeoIE, VimeoChannelIE
 from .vine import VineIE
+from .vk import VKIE
 from .wat import WatIE
 from .websurg import WeBSurgIE
 from .weibo import WeiboIE
@@ -145,6 +156,7 @@ from .worldstarhiphop import WorldStarHipHopIE
 from .xhamster import XHamsterIE
 from .xnxx import XNXXIE
 from .xvideos import XVideosIE
+from .xtube import XTubeIE
 from .yahoo import YahooIE, YahooSearchIE
 from .youjizz import YouJizzIE
 from .youku import YoukuIE
@@ -153,6 +165,7 @@ from .youtube import (
     YoutubeIE,
     YoutubePlaylistIE,
     YoutubeSearchIE,
+    YoutubeSearchDateIE,
     YoutubeUserIE,
     YoutubeChannelIE,
     YoutubeShowIE,

@@ -74,14 +74,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             self._downloader.report_warning(u'unable to fetch login page: %s' % compat_str(err))
             return False
 
-        galx = None
-        dsh = None
-        match = re.search(re.compile(r'<input.+?name="GALX".+?value="(.+?)"', re.DOTALL), login_page)
-        if match:
-          galx = match.group(1)
-        match = re.search(re.compile(r'<input.+?name="dsh".+?value="(.+?)"', re.DOTALL), login_page)
-        if match:
-          dsh = match.group(1)
+        galx = self._search_regex(r'(?s)<input.+?name="GALX".+?value="(.+?)"',
+                                  login_page, u'Login GALX parameter')
 
         # Log in
         login_form_strs = {
@@ -95,7 +89,6 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
                 u'checkConnection': u'',
                 u'checkedDomains': u'youtube',
                 u'dnConn': u'',
-                u'dsh': dsh,
                 u'pstMsg': u'0',
                 u'rmShown': u'1',
                 u'secTok': u'',
@@ -236,10 +229,12 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         '136': 'mp4',
         '137': 'mp4',
         '138': 'mp4',
-        '139': 'mp4',
-        '140': 'mp4',
-        '141': 'mp4',
         '160': 'mp4',
+
+        # Dash mp4 audio
+        '139': 'm4a',
+        '140': 'm4a',
+        '141': 'm4a',
 
         # Dash webm
         '171': 'webm',
@@ -342,18 +337,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                 u"uploader_id": u"phihag",
                 u"upload_date": u"20121002",
                 u"description": u"test chars:  \"'/\\ä↭𝕐\n\nThis is a test video for youtube-dl.\n\nFor more information, contact phihag@phihag.de ."
-            }
-        },
-        {
-            u"url":  u"http://www.youtube.com/watch?v=1ltcDfZMA3U",
-            u"file":  u"1ltcDfZMA3U.flv",
-            u"note": u"Test VEVO video (#897)",
-            u"info_dict": {
-                u"upload_date": u"20070518",
-                u"title": u"Maps - It Will Find You",
-                u"description": u"Music video by Maps performing It Will Find You.",
-                u"uploader": u"MuteUSA",
-                u"uploader_id": u"MuteUSA"
             }
         },
         {
@@ -1099,7 +1082,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         else:
             raise ExtractorError(u'Unable to decrypt signature, key length %d not supported; retrying might work' % (len(s)))
 
-    def _get_available_subtitles(self, video_id):
+    def _get_available_subtitles(self, video_id, webpage):
         try:
             sub_list = self._download_webpage(
                 'http://video.google.com/timedtext?hl=en&type=list&v=%s' % video_id,
@@ -1116,7 +1099,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                 'lang': lang,
                 'v': video_id,
                 'fmt': self._downloader.params.get('subtitlesformat'),
-                'name': l[0],
+                'name': l[0].encode('utf-8'),
             })
             url = u'http://www.youtube.com/api/timedtext?' + params
             sub_lang_list[lang] = url
@@ -1403,32 +1386,29 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             # this signatures are encrypted
             if 'url_encoded_fmt_stream_map' not in args:
                 raise ValueError(u'No stream_map present')  # caught below
-            m_s = re.search(r'[&,]s=', args['url_encoded_fmt_stream_map'])
+            re_signature = re.compile(r'[&,]s=')
+            m_s = re_signature.search(args['url_encoded_fmt_stream_map'])
             if m_s is not None:
                 self.to_screen(u'%s: Encrypted signatures detected.' % video_id)
                 video_info['url_encoded_fmt_stream_map'] = [args['url_encoded_fmt_stream_map']]
-            m_s = re.search(r'[&,]s=', args.get('adaptive_fmts', u''))
+            m_s = re_signature.search(args.get('adaptive_fmts', u''))
             if m_s is not None:
-                if 'url_encoded_fmt_stream_map' in video_info:
-                    video_info['url_encoded_fmt_stream_map'][0] += ',' + args['adaptive_fmts']
+                if 'adaptive_fmts' in video_info:
+                    video_info['adaptive_fmts'][0] += ',' + args['adaptive_fmts']
                 else:
-                    video_info['url_encoded_fmt_stream_map'] = [args['adaptive_fmts']]
-            elif 'adaptive_fmts' in video_info:
-                if 'url_encoded_fmt_stream_map' in video_info:
-                    video_info['url_encoded_fmt_stream_map'][0] += ',' + video_info['adaptive_fmts'][0]
-                else:
-                    video_info['url_encoded_fmt_stream_map'] = video_info['adaptive_fmts']
+                    video_info['adaptive_fmts'] = [args['adaptive_fmts']]
         except ValueError:
             pass
 
         if 'conn' in video_info and video_info['conn'][0].startswith('rtmp'):
             self.report_rtmp_download()
             video_url_list = [(None, video_info['conn'][0])]
-        elif 'url_encoded_fmt_stream_map' in video_info and len(video_info['url_encoded_fmt_stream_map']) >= 1:
-            if 'rtmpe%3Dyes' in video_info['url_encoded_fmt_stream_map'][0]:
+        elif len(video_info.get('url_encoded_fmt_stream_map', [])) >= 1 or len(video_info.get('adaptive_fmts', [])) >= 1:
+            encoded_url_map = video_info.get('url_encoded_fmt_stream_map', [''])[0] + ',' + video_info.get('adaptive_fmts',[''])[0]
+            if 'rtmpe%3Dyes' in encoded_url_map:
                 raise ExtractorError('rtmpe downloads are not supported, see https://github.com/rg3/youtube-dl/issues/343 for more information.', expected=True)
             url_map = {}
-            for url_data_str in video_info['url_encoded_fmt_stream_map'][0].split(','):
+            for url_data_str in encoded_url_map.split(','):
                 url_data = compat_parse_qs(url_data_str)
                 if 'itag' in url_data and 'url' in url_data:
                     url = url_data['url'][0]
@@ -1481,13 +1461,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             raise ExtractorError(u'no conn, hlsvp or url_encoded_fmt_stream_map information found in video info')
 
         results = []
-        for format_param, video_real_url in video_url_list:
+        for itag, video_real_url in video_url_list:
             # Extension
-            video_extension = self._video_extensions.get(format_param, 'flv')
+            video_extension = self._video_extensions.get(itag, 'flv')
 
-            video_format = '{0} - {1}{2}'.format(format_param if format_param else video_extension,
-                                              self._video_dimensions.get(format_param, '???'),
-                                              ' ('+self._special_itags[format_param]+')' if format_param in self._special_itags else '')
+            video_format = '{0} - {1}{2}'.format(itag if itag else video_extension,
+                                              self._video_dimensions.get(itag, '???'),
+                                              ' ('+self._special_itags[itag]+')' if itag in self._special_itags else '')
 
             results.append({
                 'id':       video_id,
@@ -1498,13 +1478,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                 'title':    video_title,
                 'ext':      video_extension,
                 'format':   video_format,
+                'format_id': itag,
                 'thumbnail':    video_thumbnail,
                 'description':  video_description,
                 'player_url':   player_url,
                 'subtitles':    video_subtitles,
                 'duration':     video_duration,
                 'age_limit':    18 if age_gate else 0,
-                'annotations':  video_annotations
+                'annotations':  video_annotations,
+                'webpage_url': 'https://www.youtube.com/watch?v=%s' % video_id,
             })
         return results
 
@@ -1590,7 +1572,6 @@ class YoutubePlaylistIE(InfoExtractor):
 class YoutubeChannelIE(InfoExtractor):
     IE_DESC = u'YouTube.com channels'
     _VALID_URL = r"^(?:https?://)?(?:youtu\.be|(?:\w+\.)?youtube(?:-nocookie)?\.com)/channel/([0-9A-Za-z_-]+)"
-    _TEMPLATE_URL = 'http://www.youtube.com/channel/%s/videos?sort=da&flow=list&view=0&page=%s&gl=US&hl=en'
     _MORE_PAGES_INDICATOR = 'yt-uix-load-more'
     _MORE_PAGES_URL = 'http://www.youtube.com/c4_browse_ajax?action_load_more_videos=1&flow=list&paging=%s&view=0&sort=da&channel_id=%s'
     IE_NAME = u'youtube:channel'
@@ -1611,30 +1592,20 @@ class YoutubeChannelIE(InfoExtractor):
         # Download channel page
         channel_id = mobj.group(1)
         video_ids = []
-        pagenum = 1
 
-        url = self._TEMPLATE_URL % (channel_id, pagenum)
-        page = self._download_webpage(url, channel_id,
-                                      u'Downloading page #%s' % pagenum)
+        # Download all channel pages using the json-based channel_ajax query
+        for pagenum in itertools.count(1):
+            url = self._MORE_PAGES_URL % (pagenum, channel_id)
+            page = self._download_webpage(url, channel_id,
+                                          u'Downloading page #%s' % pagenum)
 
-        # Extract video identifiers
-        ids_in_page = self.extract_videos_from_page(page)
-        video_ids.extend(ids_in_page)
+            page = json.loads(page)
 
-        # Download any subsequent channel pages using the json-based channel_ajax query
-        if self._MORE_PAGES_INDICATOR in page:
-            for pagenum in itertools.count(1):
-                url = self._MORE_PAGES_URL % (pagenum, channel_id)
-                page = self._download_webpage(url, channel_id,
-                                              u'Downloading page #%s' % pagenum)
+            ids_in_page = self.extract_videos_from_page(page['content_html'])
+            video_ids.extend(ids_in_page)
 
-                page = json.loads(page)
-
-                ids_in_page = self.extract_videos_from_page(page['content_html'])
-                video_ids.extend(ids_in_page)
-
-                if self._MORE_PAGES_INDICATOR  not in page['load_more_widget_html']:
-                    break
+            if self._MORE_PAGES_INDICATOR not in page['load_more_widget_html']:
+                break
 
         self._downloader.to_screen(u'[youtube] Channel %s: Found %i videos' % (channel_id, len(video_ids)))
 
@@ -1750,6 +1721,10 @@ class YoutubeSearchIE(SearchInfoExtractor):
         videos = [self.url_result('http://www.youtube.com/watch?v=%s' % id, 'Youtube') for id in video_ids]
         return self.playlist_result(videos, query)
 
+class YoutubeSearchDateIE(YoutubeSearchIE):
+    _API_URL = 'https://gdata.youtube.com/feeds/api/videos?q=%s&start-index=%i&max-results=50&v=2&alt=jsonc&orderby=published'
+    _SEARCH_KEY = 'ytsearchdate'
+    IE_DESC = u'YouTube.com searches, newest videos first'
 
 class YoutubeShowIE(InfoExtractor):
     IE_DESC = u'YouTube.com (multi-season) shows'

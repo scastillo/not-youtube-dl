@@ -26,6 +26,7 @@ class MTVIE(InfoExtractor):
             },
         },
         {
+            u'add_ie': ['Vevo'],
             u'url': u'http://www.mtv.com/videos/taylor-swift/916187/everything-has-changed-ft-ed-sheeran.jhtml',
             u'file': u'USCJY1331283.mp4',
             u'md5': u'73b4e7fcadd88929292fe52c3ced8caf',
@@ -80,6 +81,8 @@ class MTVIE(InfoExtractor):
         video_id = self._id_from_uri(uri)
         self.report_extraction(video_id)
         mediagen_url = itemdoc.find('%s/%s' % (_media_xml_tag('group'), _media_xml_tag('content'))).attrib['url']
+        # Remove the templates, like &device={device}
+        mediagen_url = re.sub(r'&[^=]*?={.*?}(?=(&|$))', u'', mediagen_url)
         if 'acceptMethods' not in mediagen_url:
             mediagen_url += '&acceptMethods=fms'
         mediagen_page = self._download_webpage(mediagen_url, video_id,
