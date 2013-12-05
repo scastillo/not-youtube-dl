@@ -8,7 +8,9 @@ class RedTubeIE(InfoExtractor):
     _TEST = {
         u'url': u'http://www.redtube.com/66418',
         u'file': u'66418.mp4',
-        u'md5': u'7b8c22b5e7098a3e1c09709df1126d2d',
+        # md5 varies from time to time, as in
+        # https://travis-ci.org/rg3/youtube-dl/jobs/14052463#L295
+        #u'md5': u'7b8c22b5e7098a3e1c09709df1126d2d',
         u'info_dict': {
             u"title": u"Sucked on a toilet",
             u"age_limit": 18,
@@ -28,7 +30,7 @@ class RedTubeIE(InfoExtractor):
             r'<source src="(.+?)" type="video/mp4">', webpage, u'video URL')
 
         video_title = self._html_search_regex(
-            r'<h1 class="videoTitle slidePanelMovable">(.+?)</h1>',
+            r'<h1 class="videoTitle[^"]*">(.+?)</h1>',
             webpage, u'title')
 
         # No self-labeling, but they describe themselves as

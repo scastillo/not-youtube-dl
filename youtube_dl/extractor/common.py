@@ -4,11 +4,11 @@ import re
 import socket
 import sys
 import netrc
+import xml.etree.ElementTree
 
 from ..utils import (
     compat_http_client,
     compat_urllib_error,
-    compat_urllib_request,
     compat_str,
 
     clean_html,
@@ -18,6 +18,7 @@ from ..utils import (
     sanitize_filename,
     unescapeHTML,
 )
+
 
 class InfoExtractor(object):
     """Information Extractor class.
@@ -71,6 +72,11 @@ class InfoExtractor(object):
                                 ("3D" or "DASH video")
                     * width     Width of the video, if known
                     * height    Height of the video, if known
+                    * abr       Average audio bitrate in KBit/s
+                    * acodec    Name of the audio codec in use
+                    * vbr       Average video bitrate in KBit/s
+                    * vcodec    Name of the video codec in use
+                    * filesize  The number of bytes, if known in advance
     webpage_url:    The url to the video webpage, if given to youtube-dl it
                     should allow to get the same result again. (It will be set
                     by YoutubeDL if it's missing)
@@ -152,7 +158,7 @@ class InfoExtractor(object):
         elif note is not False:
             self.to_screen(u'%s: %s' % (video_id, note))
         try:
-            return compat_urllib_request.urlopen(url_or_request)
+            return self._downloader.urlopen(url_or_request)
         except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
             if errnote is None:
                 errnote = u'Unable to download webpage'
@@ -204,6 +210,12 @@ class InfoExtractor(object):
         """ Returns the data of the page as a string """
         return self._download_webpage_handle(url_or_request, video_id, note, errnote)[0]
 
+    def _download_xml(self, url_or_request, video_id,
+                      note=u'Downloading XML', errnote=u'Unable to download XML'):
+        """Return the xml as an xml.etree.ElementTree.Element"""
+        xml_string = self._download_webpage(url_or_request, video_id, note, errnote)
+        return xml.etree.ElementTree.fromstring(xml_string.encode('utf-8'))
+
     def to_screen(self, msg):
         """Print msg to screen, prefixing it with '[ie_name]'"""
         self._downloader.to_screen(u'[%s] %s' % (self.IE_NAME, msg))
@@ -225,12 +237,14 @@ class InfoExtractor(object):
         self.to_screen(u'Logging in')
 
     #Methods for following #608
-    def url_result(self, url, ie=None):
+    def url_result(self, url, ie=None, video_id=None):
         """Returns a url that points to a page that should be processed"""
         #TODO: ie should be the class used for getting the info
         video_info = {'_type': 'url',
                       'url': url,
                       'ie_key': ie}
+        if video_id is not None:
+            video_info['id'] = video_id
         return video_info
     def playlist_result(self, entries, playlist_id=None, playlist_title=None):
         """Returns a playlist"""
@@ -315,16 +329,22 @@ class InfoExtractor(object):
 
     # Helper functions for extracting OpenGraph info
     @staticmethod
-    def _og_regex(prop):
-        return r'<meta.+?property=[\'"]og:%s[\'"].+?content=(?:"(.+?)"|\'(.+?)\')' % re.escape(prop)
+    def _og_regexes(prop):
+        content_re = r'content=(?:"([^>]+?)"|\'(.+?)\')'
+        property_re = r'property=[\'"]og:%s[\'"]' % re.escape(prop)
+        template = r'<meta[^>]+?%s[^>]+?%s'
+        return [
+            template % (property_re, content_re),
+            template % (content_re, property_re),
+        ]
 
     def _og_search_property(self, prop, html, name=None, **kargs):
         if name is None:
             name = 'OpenGraph %s' % prop
-        escaped = self._search_regex(self._og_regex(prop), html, name, flags=re.DOTALL, **kargs)
-        if not escaped is None:
-            return unescapeHTML(escaped)
-        return None
+        escaped = self._search_regex(self._og_regexes(prop), html, name, flags=re.DOTALL, **kargs)
+        if escaped is None:
+            return None
+        return unescapeHTML(escaped)
 
     def _og_search_thumbnail(self, html, **kargs):
         return self._og_search_property('image', html, u'thumbnail url', fatal=False, **kargs)
@@ -336,9 +356,21 @@ class InfoExtractor(object):
         return self._og_search_property('title', html, **kargs)
 
     def _og_search_video_url(self, html, name='video url', secure=True, **kargs):
-        regexes = [self._og_regex('video')]
-        if secure: regexes.insert(0, self._og_regex('video:secure_url'))
+        regexes = self._og_regexes('video')
+        if secure: regexes = self._og_regexes('video:secure_url') + regexes
         return self._html_search_regex(regexes, html, name, **kargs)
+
+    def _html_search_meta(self, name, html, display_name=None):
+        if display_name is None:
+            display_name = name
+        return self._html_search_regex(
+            r'''(?ix)<meta
+                    (?=[^>]+(?:itemprop|name|property)=["\']%s["\'])
+                    [^>]+content=["\']([^"\']+)["\']''' % re.escape(name),
+            html, display_name, fatal=False)
+
+    def _dc_search_uploader(self, html):
+        return self._html_search_meta('dc.creator', html, 'uploader')
 
     def _rta_search(self, html):
         # See http://www.rtalabel.org/index.php?content=howtofaq#single
@@ -347,6 +379,23 @@ class InfoExtractor(object):
                      html):
             return 18
         return 0
+
+    def _media_rating_search(self, html):
+        # See http://www.tjg-designs.com/WP/metadata-code-examples-adding-metadata-to-your-web-pages/
+        rating = self._html_search_meta('rating', html)
+
+        if not rating:
+            return None
+
+        RATING_TABLE = {
+            'safe for kids': 0,
+            'general': 8,
+            '14 years': 14,
+            'mature': 17,
+            'restricted': 19,
+        }
+        return RATING_TABLE.get(rating.lower(), None)
+
 
 
 class SearchInfoExtractor(InfoExtractor):

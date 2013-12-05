@@ -8,13 +8,16 @@ import gzip
 import io
 import json
 import locale
+import math
 import os
 import pipes
 import platform
 import re
+import ssl
 import socket
 import sys
 import traceback
+import xml.etree.ElementTree
 import zlib
 
 try:
@@ -535,17 +538,34 @@ def formatSeconds(secs):
     else:
         return '%d' % secs
 
-def make_HTTPS_handler(opts):
-    if sys.version_info < (3,2):
-        # Python's 2.x handler is very simplistic
-        return compat_urllib_request.HTTPSHandler()
+def make_HTTPS_handler(opts_no_check_certificate):
+    if sys.version_info < (3, 2):
+        import httplib
+
+        class HTTPSConnectionV3(httplib.HTTPSConnection):
+            def __init__(self, *args, **kwargs):
+                httplib.HTTPSConnection.__init__(self, *args, **kwargs)
+
+            def connect(self):
+                sock = socket.create_connection((self.host, self.port), self.timeout)
+                if self._tunnel_host:
+                    self.sock = sock
+                    self._tunnel()
+                try:
+                    self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv3)
+                except ssl.SSLError:
+                    self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv23)
+
+        class HTTPSHandlerV3(compat_urllib_request.HTTPSHandler):
+            def https_open(self, req):
+                return self.do_open(HTTPSConnectionV3, req)
+        return HTTPSHandlerV3()
     else:
-        import ssl
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
         context.set_default_verify_paths()
         
         context.verify_mode = (ssl.CERT_NONE
-                               if opts.no_check_certificate
+                               if opts_no_check_certificate
                                else ssl.CERT_REQUIRED)
         return compat_urllib_request.HTTPSHandler(context=context)
 
@@ -734,6 +754,8 @@ def unified_strdate(date_str):
         '%Y/%m/%d %H:%M:%S',
         '%d.%m.%Y %H:%M',
         '%Y-%m-%dT%H:%M:%SZ',
+        '%Y-%m-%dT%H:%M:%S.%fZ',
+        '%Y-%m-%dT%H:%M:%S.%f0Z',
         '%Y-%m-%dT%H:%M:%S',
     ]
     for expression in format_expressions:
@@ -949,7 +971,16 @@ class locked_file(object):
 
 
 def shell_quote(args):
-    return ' '.join(map(pipes.quote, args))
+    quoted_args = []
+    encoding = sys.getfilesystemencoding()
+    if encoding is None:
+        encoding = 'utf-8'
+    for a in args:
+        if isinstance(a, bytes):
+            # We may get a filename encoded with 'encodeFilename'
+            a = a.decode(encoding)
+        quoted_args.append(pipes.quote(a))
+    return u' '.join(quoted_args)
 
 
 def takewhile_inclusive(pred, seq):
@@ -976,3 +1007,17 @@ def unsmuggle_url(smug_url):
     jsond = compat_parse_qs(sdata)[u'__youtubedl_smuggle'][0]
     data = json.loads(jsond)
     return url, data
+
+
+def format_bytes(bytes):
+    if bytes is None:
+        return u'N/A'
+    if type(bytes) is str:
+        bytes = float(bytes)
+    if bytes == 0.0:
+        exponent = 0
+    else:
+        exponent = int(math.log(bytes, 1024.0))
+    suffix = [u'B', u'KiB', u'MiB', u'GiB', u'TiB', u'PiB', u'EiB', u'ZiB', u'YiB'][exponent]
+    converted = float(bytes) / float(1024 ** exponent)
+    return u'%.2f%s' % (converted, suffix)
