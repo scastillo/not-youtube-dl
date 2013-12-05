@@ -24,7 +24,7 @@ class GameSpotIE(InfoExtractor):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        page_id = video_id = mobj.group('page_id')
+        page_id = mobj.group('page_id')
         webpage = self._download_webpage(url, page_id)
         data_video_json = self._search_regex(r'data-video=\'(.*?)\'', webpage, u'data video')
         data_video = json.loads(unescapeHTML(data_video_json))
@@ -47,13 +47,10 @@ class GameSpotIE(InfoExtractor):
                 'format_id': q,
             })
 
-        info = {
+        return {
             'id': data_video['guid'],
             'title': compat_urllib_parse.unquote(data_video['title']),
             'formats': formats,
             'description': get_meta_content('description', webpage),
             'thumbnail': self._og_search_thumbnail(webpage),
         }
-        # TODO: Remove when #980 has been merged
-        info.update(formats[-1])
-        return info

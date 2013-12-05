@@ -2,11 +2,15 @@ import io
 import json
 import traceback
 import hashlib
+import os
 import subprocess
 import sys
 from zipimport import zipimporter
 
-from .utils import *
+from .utils import (
+    compat_str,
+    compat_urllib_request,
+)
 from .version import __version__
 
 def rsa_verify(message, signature, key):
@@ -36,6 +40,7 @@ def rsa_verify(message, signature, key):
     signature = signature[19:]
     if signature != sha256(message).digest(): return False
     return True
+
 
 def update_self(to_screen, verbose):
     """Update the program file with the latest version from the repository"""
@@ -78,6 +83,13 @@ def update_self(to_screen, verbose):
         return
 
     version_id = versions_info['latest']
+
+    def version_tuple(version_str):
+        return tuple(map(int, version_str.split('.')))
+    if version_tuple(__version__) >= version_tuple(version_id):
+        to_screen(u'youtube-dl is up to date (%s)' % __version__)
+        return
+
     to_screen(u'Updating to version ' + version_id + '...')
     version = versions_info['versions'][version_id]
 
@@ -105,7 +117,7 @@ def update_self(to_screen, verbose):
             urlh = compat_urllib_request.urlopen(version['exe'][0])
             newcontent = urlh.read()
             urlh.close()
-        except (IOError, OSError) as err:
+        except (IOError, OSError):
             if verbose: to_screen(compat_str(traceback.format_exc()))
             to_screen(u'ERROR: unable to download latest version')
             return
@@ -118,7 +130,7 @@ def update_self(to_screen, verbose):
         try:
             with open(exe + '.new', 'wb') as outf:
                 outf.write(newcontent)
-        except (IOError, OSError) as err:
+        except (IOError, OSError):
             if verbose: to_screen(compat_str(traceback.format_exc()))
             to_screen(u'ERROR: unable to write the new version')
             return
@@ -137,7 +149,7 @@ start /b "" cmd /c del "%%~f0"&exit /b"
 
             subprocess.Popen([bat])  # Continues to run in the background
             return  # Do not show premature success messages
-        except (IOError, OSError) as err:
+        except (IOError, OSError):
             if verbose: to_screen(compat_str(traceback.format_exc()))
             to_screen(u'ERROR: unable to overwrite current version')
             return
@@ -148,7 +160,7 @@ start /b "" cmd /c del "%%~f0"&exit /b"
             urlh = compat_urllib_request.urlopen(version['bin'][0])
             newcontent = urlh.read()
             urlh.close()
-        except (IOError, OSError) as err:
+        except (IOError, OSError):
             if verbose: to_screen(compat_str(traceback.format_exc()))
             to_screen(u'ERROR: unable to download latest version')
             return
@@ -161,7 +173,7 @@ start /b "" cmd /c del "%%~f0"&exit /b"
         try:
             with open(filename, 'wb') as outf:
                 outf.write(newcontent)
-        except (IOError, OSError) as err:
+        except (IOError, OSError):
             if verbose: to_screen(compat_str(traceback.format_exc()))
             to_screen(u'ERROR: unable to overwrite current version')
             return

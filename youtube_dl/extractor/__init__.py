@@ -1,5 +1,6 @@
 from .appletrailers import AppleTrailersIE
 from .addanime import AddAnimeIE
+from .anitube import AnitubeIE
 from .archiveorg import ArchiveOrgIE
 from .ard import ARDIE
 from .arte import (
@@ -10,7 +11,7 @@ from .arte import (
 )
 from .auengine import AUEngineIE
 from .bambuser import BambuserIE, BambuserChannelIE
-from .bandcamp import BandcampIE
+from .bandcamp import BandcampIE, BandcampAlbumIE
 from .bliptv import BlipTVIE, BlipTVUserIE
 from .bloomberg import BloombergIE
 from .breakcom import BreakIE
@@ -19,12 +20,15 @@ from .c56 import C56IE
 from .canalplus import CanalplusIE
 from .canalc2 import Canalc2IE
 from .cinemassacre import CinemassacreIE
+from .clipfish import ClipfishIE
+from .clipsyndicate import ClipsyndicateIE
 from .cnn import CNNIE
 from .collegehumor import CollegeHumorIE
-from .comedycentral import ComedyCentralIE
+from .comedycentral import ComedyCentralIE, ComedyCentralShowsIE
 from .condenast import CondeNastIE
 from .criterion import CriterionIE
 from .cspan import CSpanIE
+from .d8 import D8IE
 from .dailymotion import (
     DailymotionIE,
     DailymotionPlaylistIE,
@@ -57,6 +61,7 @@ from .francetv import (
 )
 from .freesound import FreesoundIE
 from .funnyordie import FunnyOrDieIE
+from .gamekings import GamekingsIE
 from .gamespot import GameSpotIE
 from .gametrailers import GametrailersIE
 from .generic import GenericIE
@@ -67,6 +72,7 @@ from .hotnewhiphop import HotNewHipHopIE
 from .howcast import HowcastIE
 from .hypem import HypemIE
 from .ign import IGNIE, OneUPIE
+from .imdb import ImdbIE
 from .ina import InaIE
 from .infoq import InfoQIE
 from .instagram import InstagramIE
@@ -79,7 +85,7 @@ from .keezmovies import KeezMoviesIE
 from .kickstarter import KickStarterIE
 from .keek import KeekIE
 from .liveleak import LiveLeakIE
-from .livestream import LivestreamIE
+from .livestream import LivestreamIE, LivestreamOriginalIE
 from .metacafe import MetacafeIE
 from .metacritic import MetacriticIE
 from .mit import TechTVMITIE, MITIE
@@ -95,11 +101,13 @@ from .nba import NBAIE
 from .nbc import NBCNewsIE
 from .newgrounds import NewgroundsIE
 from .nhl import NHLIE, NHLVideocenterIE
+from .niconico import NiconicoIE
 from .nowvideo import NowVideoIE
 from .ooyala import OoyalaIE
 from .orf import ORFIE
 from .pbs import PBSIE
 from .photobucket import PhotobucketIE
+from .podomatic import PodomaticIE
 from .pornhub import PornHubIE
 from .pornotube import PornotubeIE
 from .rbmaradio import RBMARadioIE
@@ -113,27 +121,38 @@ from .rutube import RutubeIE
 from .sina import SinaIE
 from .slashdot import SlashdotIE
 from .slideshare import SlideshareIE
+from .smotri import (
+    SmotriIE,
+    SmotriCommunityIE,
+    SmotriUserIE,
+)
 from .sohu import SohuIE
 from .soundcloud import SoundcloudIE, SoundcloudSetIE, SoundcloudUserIE
-from .southparkstudios import SouthParkStudiosIE
+from .southparkstudios import (
+    SouthParkStudiosIE,
+    SouthparkDeIE,
+)
 from .space import SpaceIE
 from .spankwire import SpankwireIE
 from .spiegel import SpiegelIE
 from .stanfordoc import StanfordOpenClassroomIE
 from .statigram import StatigramIE
 from .steam import SteamIE
+from .streamcloud import StreamcloudIE
 from .sztvhu import SztvHuIE
 from .teamcoco import TeamcocoIE
 from .techtalks import TechTalksIE
 from .ted import TEDIE
 from .tf1 import TF1IE
 from .thisav import ThisAVIE
+from .toutv import TouTvIE
 from .traileraddict import TrailerAddictIE
 from .trilulilu import TriluliluIE
 from .tube8 import Tube8IE
 from .tudou import TudouIE
 from .tumblr import TumblrIE
 from .tutv import TutvIE
+from .tvp import TvpIE
 from .unistra import UnistraIE
 from .ustream import UstreamIE, UstreamChannelIE
 from .vbox7 import Vbox7IE
@@ -145,8 +164,13 @@ from .viddler import ViddlerIE
 from .videodetective import VideoDetectiveIE
 from .videofyme import VideofyMeIE
 from .videopremium import VideoPremiumIE
-from .vimeo import VimeoIE, VimeoChannelIE
+from .vimeo import (
+    VimeoIE,
+    VimeoChannelIE,
+    VimeoUserIE,
+)
 from .vine import VineIE
+from .viki import VikiIE
 from .vk import VKIE
 from .wat import WatIE
 from .websurg import WeBSurgIE
@@ -157,7 +181,11 @@ from .xhamster import XHamsterIE
 from .xnxx import XNXXIE
 from .xvideos import XVideosIE
 from .xtube import XTubeIE
-from .yahoo import YahooIE, YahooSearchIE
+from .yahoo import (
+    YahooIE,
+    YahooNewsIE,
+    YahooSearchIE,
+)
 from .youjizz import YouJizzIE
 from .youku import YoukuIE
 from .youporn import YouPornIE
@@ -174,6 +202,7 @@ from .youtube import (
     YoutubeTruncatedURLIE,
     YoutubeWatchLaterIE,
     YoutubeFavouritesIE,
+    YoutubeHistoryIE,
 )
 from .zdf import ZDFIE
 

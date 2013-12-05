@@ -37,7 +37,8 @@ OPTIONS
     --list-extractors          List all supported extractors and the URLs they
                                would handle
     --extractor-descriptions   Output descriptions of all supported extractors
-    --proxy URL                Use the specified HTTP/HTTPS proxy
+    --proxy URL                Use the specified HTTP/HTTPS proxy. Pass in an
+                               empty string (--proxy "") for direct connection
     --no-check-certificate     Suppress HTTPS certificate validation.
     --cache-dir DIR            Location in the filesystem where youtube-dl can
                                store downloaded information permanently. By
@@ -64,8 +65,9 @@ Video Selection:
     --dateafter DATE           download only videos uploaded after this date
     --no-playlist              download only the currently playing video
     --age-limit YEARS          download only videos suitable for the given age
-    --download-archive FILE    Download only videos not present in the archive
-                               file. Record all downloaded videos in it.
+    --download-archive FILE    Download only videos not listed in the archive
+                               file. Record the IDs of all downloaded videos in
+                               it.
 
 Download Options:
 -----------------
@@ -138,19 +140,20 @@ Verbosity / Simulation Options:
     --get-description          simulate, quiet but print video description
     --get-filename             simulate, quiet but print output filename
     --get-format               simulate, quiet but print output format
+    -j, --dump-json            simulate, quiet but print JSON information
     --newline                  output progress bar as new lines
     --no-progress              do not print progress bar
     --console-title            display progress in console titlebar
     -v, --verbose              print various debugging information
     --dump-intermediate-pages  print downloaded pages to debug problems(very
                                verbose)
-    --write-pages              Write downloaded pages to files in the current
-                               directory
+    --write-pages              Write downloaded intermediary pages to files in
+                               the current directory to debug problems
 
 Video Format Options:
 ---------------------
 
-    -f, --format FORMAT        video format code, specifiy the order of
+    -f, --format FORMAT        video format code, specify the order of
                                preference using slashes: "-f 22/17/18". "-f mp4"
                                and "-f flv" are also supported
     --all-formats              download all available video formats
@@ -207,7 +210,9 @@ CONFIGURATION
 
 You can configure youtube-dl by placing default arguments (such as
 --extract-audio --no-mtime to always extract the audio and not copy the
-mtime) into /etc/youtube-dl.conf and/or ~/.config/youtube-dl.conf.
+mtime) into /etc/youtube-dl.conf and/or ~/.config/youtube-dl.conf. On
+Windows, the configuration file locations are
+%APPDATA%\youtube-dl\config.txt and C:\Users\<Yourname>\youtube-dl.conf.
 
 OUTPUT TEMPLATE
 ===============

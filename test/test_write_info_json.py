@@ -7,8 +7,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from test.helper import get_params, global_setup
-global_setup()
+from test.helper import get_params
 
 
 import io
@@ -31,7 +30,7 @@ params = get_params({
 
 
 TEST_ID = 'BaW_jenozKc'
-INFO_JSON_FILE = TEST_ID + '.mp4.info.json'
+INFO_JSON_FILE = TEST_ID + '.info.json'
 DESCRIPTION_FILE = TEST_ID + '.mp4.description'
 EXPECTED_DESCRIPTION = u'''test chars:  "'/\ä↭𝕐
 
