@@ -1,6 +1,4 @@
-youtube-dl (2013.12.04-1~1.gbpc91254) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @c91254967656b8722087896c531ed6d815cbe670 **
+youtube-dl (2013.12.04-1) unstable; urgency=low
 
   * The "I still have a flu (but am getting better) release".
   * Imported Upstream version 2013.12.04.
@@ -10,7 +8,7 @@ youtube-dl (2013.12.04-1~1.gbpc91254) UNRELEASED; urgency=low
       Thanks Jaime Marquínez Ferrándiz for the fix. Closes: #730730.
   * debian/control: Update list of extractors.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 05 Dec 2013 01:41:27 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 05 Dec 2013 02:24:18 -0200
 
 youtube-dl (2013.11.11-2) unstable; urgency=low
 
