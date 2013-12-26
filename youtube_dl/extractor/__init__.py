@@ -1,6 +1,8 @@
-from .appletrailers import AppleTrailersIE
+from .academicearth import AcademicEarthCourseIE
 from .addanime import AddAnimeIE
 from .anitube import AnitubeIE
+from .aparat import AparatIE
+from .appletrailers import AppleTrailersIE
 from .archiveorg import ArchiveOrgIE
 from .ard import ARDIE
 from .arte import (
@@ -8,10 +10,12 @@ from .arte import (
     ArteTVPlus7IE,
     ArteTVCreativeIE,
     ArteTVFutureIE,
+    ArteTVDDCIE,
 )
 from .auengine import AUEngineIE
 from .bambuser import BambuserIE, BambuserChannelIE
 from .bandcamp import BandcampIE, BandcampAlbumIE
+from .blinkx import BlinkxIE
 from .bliptv import BlipTVIE, BlipTVUserIE
 from .bloomberg import BloombergIE
 from .breakcom import BreakIE
@@ -19,6 +23,8 @@ from .brightcove import BrightcoveIE
 from .c56 import C56IE
 from .canalplus import CanalplusIE
 from .canalc2 import Canalc2IE
+from .cbs import CBSIE
+from .channel9 import Channel9IE
 from .cinemassacre import CinemassacreIE
 from .clipfish import ClipfishIE
 from .clipsyndicate import ClipsyndicateIE
@@ -27,6 +33,7 @@ from .collegehumor import CollegeHumorIE
 from .comedycentral import ComedyCentralIE, ComedyCentralShowsIE
 from .condenast import CondeNastIE
 from .criterion import CriterionIE
+from .crunchyroll import CrunchyrollIE
 from .cspan import CSpanIE
 from .d8 import D8IE
 from .dailymotion import (
@@ -56,7 +63,7 @@ from .flickr import FlickrIE
 from .francetv import (
     PluzzIE,
     FranceTvInfoIE,
-    France2IE,
+    FranceTVIE,
     GenerationQuoiIE
 )
 from .freesound import FreesoundIE
@@ -77,6 +84,10 @@ from .ina import InaIE
 from .infoq import InfoQIE
 from .instagram import InstagramIE
 from .internetvideoarchive import InternetVideoArchiveIE
+from .ivi import (
+    IviIE,
+    IviCompilationIE
+)
 from .jeuxvideo import JeuxVideoIE
 from .jukebox import JukeboxIE
 from .justintv import JustinTVIE
@@ -86,6 +97,7 @@ from .kickstarter import KickStarterIE
 from .keek import KeekIE
 from .liveleak import LiveLeakIE
 from .livestream import LivestreamIE, LivestreamOriginalIE
+from .mdr import MDRIE
 from .metacafe import MetacafeIE
 from .metacritic import MetacriticIE
 from .mit import TechTVMITIE, MITIE
@@ -99,17 +111,22 @@ from .myvideo import MyVideoIE
 from .naver import NaverIE
 from .nba import NBAIE
 from .nbc import NBCNewsIE
+from .ndtv import NDTVIE
 from .newgrounds import NewgroundsIE
 from .nhl import NHLIE, NHLVideocenterIE
 from .niconico import NiconicoIE
+from .ninegag import NineGagIE
 from .nowvideo import NowVideoIE
 from .ooyala import OoyalaIE
 from .orf import ORFIE
 from .pbs import PBSIE
 from .photobucket import PhotobucketIE
 from .podomatic import PodomaticIE
+from .pornhd import PornHdIE
 from .pornhub import PornHubIE
 from .pornotube import PornotubeIE
+from .pyvideo import PyvideoIE
+from .radiofrance import RadioFranceIE
 from .rbmaradio import RBMARadioIE
 from .redtube import RedTubeIE
 from .ringtv import RingTVIE
@@ -125,6 +142,7 @@ from .smotri import (
     SmotriIE,
     SmotriCommunityIE,
     SmotriUserIE,
+    SmotriBroadcastIE,
 )
 from .sohu import SohuIE
 from .soundcloud import SoundcloudIE, SoundcloudSetIE, SoundcloudUserIE
@@ -144,6 +162,7 @@ from .teamcoco import TeamcocoIE
 from .techtalks import TechTalksIE
 from .ted import TEDIE
 from .tf1 import TF1IE
+from .theplatform import ThePlatformIE
 from .thisav import ThisAVIE
 from .toutv import TouTvIE
 from .traileraddict import TrailerAddictIE
@@ -168,6 +187,8 @@ from .vimeo import (
     VimeoIE,
     VimeoChannelIE,
     VimeoUserIE,
+    VimeoAlbumIE,
+    VimeoGroupsIE,
 )
 from .vine import VineIE
 from .viki import VikiIE
@@ -176,6 +197,7 @@ from .wat import WatIE
 from .websurg import WeBSurgIE
 from .weibo import WeiboIE
 from .wimp import WimpIE
+from .wistia import WistiaIE
 from .worldstarhiphop import WorldStarHipHopIE
 from .xhamster import XHamsterIE
 from .xnxx import XNXXIE
@@ -203,6 +225,7 @@ from .youtube import (
     YoutubeWatchLaterIE,
     YoutubeFavouritesIE,
     YoutubeHistoryIE,
+    YoutubeTopListIE,
 )
 from .zdf import ZDFIE
 
