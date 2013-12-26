@@ -1,13 +1,17 @@
 # encoding: utf-8
 
+import os.path
 import re
 import json
 import hashlib
+import uuid
 
 from .common import InfoExtractor
 from ..utils import (
-    determine_ext,
-    ExtractorError
+    compat_urllib_parse,
+    compat_urllib_request,
+    ExtractorError,
+    url_basename,
 )
 
 
@@ -130,7 +134,16 @@ class SmotriIE(InfoExtractor):
         # We will extract some from the video web page instead
         video_page_url = 'http://' + mobj.group('url')
         video_page = self._download_webpage(video_page_url, video_id, u'Downloading video page')
-        
+
+        # Warning if video is unavailable
+        warning = self._html_search_regex(
+            r'<div class="videoUnModer">(.*?)</div>', video_page,
+            u'warning messagef', default=None)
+        if warning is not None:
+            self._downloader.report_warning(
+                u'Video %s may not be available; smotri said: %s ' %
+                (video_id, warning))
+
         # Adult content
         if re.search(u'EroConfirmText">', video_page) is not None:
             self.report_age_confirmation()
@@ -146,38 +159,44 @@ class SmotriIE(InfoExtractor):
         # Extract the rest of meta data
         video_title = self._search_meta(u'name', video_page, u'title')
         if not video_title:
-            video_title = video_url.rsplit('/', 1)[-1]
+            video_title = os.path.splitext(url_basename(video_url))[0]
 
         video_description = self._search_meta(u'description', video_page)
         END_TEXT = u' на сайте Smotri.com'
-        if video_description.endswith(END_TEXT):
+        if video_description and video_description.endswith(END_TEXT):
             video_description = video_description[:-len(END_TEXT)]
         START_TEXT = u'Смотреть онлайн ролик '
-        if video_description.startswith(START_TEXT):
+        if video_description and video_description.startswith(START_TEXT):
             video_description = video_description[len(START_TEXT):]
         video_thumbnail = self._search_meta(u'thumbnail', video_page)
 
         upload_date_str = self._search_meta(u'uploadDate', video_page, u'upload date')
-        upload_date_m = re.search(r'(?P<year>\d{4})\.(?P<month>\d{2})\.(?P<day>\d{2})T', upload_date_str)
-        video_upload_date = (
-            (
-                upload_date_m.group('year') +
-                upload_date_m.group('month') +
-                upload_date_m.group('day')
+        if upload_date_str:
+            upload_date_m = re.search(r'(?P<year>\d{4})\.(?P<month>\d{2})\.(?P<day>\d{2})T', upload_date_str)
+            video_upload_date = (
+                (
+                    upload_date_m.group('year') +
+                    upload_date_m.group('month') +
+                    upload_date_m.group('day')
+                )
+                if upload_date_m else None
             )
-            if upload_date_m else None
-        )
+        else:
+            video_upload_date = None
         
         duration_str = self._search_meta(u'duration', video_page)
-        duration_m = re.search(r'T(?P<hours>[0-9]{2})H(?P<minutes>[0-9]{2})M(?P<seconds>[0-9]{2})S', duration_str)
-        video_duration = (
-            (
-                (int(duration_m.group('hours')) * 60 * 60) +
-                (int(duration_m.group('minutes')) * 60) +
-                int(duration_m.group('seconds'))
+        if duration_str:
+            duration_m = re.search(r'T(?P<hours>[0-9]{2})H(?P<minutes>[0-9]{2})M(?P<seconds>[0-9]{2})S', duration_str)
+            video_duration = (
+                (
+                    (int(duration_m.group('hours')) * 60 * 60) +
+                    (int(duration_m.group('minutes')) * 60) +
+                    int(duration_m.group('seconds'))
+                )
+                if duration_m else None
             )
-            if duration_m else None
-        )
+        else:
+            video_duration = None
         
         video_uploader = self._html_search_regex(
             u'<div class="DescrUser"><div>Автор.*?onmouseover="popup_user_info[^"]+">(.*?)</a>',
@@ -200,7 +219,7 @@ class SmotriIE(InfoExtractor):
             'uploader': video_uploader,
             'upload_date': video_upload_date,
             'uploader_id': video_uploader_id,
-            'video_duration': video_duration,
+            'duration': video_duration,
             'view_count': video_view_count,
             'age_limit': 18 if adult_content else 0,
             'video_page_url': video_page_url
@@ -250,3 +269,105 @@ class SmotriUserIE(InfoExtractor):
             u'user nickname')
 
         return self.playlist_result(entries, user_id, user_nickname)
+
+
+class SmotriBroadcastIE(InfoExtractor):
+    IE_DESC = u'Smotri.com broadcasts'
+    IE_NAME = u'smotri:broadcast'
+    _VALID_URL = r'^https?://(?:www\.)?(?P<url>smotri\.com/live/(?P<broadcastid>[^/]+))/?.*'
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        broadcast_id = mobj.group('broadcastid')
+
+        broadcast_url = 'http://' + mobj.group('url')
+        broadcast_page = self._download_webpage(broadcast_url, broadcast_id, u'Downloading broadcast page')
+
+        if re.search(u'>Режиссер с логином <br/>"%s"<br/> <span>не существует<' % broadcast_id, broadcast_page) is not None:
+            raise ExtractorError(u'Broadcast %s does not exist' % broadcast_id, expected=True)
+
+        # Adult content
+        if re.search(u'EroConfirmText">', broadcast_page) is not None:
+
+            (username, password) = self._get_login_info()
+            if username is None:
+                raise ExtractorError(u'Erotic broadcasts allowed only for registered users, '
+                    u'use --username and --password options to provide account credentials.', expected=True)
+
+            # Log in
+            login_form_strs = {
+                u'login-hint53': '1',
+                u'confirm_erotic': '1',
+                u'login': username,
+                u'password': password,
+            }
+            # Convert to UTF-8 *before* urlencode because Python 2.x's urlencode
+            # chokes on unicode
+            login_form = dict((k.encode('utf-8'), v.encode('utf-8')) for k,v in login_form_strs.items())
+            login_data = compat_urllib_parse.urlencode(login_form).encode('utf-8')
+            login_url = broadcast_url + '/?no_redirect=1'
+            request = compat_urllib_request.Request(login_url, login_data)
+            request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+            broadcast_page = self._download_webpage(
+                request, broadcast_id, note=u'Logging in and confirming age')
+
+            if re.search(u'>Неверный логин или пароль<', broadcast_page) is not None:
+                raise ExtractorError(u'Unable to log in: bad username or password', expected=True)
+
+            adult_content = True
+        else:
+            adult_content = False
+
+        ticket = self._html_search_regex(
+            u'window\.broadcast_control\.addFlashVar\\(\'file\', \'([^\']+)\'\\);',
+            broadcast_page, u'broadcast ticket')
+
+        url = 'http://smotri.com/broadcast/view/url/?ticket=%s' % ticket
+
+        broadcast_password = self._downloader.params.get('videopassword', None)
+        if broadcast_password:
+            url += '&pass=%s' % hashlib.md5(broadcast_password.encode('utf-8')).hexdigest()
+
+        broadcast_json_page = self._download_webpage(url, broadcast_id, u'Downloading broadcast JSON')
+
+        try:
+            broadcast_json = json.loads(broadcast_json_page)
+
+            protected_broadcast = broadcast_json['_pass_protected'] == 1
+            if protected_broadcast and not broadcast_password:
+                raise ExtractorError(u'This broadcast is protected by a password, use the --video-password option', expected=True)
+
+            broadcast_offline = broadcast_json['is_play'] == 0
+            if broadcast_offline:
+                raise ExtractorError(u'Broadcast %s is offline' % broadcast_id, expected=True)
+
+            rtmp_url = broadcast_json['_server']
+            if not rtmp_url.startswith('rtmp://'):
+                raise ExtractorError(u'Unexpected broadcast rtmp URL')
+
+            broadcast_playpath = broadcast_json['_streamName']
+            broadcast_thumbnail = broadcast_json['_imgURL']
+            broadcast_title = broadcast_json['title']
+            broadcast_description = broadcast_json['description']
+            broadcaster_nick = broadcast_json['nick']
+            broadcaster_login = broadcast_json['login']
+            rtmp_conn = 'S:%s' % uuid.uuid4().hex
+        except KeyError:
+            if protected_broadcast:
+                raise ExtractorError(u'Bad broadcast password', expected=True)
+            raise ExtractorError(u'Unexpected broadcast JSON')
+
+        return {
+            'id': broadcast_id,
+            'url': rtmp_url,
+            'title': broadcast_title,
+            'thumbnail': broadcast_thumbnail,
+            'description': broadcast_description,
+            'uploader': broadcaster_nick,
+            'uploader_id': broadcaster_login,
+            'age_limit': 18 if adult_content else 0,
+            'ext': 'flv',
+            'play_path': broadcast_playpath,
+            'rtmp_live': True,
+            'rtmp_conn': rtmp_conn
+        }
