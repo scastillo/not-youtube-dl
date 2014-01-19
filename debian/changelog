@@ -1,8 +1,9 @@
-youtube-dl (2013.12.23-1~1.gbp63a692) UNRELEASED; urgency=medium
+youtube-dl (2014.01.17.2-1~1.gbpd1a5ea) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @63a6927374492ef47c8fd6de67d0760ace4dd0ed **
+  ** SNAPSHOT build @d1a5eac72c0b1116e8efbbf50766d8d00678f5c8 **
 
   * Imported Upstream version 2013.12.23
+  * Imported Upstream version 2014.01.17.2
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 27 Dec 2013 00:57:28 -0200
 
