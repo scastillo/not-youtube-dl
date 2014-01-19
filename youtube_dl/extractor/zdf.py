@@ -1,10 +1,10 @@
 # coding: utf-8
 
-import operator
 import re
 
 from .common import InfoExtractor
 from ..utils import (
+    int_or_none,
     unified_strdate,
 )
 
@@ -67,29 +67,13 @@ class ZDFIE(InfoExtractor):
             ''', format_id)
 
             ext = format_m.group('container')
-            is_supported = ext != 'f4f'
-
-            PROTO_ORDER = ['http', 'rtmp', 'rtsp']
-            try:
-                proto_pref = -PROTO_ORDER.index(format_m.group('proto'))
-            except ValueError:
-                proto_pref = -999
+            proto = format_m.group('proto').lower()
 
             quality = fnode.find('./quality').text
-            QUALITY_ORDER = ['veryhigh', '300', 'high', 'med', 'low']
-            try:
-                quality_pref = -QUALITY_ORDER.index(quality)
-            except ValueError:
-                quality_pref = -999
-
             abr = int(fnode.find('./audioBitrate').text) // 1000
             vbr = int(fnode.find('./videoBitrate').text) // 1000
-            pref = (is_available, is_supported,
-                    proto_pref, quality_pref, vbr, abr)
 
             format_note = u''
-            if not is_supported:
-                format_note += u'(unsupported)'
             if not format_note:
                 format_note = None
 
@@ -101,18 +85,20 @@ class ZDFIE(InfoExtractor):
                 'vcodec': format_m.group('vcodec'),
                 'abr': abr,
                 'vbr': vbr,
-                'width': int(fnode.find('./width').text),
-                'height': int(fnode.find('./height').text),
-                'filesize': int(fnode.find('./filesize').text),
+                'width': int_or_none(fnode.find('./width').text),
+                'height': int_or_none(fnode.find('./height').text),
+                'filesize': int_or_none(fnode.find('./filesize').text),
                 'format_note': format_note,
-                '_pref': pref,
+                'protocol': proto,
                 '_available': is_available,
             }
 
         format_nodes = doc.findall('.//formitaeten/formitaet')
-        formats = sorted(filter(lambda f: f['_available'],
-                                map(xml_to_format, format_nodes)),
-                         key=operator.itemgetter('_pref'))
+        formats = list(filter(
+            lambda f: f['_available'],
+            map(xml_to_format, format_nodes)))
+
+        self._sort_formats(formats)
 
         return {
             'id': video_id,

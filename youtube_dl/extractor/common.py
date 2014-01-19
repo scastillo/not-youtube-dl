@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 import socket
@@ -9,6 +10,7 @@ import xml.etree.ElementTree
 from ..utils import (
     compat_http_client,
     compat_urllib_error,
+    compat_urllib_parse_urlparse,
     compat_str,
 
     clean_html,
@@ -37,10 +39,12 @@ class InfoExtractor(object):
     id:             Video identifier.
     title:          Video title, unescaped.
 
-    Additionally, it must contain either a formats entry or url and ext:
+    Additionally, it must contain either a formats entry or a url one:
 
-    formats:        A list of dictionaries for each format available, it must
-                    be ordered from worst to best quality. Potential fields:
+    formats:        A list of dictionaries for each format available, ordered
+                    from worst to best quality.
+
+                    Potential fields:
                     * url        Mandatory. The URL of the video file
                     * ext        Will be calculated from url if missing
                     * format     A human-readable description of the format
@@ -48,23 +52,36 @@ class InfoExtractor(object):
                                  Calculated from the format_id, width, height.
                                  and format_note fields if missing.
                     * format_id  A short description of the format
-                                 ("mp4_h264_opus" or "19")
+                                 ("mp4_h264_opus" or "19").
+                                Technically optional, but strongly recommended.
                     * format_note Additional info about the format
                                  ("3D" or "DASH video")
                     * width      Width of the video, if known
                     * height     Height of the video, if known
+                    * resolution Textual description of width and height
+                    * tbr        Average bitrate of audio and video in KBit/s
                     * abr        Average audio bitrate in KBit/s
                     * acodec     Name of the audio codec in use
                     * vbr        Average video bitrate in KBit/s
                     * vcodec     Name of the video codec in use
                     * filesize   The number of bytes, if known in advance
                     * player_url SWF Player URL (used for rtmpdump).
+                    * protocol   The protocol that will be used for the actual
+                                 download, lower-case.
+                                 "http", "https", "rtsp", "rtmp" or so.
+                    * preference Order number of this format. If this field is
+                                 present and not None, the formats get sorted
+                                 by this field.
+                                 -1 for default (order by other properties),
+                                 -2 or smaller for less than default.
+                    * quality    Order number of the video quality of this
+                                 format, irrespective of the file format.
+                                 -1 for default (order by other properties),
+                                 -2 or smaller for less than default.
     url:            Final video URL.
     ext:            Video filename extension.
     format:         The video format, defaults to ext (used for --get-format)
     player_url:     SWF Player URL (used for rtmpdump).
-    urlhandle:      [internal] The urlHandle to be used to download the file,
-                    like returned by urllib.request.urlopen
 
     The following fields are optional:
 
@@ -244,6 +261,20 @@ class InfoExtractor(object):
             xml_string = transform_source(xml_string)
         return xml.etree.ElementTree.fromstring(xml_string.encode('utf-8'))
 
+    def _download_json(self, url_or_request, video_id,
+                       note=u'Downloading JSON metadata',
+                       errnote=u'Unable to download JSON metadata'):
+        json_string = self._download_webpage(url_or_request, video_id, note, errnote)
+        try:
+            return json.loads(json_string)
+        except ValueError as ve:
+            raise ExtractorError('Failed to download JSON', cause=ve)
+
+    def report_warning(self, msg, video_id=None):
+        idstr = u'' if video_id is None else u'%s: ' % video_id
+        self._downloader.report_warning(
+            u'[%s] %s%s' % (self.IE_NAME, idstr, msg))
+
     def to_screen(self, msg):
         """Print msg to screen, prefixing it with '[ie_name]'"""
         self._downloader.to_screen(u'[%s] %s' % (self.IE_NAME, msg))
@@ -361,7 +392,7 @@ class InfoExtractor(object):
     @staticmethod
     def _og_regexes(prop):
         content_re = r'content=(?:"([^>]+?)"|\'(.+?)\')'
-        property_re = r'property=[\'"]og:%s[\'"]' % re.escape(prop)
+        property_re = r'(?:name|property)=[\'"]og:%s[\'"]' % re.escape(prop)
         template = r'<meta[^>]+?%s[^>]+?%s'
         return [
             template % (property_re, content_re),
@@ -426,6 +457,58 @@ class InfoExtractor(object):
         }
         return RATING_TABLE.get(rating.lower(), None)
 
+    def _sort_formats(self, formats):
+        def _formats_key(f):
+            # TODO remove the following workaround
+            from ..utils import determine_ext
+            if not f.get('ext') and 'url' in f:
+                f['ext'] = determine_ext(f['url'])
+
+            preference = f.get('preference')
+            if preference is None:
+                proto = f.get('protocol')
+                if proto is None:
+                    proto = compat_urllib_parse_urlparse(f.get('url', '')).scheme
+
+                preference = 0 if proto in ['http', 'https'] else -0.1
+                if f.get('ext') in ['f4f', 'f4m']:  # Not yet supported
+                    preference -= 0.5
+
+            if f.get('vcodec') == 'none':  # audio only
+                if self._downloader.params.get('prefer_free_formats'):
+                    ORDER = [u'aac', u'mp3', u'm4a', u'webm', u'ogg', u'opus']
+                else:
+                    ORDER = [u'webm', u'opus', u'ogg', u'mp3', u'aac', u'm4a']
+                ext_preference = 0
+                try:
+                    audio_ext_preference = ORDER.index(f['ext'])
+                except ValueError:
+                    audio_ext_preference = -1
+            else:
+                if self._downloader.params.get('prefer_free_formats'):
+                    ORDER = [u'flv', u'mp4', u'webm']
+                else:
+                    ORDER = [u'webm', u'flv', u'mp4']
+                try:
+                    ext_preference = ORDER.index(f['ext'])
+                except ValueError:
+                    ext_preference = -1
+                audio_ext_preference = 0
+
+            return (
+                preference,
+                f.get('quality') if f.get('quality') is not None else -1,
+                f.get('height') if f.get('height') is not None else -1,
+                f.get('width') if f.get('width') is not None else -1,
+                ext_preference,
+                f.get('tbr') if f.get('tbr') is not None else -1,
+                f.get('vbr') if f.get('vbr') is not None else -1,
+                f.get('abr') if f.get('abr') is not None else -1,
+                audio_ext_preference,
+                f.get('filesize') if f.get('filesize') is not None else -1,
+                f.get('format_id'),
+            )
+        formats.sort(key=_formats_key)
 
 
 class SearchInfoExtractor(InfoExtractor):
