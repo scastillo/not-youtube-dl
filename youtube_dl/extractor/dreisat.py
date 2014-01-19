@@ -4,18 +4,17 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
-    determine_ext,
     unified_strdate,
 )
 
 
 class DreiSatIE(InfoExtractor):
     IE_NAME = '3sat'
-    _VALID_URL = r'(?:http://)?(?:www\.)?3sat\.de/mediathek/index\.php\?(?:(?:mode|display)=[^&]+&)*obj=(?P<id>[0-9]+)$'
+    _VALID_URL = r'(?:http://)?(?:www\.)?3sat\.de/mediathek/(?:index\.php)?\?(?:(?:mode|display)=[^&]+&)*obj=(?P<id>[0-9]+)$'
     _TEST = {
         u"url": u"http://www.3sat.de/mediathek/index.php?obj=36983",
-        u'file': u'36983.webm',
-        u'md5': u'57c97d0469d71cf874f6815aa2b7c944',
+        u'file': u'36983.mp4',
+        u'md5': u'9dcfe344732808dbfcc901537973c922',
         u'info_dict': {
             u"title": u"Kaffeeland Schweiz",
             u"description": u"Über 80 Kaffeeröstereien liefern in der Schweiz das Getränk, in das das Land so vernarrt ist: Mehr als 1000 Tassen trinkt ein Schweizer pro Jahr. SCHWEIZWEIT nimmt die Kaffeekultur unter die...", 
@@ -52,18 +51,12 @@ class DreiSatIE(InfoExtractor):
             'width': int(fe.find('./width').text),
             'height': int(fe.find('./height').text),
             'url': fe.find('./url').text,
-            'ext': determine_ext(fe.find('./url').text),
             'filesize': int(fe.find('./filesize').text),
             'video_bitrate': int(fe.find('./videoBitrate').text),
-            '3sat_qualityname': fe.find('./quality').text,
         } for fe in format_els
             if not fe.find('./url').text.startswith('http://www.metafilegenerator.de/')]
 
-        def _sortkey(format):
-            qidx = ['low', 'med', 'high', 'veryhigh'].index(format['3sat_qualityname'])
-            prefer_http = 1 if 'rtmp' in format['url'] else 0
-            return (qidx, prefer_http, format['video_bitrate'])
-        formats.sort(key=_sortkey)
+        self._sort_formats(formats)
 
         return {
             '_type': 'video',
