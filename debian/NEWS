@@ -1,3 +1,17 @@
+youtube-dl (2014.02.17-1~0.gbp848723) UNRELEASED; urgency=medium
+
+  There are too many goodies that this new release brings us,
+  including that it is possible to combine/merge/multiplex audio and
+  video formats that Youtube now offers separately (See the previous
+  notes about Youtube using DASH for video and audio).
+
+  Now, if you want a 480p video in H.264 format, High profile, with
+  128kbps AAC audio (this used to be Youtube's format 35), you can
+  specify format `-f 135+140` on the command-line, and so on. Only your
+  imagination is the limit.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 17 Feb 2014 18:24:20 -0300
+
 youtube-dl (2013.10.23-1) unstable; urgency=low
 
   From http://cynic.cc/blog/posts/2013-10-23-assorted_news/:
