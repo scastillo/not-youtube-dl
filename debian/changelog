@@ -1,6 +1,6 @@
-youtube-dl (2014.02.17-1~0.gbp848723) UNRELEASED; urgency=medium
+youtube-dl (2014.02.17-1~1.gbpdeb336) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @848723ea972c09f28787db91d8c06e98a274ab89 **
+  ** SNAPSHOT build @deb336935f1c0705845cf0fec03f36bf9e6e9166 **
 
   * The "Way too many changes release".
   * Imported Upstream version 2013.12.23
@@ -17,6 +17,8 @@ youtube-dl (2014.02.17-1~0.gbp848723) UNRELEASED; urgency=medium
       imagination is the limit.
     + Fixes "using --list-subs triggers downloading video from vimeo".
       Closes: #734647.
+  * debian/NEWS:
+    + Write news about new muxing feature of youtube-dl.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 27 Dec 2013 00:57:28 -0200
 
