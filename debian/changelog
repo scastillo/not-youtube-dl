@@ -17,7 +17,9 @@ youtube-dl (2014.02.17-1) unstable; urgency=medium
       Closes: #734647.
   * debian/NEWS:
     + Write news about new muxing feature of youtube-dl.
-  * debian/control: Massive update of supported sites.
+  * debian/control:
+    + Massive update of supported sites in long description.
+    + Package complies with policy 3.9.5.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Mon, 17 Feb 2014 19:41:53 -0300
 
