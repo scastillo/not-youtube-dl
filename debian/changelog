@@ -1,6 +1,6 @@
-youtube-dl (2014.02.17-1~1.gbpdeb336) UNRELEASED; urgency=medium
+youtube-dl (2014.02.17-1~2.gbp0abefc) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @deb336935f1c0705845cf0fec03f36bf9e6e9166 **
+  ** SNAPSHOT build @0abefc7d1e7d91383edf539f36aab1ae81dba567 **
 
   * The "Way too many changes release".
   * Imported Upstream version 2013.12.23
@@ -19,6 +19,7 @@ youtube-dl (2014.02.17-1~1.gbpdeb336) UNRELEASED; urgency=medium
       Closes: #734647.
   * debian/NEWS:
     + Write news about new muxing feature of youtube-dl.
+  * debian/control: Massive update of supported sites.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 27 Dec 2013 00:57:28 -0200
 
