@@ -36,35 +36,60 @@ Description: downloader of videos from YouTube and other sites
  .
  Currently supported sites (or features of sites) are:
  .
- 1up.com, 220.ro, 3sat, 56.com, 8tracks, AddAnime, anitube.se,
- AppleTrailers, archive.org, ARD, arte.tv, arte.tv:+7, arte.tv:creative,
- arte.tv:future, AUEngine, bambuser, bambuser:channel, Bandcamp,
- Bandcamp:album, blip.tv, blip.tv:user, Bloomberg, Break, Brightcove,
- canalc2.tv, canalplus.fr, Cinemassacre, clipfish, Clipsyndicate, CNN,
- CollegeHumor, ComedyCentral, ComedyCentralShows, CondeNast, Criterion,
- CSpan, d8.tv, dailymotion, dailymotion:playlist, dailymotion:user,
- daum.net, DefenseGouvFr, DepositFiles, Dotsub, EbaumsWorld, eHow, eitb.tv,
- Escapist, exfm, ExtremeTube, facebook, faz.net, fernsehkritik.tv,
- fernsehkritik.tv:postecke, Flickr, france2.fr, france2.fr:generation-quoi,
- francetvinfo.fr, Freesound, FunnyOrDie, Gamekings, GameSpot, Gametrailers,
- generic, Hark, HotNewHipHop, Howcast, Hypem, ign.com, imdb, Ina, InfoQ,
- Instagram, InternetVideoArchive, JeuxVideo, Jukebox, justin.tv, Kankan,
- keek, KeezMovies, KickStarter, liveleak, livestream, livestream:original,
- metacafe, Metacritic, mixcloud, Mofosex, MTV, muzu.tv, MySpace, MySpass,
- myvideo, Naver, NBA, NBCNews, Newgrounds, nhl.com, nhl.com:videocenter,
- niconico, NowVideo, Ooyala, ORF, PBS, photobucket, plus.google,
- pluzz.francetv.fr, podomatic, PornHub, Pornotube, RBMARadio, RedTube,
- RingTV, RottenTomatoes, Roxwel, RTLnow, Rutube, screen.yahoo:search, Sina,
- Slashdot, Slideshare, smotri, smotri:community, smotri:user, Sohu,
- soundcloud, soundcloud:set, soundcloud:user, southpark.de,
- southparkstudios.com, Space, Spankwire, Spiegel, stanfordoc, Statigram,
- Steam, streamcloud.eu, SztvHu, Teamcoco, TechTalks, techtv.mit.edu, TED,
- TF1, ThisAV, tou.tv, TrailerAddict, Trilulilu, Tube8, Tudou, Tumblr, Tutv,
- tvp.pl, Unistra, ustream, ustream:channel, Vbox7, VeeHD, Veoh, Vevo, Vice,
- Viddler, video.google:search, video.mit.edu, VideoDetective, videofy.me,
- VideoPremium, viki, vimeo, vimeo:channel, vimeo:user, Vine, vk.com, wat.tv,
- websurg.com, Weibo, Wimp, WorldStarHipHop, XHamster, XNXX, XTube, XVideos,
- Yahoo, yahoo:news, YouJizz, Youku, YouPorn, youtube, youtube:channel,
- youtube:favorites, youtube:history, youtube:playlist, youtube:recommended,
- youtube:search, youtube:search:date, youtube:show, youtube:subscriptions,
- youtube:truncated_url, youtube:user, youtube:watch_later, ZDF.
+ 1up.com, 220.ro, 3sat, 4tube, 56.com, 8tracks, 9gag, AcademicEarth:Course,
+ AddAnime, anitube.se, Aparat, AppleTrailers, archive.org videos, ARD,
+ arte.tv, arte.tv:+7, arte.tv:creative, arte.tv:ddc, arte.tv:future,
+ AUEngine, bambuser, bambuser:channel, Bandcamp, Bandcamp:album, BBC iPlayer,
+ blinkx, blip.tv:user, BlipTV, Bloomberg, Break, Brightcove, canalc2.tv,
+ canalplus.fr, CBS, Channel 9, Chilloutzone, Cinemassacre, clipfish,
+ cliphunter, Clipsyndicate, cmt.com, CNN, CNNBlogs, CollegeHumor,
+ ComedyCentral, The Daily Show / Colbert Report, Condé Nast media group: GQ,
+ Glamour, Vanity Fair, Vogue, W Magazine, WIRED, Criterion, Crunchyroll,
+ C-SPAN, culturebox.francetvinfo.fr, d8.tv, dailymotion,
+ dailymotion:playlist, dailymotion:user, daum.net, defense.gouv.fr,
+ DepositFiles, Discovery, Dotsub, Dropbox, EbaumsWorld, eHow, eitb.tv, El
+ País, Escapist, EveryonesMixtape, ex.fm, ExtremeTube, facebook, faz.net,
+ fernsehkritik.tv, fernsehkritik.tv:postecke, Firstpost.com, Видеоархив -
+ Первый канал, Flickr, france2.fr:generation-quoi, FranceInter, France 2, 3,
+ 4, 5 and Ô, francetvinfo.fr, Freesound, freespeech.org, FunnyOrDie,
+ Gamekings, GameSpot, Gametrailers, Generic downloader that works on some
+ sites, Hark, helsinki.fi, HotNewHipHop, Howcast, Huffington Post, Hypem,
+ ign.com, Internet Movie Database trailers, Internet Movie Database lists,
+ Ina, InfoQ, Instagram, InternetVideoArchive, IPrima, ivi.ru, ivi.ru
+ compilations, JadoreCettePub, JeuxVideo, jpopsuki.tv, Jukebox, justin.tv,
+ Kankan, keek, KeezMovies, KhanAcademy, KickStarter, KontrTube.ru - Труба
+ зовёт, la7.tv, LIFE | NEWS, LiveLeak, livestream, livestream:original,
+ lynda.com videos, lynda.com online courses, m6, MacGameStore trailers,
+ Malemotion, MDR, metacafe, Metacritic, mixcloud, Mofosex, Mooshare.biz,
+ MPORA, MTV, mtviggy.com, muzu.tv, MySpace, MySpass, myvideo, Naver, NBA,
+ NBCNews, NDR.de - Mediathek, NDTV, Newgrounds, National Film Board of
+ Canada, nhl.com, NHL videocenter category, ニコニコ動画, Normalboots,
+ Novamov, Nowness, NowVideo, Ooyala, ORF, PBS, photobucket, Google Plus,
+ pluzz.francetv.fr, podomatic, PornHd, PornHub, Pornotube, Pyvideo,
+ radiofrance, RBMARadio, RedTube, RingTV, RottenTomatoes, Roxwel, RTLnow,
+ Rutube videos, Rutube channels, Rutube movies, Rutube person videos, Yahoo
+ screen search (Example: "yvsearchall:purple fish" ), ServingSys, Sina,
+ Slashdot, Slideshare, Smotri.com, Smotri.com broadcasts, Smotri.com
+ community videos, Smotri.com user videos, Sohu, soundcloud, soundcloud:set,
+ soundcloud:user, southpark.de, southparkstudios.com, Space, Spankwire,
+ Spiegel, Spike, Stanford Open ClassRoom, Statigram, Steam, streamcloud.eu,
+ StreamCZ, Syfy, SztvHu, Teamcoco, TechTalks, techtv.mit.edu, TED, TF1,
+ ThePlatform, ThisAV, tinypic.com videos, tou.tv, Trilulilu, Tube8, Tudou,
+ Tumblr, Tutv, tvp.pl, Unistra, ustream, ustream:channel, Vbox7, VeeHD, Veoh,
+ Вести.Ru, Vevo, Vice, Viddler, Google Video search (Example:
+ "gvsearch5:falling cat" ), video.mit.edu, VideoDetective, videofy.me,
+ VideoPremium, viki, vimeo, vimeo:album, vimeo:channel, vimeo:group, Review
+ pages on vimeo, vimeo:user, Vine, vk.com, Vube.com, wat.tv, Weibo, Wimp,
+ Wistia, WorldStarHipHop, XHamster, XNXX, XTube, XVideos, Yahoo screen, Yahoo
+ screen, YouJizz, Youku, YouPorn, YouTube.com, YouTube.com channels,
+ YouTube.com favourite videos, "ytfav" keyword (requires authentication),
+ Youtube watch history, "ythistory" keyword (requires authentication),
+ YouTube.com playlists, YouTube.com recommended videos, "ytrec" keyword
+ (requires authentication), YouTube.com searches (Example:
+ "ytsearch10:running tortoise" ), YouTube.com searches, newest videos first
+ (Example: "ytsearchdateall:falling cat" ), YouTube.com (multi-season) shows,
+ YouTube.com subscriptions feed, "ytsubs" keyword(requires authentication),
+ YouTube.com top lists, "yttoplist:{channel}:{list title}" (Example:
+ "yttoplist:music:Top Tracks"), YouTube.com user videos (URL or "ytuser"
+ keyword), Youtube watch later list, "ytwatchlater" keyword (requires
+ authentication), ZDF.
