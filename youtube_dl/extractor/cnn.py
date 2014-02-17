@@ -6,6 +6,7 @@ from .common import InfoExtractor
 from ..utils import (
     int_or_none,
     parse_duration,
+    url_basename,
 )
 
 
@@ -25,12 +26,13 @@ class CNNIE(InfoExtractor):
         },
     },
     {
-        u"url": u"http://edition.cnn.com/video/?/video/us/2013/08/21/sot-student-gives-epic-speech.georgia-institute-of-technology&utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+rss%2Fcnn_topstories+%28RSS%3A+Top+Stories%29",
-        u"file": u"us_2013_08_21_sot-student-gives-epic-speech.georgia-institute-of-technology.mp4",
-        u"md5": u"b5cc60c60a3477d185af8f19a2a26f4e",
-        u"info_dict": {
-            u"title": "Student's epic speech stuns new freshmen",
-            u"description": "A Georgia Tech student welcomes the incoming freshmen with an epic speech backed by music from \"2001: A Space Odyssey.\""
+        "url": "http://edition.cnn.com/video/?/video/us/2013/08/21/sot-student-gives-epic-speech.georgia-institute-of-technology&utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+rss%2Fcnn_topstories+%28RSS%3A+Top+Stories%29",
+        "file": "us_2013_08_21_sot-student-gives-epic-speech.georgia-institute-of-technology.mp4",
+        "md5": "b5cc60c60a3477d185af8f19a2a26f4e",
+        "info_dict": {
+            "title": "Student's epic speech stuns new freshmen",
+            "description": "A Georgia Tech student welcomes the incoming freshmen with an epic speech backed by music from \"2001: A Space Odyssey.\"",
+            "upload_date": "20130821",
         }
     }]
 
@@ -96,4 +98,29 @@ class CNNIE(InfoExtractor):
             'description': info.find('description').text,
             'duration': duration,
             'upload_date': upload_date,
+        }
+
+
+class CNNBlogsIE(InfoExtractor):
+    _VALID_URL = r'https?://[^\.]+\.blogs\.cnn\.com/.+'
+    _TEST = {
+        'url': 'http://reliablesources.blogs.cnn.com/2014/02/09/criminalizing-journalism/',
+        'md5': '3e56f97b0b6ffb4b79f4ea0749551084',
+        'info_dict': {
+            'id': 'bestoftv/2014/02/09/criminalizing-journalism.cnn',
+            'ext': 'mp4',
+            'title': 'Criminalizing journalism?',
+            'description': 'Glenn Greenwald responds to comments made this week on Capitol Hill that journalists could be criminal accessories.',
+            'upload_date': '20140209',
+        },
+        'add_ie': ['CNN'],
+    }
+
+    def _real_extract(self, url):
+        webpage = self._download_webpage(url, url_basename(url))
+        cnn_url = self._html_search_regex(r'data-url="(.+?)"', webpage, 'cnn url')
+        return {
+            '_type': 'url',
+            'url': cnn_url,
+            'ie_key': CNNIE.ie_key(),
         }
