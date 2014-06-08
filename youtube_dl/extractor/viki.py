@@ -1,29 +1,33 @@
+from __future__ import unicode_literals
+
 import re
 
 from ..utils import (
     ExtractorError,
     unescapeHTML,
     unified_strdate,
+    US_RATINGS,
 )
 from .subtitles import SubtitlesInfoExtractor
 
 
 class VikiIE(SubtitlesInfoExtractor):
-    IE_NAME = u'viki'
+    IE_NAME = 'viki'
 
     _VALID_URL = r'^https?://(?:www\.)?viki\.com/videos/(?P<id>[0-9]+v)'
     _TEST = {
-        u'url': u'http://www.viki.com/videos/1023585v-heirs-episode-14',
-        u'file': u'1023585v.mp4',
-        u'md5': u'a21454021c2646f5433514177e2caa5f',
-        u'info_dict': {
-            u'title': u'Heirs Episode 14',
-            u'uploader': u'SBS',
-            u'description': u'md5:c4b17b9626dd4b143dcc4d855ba3474e',
-            u'upload_date': u'20131121',
-            u'age_limit': 13,
+        'url': 'http://www.viki.com/videos/1023585v-heirs-episode-14',
+        'md5': 'a21454021c2646f5433514177e2caa5f',
+        'info_dict': {
+            'id': '1023585v',
+            'ext': 'mp4',
+            'title': 'Heirs Episode 14',
+            'uploader': 'SBS',
+            'description': 'md5:c4b17b9626dd4b143dcc4d855ba3474e',
+            'upload_date': '20131121',
+            'age_limit': 13,
         },
-        u'skip': u'Blocked in the US',
+        'skip': 'Blocked in the US',
     }
 
     def _real_extract(self, url):
@@ -44,28 +48,21 @@ class VikiIE(SubtitlesInfoExtractor):
 
         rating_str = self._html_search_regex(
             r'<strong>Rating: </strong>\s*([^<]*)<', webpage,
-            u'rating information', default='').strip()
-        RATINGS = {
-            'G': 0,
-            'PG': 10,
-            'PG-13': 13,
-            'R': 16,
-            'NC': 18,
-        }
-        age_limit = RATINGS.get(rating_str)
+            'rating information', default='').strip()
+        age_limit = US_RATINGS.get(rating_str)
 
         info_url = 'http://www.viki.com/player5_fragment/%s?action=show&controller=videos' % video_id
         info_webpage = self._download_webpage(
-            info_url, video_id, note=u'Downloading info page')
+            info_url, video_id, note='Downloading info page')
         if re.match(r'\s*<div\s+class="video-error', info_webpage):
             raise ExtractorError(
-                u'Video %s is blocked from your location.' % video_id,
+                'Video %s is blocked from your location.' % video_id,
                 expected=True)
         video_url = self._html_search_regex(
-            r'<source[^>]+src="([^"]+)"', info_webpage, u'video URL')
+            r'<source[^>]+src="([^"]+)"', info_webpage, 'video URL')
 
         upload_date_str = self._html_search_regex(
-            r'"created_at":"([^"]+)"', info_webpage, u'upload date')
+            r'"created_at":"([^"]+)"', info_webpage, 'upload date')
         upload_date = (
             unified_strdate(upload_date_str)
             if upload_date_str is not None

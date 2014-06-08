@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import calendar
+import codecs
+import contextlib
 import ctypes
 import datetime
 import email.utils
 import errno
+import getpass
 import gzip
 import itertools
 import io
@@ -21,6 +25,7 @@ import struct
 import subprocess
 import sys
 import traceback
+import xml.etree.ElementTree
 import zlib
 
 try:
@@ -173,6 +178,11 @@ try:
     compat_chr = unichr # Python 2
 except NameError:
     compat_chr = chr
+
+try:
+    from xml.etree.ElementTree import ParseError as compat_xml_parse_error
+except ImportError:  # Python 2.6
+    from xml.parsers.expat import ExpatError as compat_xml_parse_error
 
 def compat_ord(c):
     if type(c) is int: return c
@@ -493,13 +503,13 @@ def orderedSet(iterable):
             res.append(el)
     return res
 
-def unescapeHTML(s):
-    """
-    @param s a string
-    """
-    assert type(s) == type(u'')
 
-    result = re.sub(u'(?u)&(.+?);', htmlentity_transform, s)
+def unescapeHTML(s):
+    if s is None:
+        return None
+    assert type(s) == compat_str
+
+    result = re.sub(r'(?u)&(.+?);', htmlentity_transform, s)
     return result
 
 
@@ -529,6 +539,15 @@ def encodeFilename(s, for_subprocess=False):
     if encoding is None:
         encoding = 'utf-8'
     return s.encode(encoding, 'ignore')
+
+
+def encodeArgument(s):
+    if not isinstance(s, compat_str):
+        # Legacy code that uses byte strings
+        # Uncomment the following line after fixing all post processors
+        #assert False, 'Internal error: %r should be of type %r, is %r' % (s, compat_str, type(s))
+        s = s.decode('ascii')
+    return encodeFilename(s, True)
 
 
 def decodeOption(optval):
@@ -585,13 +604,15 @@ def make_HTTPS_handler(opts_no_check_certificate, **kwargs):
 
 class ExtractorError(Exception):
     """Error during info extraction."""
-    def __init__(self, msg, tb=None, expected=False, cause=None):
+    def __init__(self, msg, tb=None, expected=False, cause=None, video_id=None):
         """ tb, if given, is the original traceback (so that it can be printed out).
         If expected is set, this is a normal error message and most likely not a bug in youtube-dl.
         """
 
         if sys.exc_info()[0] in (compat_urllib_error.URLError, socket.timeout, UnavailableVideoError):
             expected = True
+        if video_id is not None:
+            msg = video_id + ': ' + msg
         if not expected:
             msg = msg + u'; please report this issue on https://yt-dl.org/bug . Be sure to call youtube-dl with the --verbose flag and include its complete output. Make sure you are using the latest version; type  youtube-dl -U  to update.'
         super(ExtractorError, self).__init__(msg)
@@ -599,6 +620,7 @@ class ExtractorError(Exception):
         self.traceback = tb
         self.exc_info = sys.exc_info()  # preserve original exception
         self.cause = cause
+        self.video_id = video_id
 
     def format_traceback(self):
         if self.traceback is None:
@@ -753,8 +775,37 @@ class YoutubeDLHandler(compat_urllib_request.HTTPHandler):
     https_response = http_response
 
 
+def parse_iso8601(date_str):
+    """ Return a UNIX timestamp from the given date """
+
+    if date_str is None:
+        return None
+
+    m = re.search(
+        r'Z$| ?(?P<sign>\+|-)(?P<hours>[0-9]{2}):?(?P<minutes>[0-9]{2})$',
+        date_str)
+    if not m:
+        timezone = datetime.timedelta()
+    else:
+        date_str = date_str[:-len(m.group(0))]
+        if not m.group('sign'):
+            timezone = datetime.timedelta()
+        else:
+            sign = 1 if m.group('sign') == '+' else -1
+            timezone = datetime.timedelta(
+                hours=sign * int(m.group('hours')),
+                minutes=sign * int(m.group('minutes')))
+
+    dt = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S') - timezone
+    return calendar.timegm(dt.timetuple())
+
+
 def unified_strdate(date_str):
     """Return a string with the date in the format YYYYMMDD"""
+
+    if date_str is None:
+        return None
+
     upload_date = None
     #Replace commas
     date_str = date_str.replace(',', ' ')
@@ -766,14 +817,17 @@ def unified_strdate(date_str):
         '%B %d %Y',
         '%b %d %Y',
         '%Y-%m-%d',
+        '%d.%m.%Y',
         '%d/%m/%Y',
         '%Y/%m/%d %H:%M:%S',
         '%Y-%m-%d %H:%M:%S',
         '%d.%m.%Y %H:%M',
+        '%d.%m.%Y %H.%M',
         '%Y-%m-%dT%H:%M:%SZ',
         '%Y-%m-%dT%H:%M:%S.%fZ',
         '%Y-%m-%dT%H:%M:%S.%f0Z',
         '%Y-%m-%dT%H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S.%f',
         '%Y-%m-%dT%H:%M',
     ]
     for expression in format_expressions:
@@ -869,25 +923,97 @@ def platform_name():
     return res
 
 
-def write_string(s, out=None):
+def _windows_write_string(s, out):
+    """ Returns True if the string was written using special methods,
+    False if it has yet to be written out."""
+    # Adapted from http://stackoverflow.com/a/3259271/35070
+
+    import ctypes
+    import ctypes.wintypes
+
+    WIN_OUTPUT_IDS = {
+        1: -11,
+        2: -12,
+    }
+
+    try:
+        fileno = out.fileno()
+    except AttributeError:
+        # If the output stream doesn't have a fileno, it's virtual
+        return False
+    if fileno not in WIN_OUTPUT_IDS:
+        return False
+
+    GetStdHandle = ctypes.WINFUNCTYPE(
+        ctypes.wintypes.HANDLE, ctypes.wintypes.DWORD)(
+        ("GetStdHandle", ctypes.windll.kernel32))
+    h = GetStdHandle(WIN_OUTPUT_IDS[fileno])
+
+    WriteConsoleW = ctypes.WINFUNCTYPE(
+        ctypes.wintypes.BOOL, ctypes.wintypes.HANDLE, ctypes.wintypes.LPWSTR,
+        ctypes.wintypes.DWORD, ctypes.POINTER(ctypes.wintypes.DWORD),
+        ctypes.wintypes.LPVOID)(("WriteConsoleW", ctypes.windll.kernel32))
+    written = ctypes.wintypes.DWORD(0)
+
+    GetFileType = ctypes.WINFUNCTYPE(ctypes.wintypes.DWORD, ctypes.wintypes.DWORD)(("GetFileType", ctypes.windll.kernel32))
+    FILE_TYPE_CHAR = 0x0002
+    FILE_TYPE_REMOTE = 0x8000
+    GetConsoleMode = ctypes.WINFUNCTYPE(
+        ctypes.wintypes.BOOL, ctypes.wintypes.HANDLE,
+        ctypes.POINTER(ctypes.wintypes.DWORD))(
+        ("GetConsoleMode", ctypes.windll.kernel32))
+    INVALID_HANDLE_VALUE = ctypes.wintypes.DWORD(-1).value
+
+    def not_a_console(handle):
+        if handle == INVALID_HANDLE_VALUE or handle is None:
+            return True
+        return ((GetFileType(handle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR
+                or GetConsoleMode(handle, ctypes.byref(ctypes.wintypes.DWORD())) == 0)
+
+    if not_a_console(h):
+        return False
+
+    def next_nonbmp_pos(s):
+        try:
+            return next(i for i, c in enumerate(s) if ord(c) > 0xffff)
+        except StopIteration:
+            return len(s)
+
+    while s:
+        count = min(next_nonbmp_pos(s), 1024)
+
+        ret = WriteConsoleW(
+            h, s, count if count else 2, ctypes.byref(written), None)
+        if ret == 0:
+            raise OSError('Failed to write string')
+        if not count:  # We just wrote a non-BMP character
+            assert written.value == 2
+            s = s[1:]
+        else:
+            assert written.value > 0
+            s = s[written.value:]
+    return True
+
+
+def write_string(s, out=None, encoding=None):
     if out is None:
         out = sys.stderr
     assert type(s) == compat_str
 
+    if sys.platform == 'win32' and encoding is None and hasattr(out, 'fileno'):
+        if _windows_write_string(s, out):
+            return
+
     if ('b' in getattr(out, 'mode', '') or
             sys.version_info[0] < 3):  # Python 2 lies about mode of sys.stderr
-        s = s.encode(preferredencoding(), 'ignore')
-    try:
+        byt = s.encode(encoding or preferredencoding(), 'ignore')
+        out.write(byt)
+    elif hasattr(out, 'buffer'):
+        enc = encoding or getattr(out, 'encoding', None) or preferredencoding()
+        byt = s.encode(enc, 'ignore')
+        out.buffer.write(byt)
+    else:
         out.write(s)
-    except UnicodeEncodeError:
-        # In Windows shells, this can fail even when the codec is just charmap!?
-        # See https://wiki.python.org/moin/PrintFails#Issue
-        if sys.platform == 'win32' and hasattr(out, 'encoding'):
-            s = s.encode(out.encoding, 'ignore').decode(out.encoding)
-            out.write(s)
-        else:
-            raise
-
     out.flush()
 
 
@@ -1111,11 +1237,11 @@ def setproctitle(title):
         libc = ctypes.cdll.LoadLibrary("libc.so.6")
     except OSError:
         return
-    title = title
-    buf = ctypes.create_string_buffer(len(title) + 1)
-    buf.value = title.encode('utf-8')
+    title_bytes = title.encode('utf-8')
+    buf = ctypes.create_string_buffer(len(title_bytes))
+    buf.value = title_bytes
     try:
-        libc.prctl(15, ctypes.byref(buf), 0, 0, 0)
+        libc.prctl(15, buf, 0, 0, 0)
     except AttributeError:
         return  # Strange libc, just skip this
 
@@ -1136,8 +1262,15 @@ class HEADRequest(compat_urllib_request.Request):
         return "HEAD"
 
 
-def int_or_none(v, scale=1):
-    return v if v is None else (int(v) // scale)
+def int_or_none(v, scale=1, default=None, get_attr=None):
+    if get_attr:
+        if v is not None:
+            v = getattr(v, get_attr, None)
+    return default if v is None else (int(v) // scale)
+
+
+def float_or_none(v, scale=1, default=None):
+    return default if v is None else (float(v) / scale)
 
 
 def parse_duration(s):
@@ -1145,7 +1278,7 @@ def parse_duration(s):
         return None
 
     m = re.match(
-        r'(?:(?:(?P<hours>[0-9]+)[:h])?(?P<mins>[0-9]+)[:m])?(?P<secs>[0-9]+)s?$', s)
+        r'(?:(?:(?P<hours>[0-9]+)[:h])?(?P<mins>[0-9]+)[:m])?(?P<secs>[0-9]+)s?(?::[0-9]+)?$', s)
     if not m:
         return None
     res = int(m.group('secs'))
@@ -1219,9 +1352,11 @@ class PagedList(object):
 
 
 def uppercase_escape(s):
+    unicode_escape = codecs.getdecoder('unicode_escape')
     return re.sub(
-        r'\\U([0-9a-fA-F]{8})',
-        lambda m: compat_chr(int(m.group(1), base=16)), s)
+        r'\\U[0-9a-fA-F]{8}',
+        lambda m: unicode_escape(m.group(0))[0],
+        s)
 
 try:
     struct.pack(u'!I', 0)
@@ -1239,3 +1374,80 @@ except TypeError:
 else:
     struct_pack = struct.pack
     struct_unpack = struct.unpack
+
+
+def read_batch_urls(batch_fd):
+    def fixup(url):
+        if not isinstance(url, compat_str):
+            url = url.decode('utf-8', 'replace')
+        BOM_UTF8 = u'\xef\xbb\xbf'
+        if url.startswith(BOM_UTF8):
+            url = url[len(BOM_UTF8):]
+        url = url.strip()
+        if url.startswith(('#', ';', ']')):
+            return False
+        return url
+
+    with contextlib.closing(batch_fd) as fd:
+        return [url for url in map(fixup, fd) if url]
+
+
+def urlencode_postdata(*args, **kargs):
+    return compat_urllib_parse.urlencode(*args, **kargs).encode('ascii')
+
+
+def parse_xml(s):
+    class TreeBuilder(xml.etree.ElementTree.TreeBuilder):
+        def doctype(self, name, pubid, system):
+            pass  # Ignore doctypes
+
+    parser = xml.etree.ElementTree.XMLParser(target=TreeBuilder())
+    kwargs = {'parser': parser} if sys.version_info >= (2, 7) else {}
+    return xml.etree.ElementTree.XML(s.encode('utf-8'), **kwargs)
+
+
+if sys.version_info < (3, 0) and sys.platform == 'win32':
+    def compat_getpass(prompt, *args, **kwargs):
+        if isinstance(prompt, compat_str):
+            prompt = prompt.encode(preferredencoding())
+        return getpass.getpass(prompt, *args, **kwargs)
+else:
+    compat_getpass = getpass.getpass
+
+
+US_RATINGS = {
+    'G': 0,
+    'PG': 10,
+    'PG-13': 13,
+    'R': 16,
+    'NC': 18,
+}
+
+
+def strip_jsonp(code):
+    return re.sub(r'(?s)^[a-zA-Z_]+\s*\(\s*(.*)\);\s*?\s*$', r'\1', code)
+
+
+def qualities(quality_ids):
+    """ Get a numeric quality value out of a list of possible values """
+    def q(qid):
+        try:
+            return quality_ids.index(qid)
+        except ValueError:
+            return -1
+    return q
+
+
+DEFAULT_OUTTMPL = '%(title)s-%(id)s.%(ext)s'
+
+try:
+    subprocess_check_output = subprocess.check_output
+except AttributeError:
+    def subprocess_check_output(*args, **kwargs):
+        assert 'input' not in kwargs
+        p = subprocess.Popen(*args, stdout=subprocess.PIPE, **kwargs)
+        output, _ = p.communicate()
+        ret = p.poll()
+        if ret:
+            raise subprocess.CalledProcessError(ret, p.args, output=output)
+        return output

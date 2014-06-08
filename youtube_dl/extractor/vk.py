@@ -16,7 +16,7 @@ from ..utils import (
 
 class VKIE(InfoExtractor):
     IE_NAME = 'vk.com'
-    _VALID_URL = r'https?://vk\.com/(?:videos.*?\?.*?z=)?video(?P<id>.*?)(?:\?|%2F|$)'
+    _VALID_URL = r'https?://vk\.com/(?:video_ext\.php\?.*?\boid=(?P<oid>-?\d+).*?\bid=(?P<id>\d+)|(?:videos.*?\?.*?z=)?video(?P<videoid>.*?)(?:\?|%2F|$))'
     _NETRC_MACHINE = 'vk'
 
     _TESTS = [
@@ -37,9 +37,21 @@ class VKIE(InfoExtractor):
             'info_dict': {
                 'id': '163339118',
                 'ext': 'mp4',
-                'uploader': 'Elvira Dzhonik',
+                'uploader': 'Elya Iskhakova',
                 'title': 'Dream Theater - Hollow Years Live at Budokan 720*',
                 'duration': 558,
+            }
+        },
+        {
+            'note': 'Embedded video',
+            'url': 'http://vk.com/video_ext.php?oid=32194266&id=162925554&hash=7d8c2e0d5e05aeaa&hd=1',
+            'md5': 'c7ce8f1f87bec05b3de07fdeafe21a0a',
+            'info_dict': {
+                'id': '162925554',
+                'ext': 'mp4',
+                'uploader': 'Vladimir Gavrin',
+                'title': 'Lin Dan',
+                'duration': 101,
             }
         },
         {
@@ -54,7 +66,7 @@ class VKIE(InfoExtractor):
                 'duration': 8352,
             },
             'skip': 'Requires vk account credentials',
-        }
+        },
     ]
 
     def _login(self):
@@ -82,7 +94,10 @@ class VKIE(InfoExtractor):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        video_id = mobj.group('id')
+        video_id = mobj.group('videoid')
+
+        if not video_id:
+            video_id = '%s_%s' % (mobj.group('oid'), mobj.group('id'))
 
         info_url = 'http://vk.com/al_video.php?act=show&al=1&video=%s' % video_id
         info_page = self._download_webpage(info_url, video_id)
@@ -93,7 +108,7 @@ class VKIE(InfoExtractor):
 
         m_yt = re.search(r'src="(http://www.youtube.com/.*?)"', info_page)
         if m_yt is not None:
-            self.to_screen(u'Youtube video detected')
+            self.to_screen('Youtube video detected')
             return self.url_result(m_yt.group(1), 'Youtube')
         data_json = self._search_regex(r'var vars = ({.*?});', info_page, 'vars')
         data = json.loads(data_json)

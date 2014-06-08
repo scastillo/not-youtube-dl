@@ -17,8 +17,9 @@ class CollegeHumorIE(InfoExtractor):
             'id': '6902724',
             'ext': 'mp4',
             'title': 'Comic-Con Cosplay Catastrophe',
-            'description': 'Fans get creative this year',
+            'description': "Fans get creative this year at San Diego.  Too creative.  And yes, that's really Joss Whedon.",
             'age_limit': 13,
+            'duration': 187,
         },
     },
     {
@@ -28,22 +29,22 @@ class CollegeHumorIE(InfoExtractor):
             'id': '3505939',
             'ext': 'mp4',
             'title': 'Font Conference',
-            'description': 'This video wasn\'t long enough,',
+            'description': "This video wasn't long enough, so we made it double-spaced.",
             'age_limit': 10,
             'duration': 179,
         },
     },
     # embedded youtube video
     {
-        'url': 'http://www.collegehumor.com/embed/6950457',
+        'url': 'http://www.collegehumor.com/embed/6950306',
         'info_dict': {
-            'id': 'W5gMp3ZjYg4',
+            'id': 'Z-bao9fg6Yc',
             'ext': 'mp4',
-            'title': 'Funny Dogs Protecting Babies Compilation 2014 [NEW HD]',
-            'uploader': 'Funnyplox TV',
-            'uploader_id': 'funnyploxtv',
-            'description': 'md5:7ded37421526d54afdf005e25bc2b7a3',
-            'upload_date': '20140128',
+            'title': 'Young Americans Think President John F. Kennedy Died THIS MORNING IN A CAR ACCIDENT!!!',
+            'uploader': 'Mark Dice',
+            'uploader_id': 'MarkDice',
+            'description': 'md5:62c3dab9351fac7bb44b53b69511d87f',
+            'upload_date': '20140127',
         },
         'params': {
             'skip_download': True,
@@ -87,6 +88,7 @@ class CollegeHumorIE(InfoExtractor):
         self._sort_formats(formats)
 
         duration = int_or_none(vdata.get('duration'), 1000)
+        like_count = int_or_none(vdata.get('likes'))
 
         return {
             'id': video_id,
@@ -96,4 +98,5 @@ class CollegeHumorIE(InfoExtractor):
             'formats': formats,
             'age_limit': age_limit,
             'duration': duration,
+            'like_count': like_count,
         }

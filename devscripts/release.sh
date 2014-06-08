@@ -14,14 +14,20 @@
 
 set -e
 
-skip_tests=false
-if [ "$1" = '--skip-test' ]; then
-    skip_tests=true
+skip_tests=true
+if [ "$1" = '--run-tests' ]; then
+    skip_tests=false
     shift
 fi
 
 if [ -z "$1" ]; then echo "ERROR: specify version number like this: $0 1994.09.06"; exit 1; fi
 version="$1"
+major_version=$(echo "$version" | sed -n 's#^\([0-9]*\.[0-9]*\.[0-9]*\).*#\1#p')
+if test "$major_version" '!=' "$(date '+%Y.%m.%d')"; then
+    echo "$version does not start with today's date!"
+    exit 1
+fi
+
 if [ ! -z "`git tag | grep "$version"`" ]; then echo 'ERROR: version already present'; exit 1; fi
 if [ ! -z "`git status --porcelain | grep -v CHANGELOG`" ]; then echo 'ERROR: the working directory is not clean; commit or stash changes'; exit 1; fi
 useless_files=$(find youtube_dl -type f -not -name '*.py')
@@ -39,9 +45,9 @@ fi
 /bin/echo -e "\n### Changing version in version.py..."
 sed -i "s/__version__ = '.*'/__version__ = '$version'/" youtube_dl/version.py
 
-/bin/echo -e "\n### Committing CHANGELOG README.md and youtube_dl/version.py..."
+/bin/echo -e "\n### Committing README.md and youtube_dl/version.py..."
 make README.md
-git add CHANGELOG README.md youtube_dl/version.py
+git add README.md youtube_dl/version.py
 git commit -m "release $version"
 
 /bin/echo -e "\n### Now tagging, signing and pushing..."
@@ -70,7 +76,7 @@ RELEASE_FILES="youtube-dl youtube-dl.exe youtube-dl-$version.tar.gz"
 git checkout HEAD -- youtube-dl youtube-dl.exe
 
 /bin/echo -e "\n### Signing and uploading the new binaries to yt-dl.org ..."
-for f in $RELEASE_FILES; do gpg --detach-sig "build/$version/$f"; done
+for f in $RELEASE_FILES; do gpg --passphrase-repeat 5 --detach-sig "build/$version/$f"; done
 scp -r "build/$version" ytdl@yt-dl.org:html/tmp/
 ssh ytdl@yt-dl.org "mv html/tmp/$version html/downloads/"
 ssh ytdl@yt-dl.org "sh html/update_latest.sh $version"
@@ -97,7 +103,7 @@ rm -rf build
 
 make pypi-files
 echo "Uploading to PyPi ..."
-python setup.py sdist upload
+python setup.py sdist bdist_wheel upload
 make clean
 
 /bin/echo -e "\n### DONE!"

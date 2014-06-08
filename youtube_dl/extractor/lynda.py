@@ -8,7 +8,9 @@ from .common import InfoExtractor
 from ..utils import (
     compat_urllib_parse,
     compat_urllib_request,
-    ExtractorError
+    ExtractorError,
+    int_or_none,
+    compat_str,
 )
 
 
@@ -19,16 +21,17 @@ class LyndaIE(SubtitlesInfoExtractor):
     _LOGIN_URL = 'https://www.lynda.com/login/login.aspx'
     _NETRC_MACHINE = 'lynda'
 
-    _SUCCESSFUL_LOGIN_REGEX = r'<a href="https://www.lynda.com/home/userAccount/ChangeContactInfo.aspx" data-qa="eyebrow_account_menu">My account'
+    _SUCCESSFUL_LOGIN_REGEX = r'isLoggedIn: true'
     _TIMECODE_REGEX = r'\[(?P<timecode>\d+:\d+:\d+[\.,]\d+)\]'
 
     ACCOUNT_CREDENTIALS_HINT = 'Use --username and --password options to provide lynda.com account credentials.'
 
     _TEST = {
         'url': 'http://www.lynda.com/Bootstrap-tutorials/Using-exercise-files/110885/114408-4.html',
-        'file': '114408.mp4',
         'md5': 'ecfc6862da89489161fb9cd5f5a6fac1',
         'info_dict': {
+            'id': '114408',
+            'ext': 'mp4',
             'title': 'Using the exercise files',
             'duration': 68
         }
@@ -41,27 +44,44 @@ class LyndaIE(SubtitlesInfoExtractor):
         mobj = re.match(self._VALID_URL, url)
         video_id = mobj.group(1)
 
-        page = self._download_webpage('http://www.lynda.com/ajax/player?videoId=%s&type=video' % video_id,
-                                      video_id, 'Downloading video JSON')
+        page = self._download_webpage('http://www.lynda.com/ajax/player?videoId=%s&type=video' % video_id, video_id,
+            'Downloading video JSON')
         video_json = json.loads(page)
 
         if 'Status' in video_json:
             raise ExtractorError('lynda returned error: %s' % video_json['Message'], expected=True)
 
         if video_json['HasAccess'] is False:
-            raise ExtractorError('Video %s is only available for members. ' % video_id + self.ACCOUNT_CREDENTIALS_HINT, expected=True)
+            raise ExtractorError(
+                'Video %s is only available for members. ' % video_id + self.ACCOUNT_CREDENTIALS_HINT, expected=True)
 
-        video_id = video_json['ID']
+        video_id = compat_str(video_json['ID'])
         duration = video_json['DurationInSeconds']
         title = video_json['Title']
 
-        formats = [{'url': fmt['Url'],
+        formats = []
+
+        fmts = video_json.get('Formats')
+        if fmts:
+            formats.extend([
+                {
+                    'url': fmt['Url'],
                     'ext': fmt['Extension'],
                     'width': fmt['Width'],
                     'height': fmt['Height'],
                     'filesize': fmt['FileSize'],
                     'format_id': str(fmt['Resolution'])
-                    } for fmt in video_json['Formats']]
+                } for fmt in fmts])
+
+        prioritized_streams = video_json.get('PrioritizedStreams')
+        if prioritized_streams:
+            formats.extend([
+                {
+                    'url': video_url,
+                    'width': int_or_none(format_id),
+                    'format_id': format_id,
+                } for format_id, video_url in prioritized_streams['0'].items()
+            ])
 
         self._sort_formats(formats)
 
@@ -91,7 +111,7 @@ class LyndaIE(SubtitlesInfoExtractor):
             'stayPut': 'false'
         }        
         request = compat_urllib_request.Request(self._LOGIN_URL, compat_urllib_parse.urlencode(login_form))
-        login_page = self._download_webpage(request, None, note='Logging in as %s' % username)
+        login_page = self._download_webpage(request, None, 'Logging in as %s' % username)
 
         # Not (yet) logged in
         m = re.search(r'loginResultJson = \'(?P<json>[^\']+)\';', login_page)
@@ -116,7 +136,7 @@ class LyndaIE(SubtitlesInfoExtractor):
                     'stayPut': 'false',
                 }
                 request = compat_urllib_request.Request(self._LOGIN_URL, compat_urllib_parse.urlencode(confirm_form))
-                login_page = self._download_webpage(request, None, note='Confirming log in and log out from another device')
+                login_page = self._download_webpage(request, None, 'Confirming log in and log out from another device')
 
         if re.search(self._SUCCESSFUL_LOGIN_REGEX, login_page) is None:
             raise ExtractorError('Unable to log in')
@@ -150,7 +170,7 @@ class LyndaIE(SubtitlesInfoExtractor):
 
     def _get_available_subtitles(self, video_id, webpage):
         url = 'http://www.lynda.com/ajax/player?videoId=%s&type=transcript' % video_id
-        sub = self._download_webpage(url, None, note=False)
+        sub = self._download_webpage(url, None, False)
         sub_json = json.loads(sub)
         return {'en': url} if len(sub_json) > 0 else {}
 
@@ -178,6 +198,9 @@ class LyndaCourseIE(InfoExtractor):
         unaccessible_videos = 0
         videos = []
         (username, _) = self._get_login_info()
+
+        # Might want to extract videos right here from video['Formats'] as it seems 'Formats' is not provided
+        # by single video API anymore
 
         for chapter in course_json['Chapters']:
             for video in chapter['Videos']:

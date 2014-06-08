@@ -12,9 +12,11 @@ from ..utils import (
     compat_urllib_parse,
     compat_urllib_request,
     compat_urlparse,
+    compat_xml_parse_error,
 
     ExtractorError,
     HEADRequest,
+    parse_xml,
     smuggle_url,
     unescapeHTML,
     unified_strdate,
@@ -22,6 +24,8 @@ from ..utils import (
 )
 from .brightcove import BrightcoveIE
 from .ooyala import OoyalaIE
+from .rutv import RUTVIE
+from .smotri import SmotriIE
 
 
 class GenericIE(InfoExtractor):
@@ -31,9 +35,10 @@ class GenericIE(InfoExtractor):
     _TESTS = [
         {
             'url': 'http://www.hodiho.fr/2013/02/regis-plante-sa-jeep.html',
-            'file': '13601338388002.mp4',
-            'md5': '6e15c93721d7ec9e9ca3fdbf07982cfd',
+            'md5': '85b90ccc9d73b4acd9138d3af4c27f89',
             'info_dict': {
+                'id': '13601338388002',
+                'ext': 'mp4',
                 'uploader': 'www.hodiho.fr',
                 'title': 'R\u00e9gis plante sa Jeep',
             }
@@ -42,8 +47,9 @@ class GenericIE(InfoExtractor):
         {
             'add_ie': ['Bandcamp'],
             'url': 'http://bronyrock.com/track/the-pony-mash',
-            'file': '3235767654.mp3',
             'info_dict': {
+                'id': '3235767654',
+                'ext': 'mp3',
                 'title': 'The Pony Mash',
                 'uploader': 'M_Pallante',
             },
@@ -69,22 +75,34 @@ class GenericIE(InfoExtractor):
         {
             # https://github.com/rg3/youtube-dl/issues/2253
             'url': 'http://bcove.me/i6nfkrc3',
-            'file': '3101154703001.mp4',
             'md5': '0ba9446db037002366bab3b3eb30c88c',
             'info_dict': {
+                'id': '3101154703001',
+                'ext': 'mp4',
                 'title': 'Still no power',
                 'uploader': 'thestar.com',
                 'description': 'Mississauga resident David Farmer is still out of power as a result of the ice storm a month ago. To keep the house warm, Farmer cuts wood from his property for a wood burning stove downstairs.',
             },
             'add_ie': ['Brightcove'],
         },
+        {
+            'url': 'http://www.championat.com/video/football/v/87/87499.html',
+            'md5': 'fb973ecf6e4a78a67453647444222983',
+            'info_dict': {
+                'id': '3414141473001',
+                'ext': 'mp4',
+                'title': 'Видео. Удаление Дзагоева (ЦСКА)',
+                'description': 'Онлайн-трансляция матча ЦСКА - "Волга"',
+                'uploader': 'Championat',
+            },
+        },
         # Direct link to a video
         {
             'url': 'http://media.w3.org/2010/05/sintel/trailer.mp4',
-            'file': 'trailer.mp4',
             'md5': '67d406c2bcb6af27fa886f31aa934bbe',
             'info_dict': {
                 'id': 'trailer',
+                'ext': 'mp4',
                 'title': 'trailer',
                 'upload_date': '20100513',
             }
@@ -92,7 +110,6 @@ class GenericIE(InfoExtractor):
         # ooyala video
         {
             'url': 'http://www.rollingstone.com/music/videos/norwegian-dj-cashmere-cat-goes-spartan-on-with-me-premiere-20131219',
-            'file': 'BwY2RxaTrTkslxOfcan0UCf0YqyvWysJ.mp4',
             'md5': '5644c6ca5d5782c1d0d350dad9bd840c',
             'info_dict': {
                 'id': 'BwY2RxaTrTkslxOfcan0UCf0YqyvWysJ',
@@ -100,6 +117,150 @@ class GenericIE(InfoExtractor):
                 'title': '2cc213299525360.mov',  # that's what we get
             },
         },
+        # google redirect
+        {
+            'url': 'http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&ved=0CCUQtwIwAA&url=http%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DcmQHVoWB5FY&ei=F-sNU-LLCaXk4QT52ICQBQ&usg=AFQjCNEw4hL29zgOohLXvpJ-Bdh2bils1Q&bvm=bv.61965928,d.bGE',
+            'info_dict': {
+                'id': 'cmQHVoWB5FY',
+                'ext': 'mp4',
+                'upload_date': '20130224',
+                'uploader_id': 'TheVerge',
+                'description': 'Chris Ziegler takes a look at the Alcatel OneTouch Fire and the ZTE Open; two of the first Firefox OS handsets to be officially announced.',
+                'uploader': 'The Verge',
+                'title': 'First Firefox OS phones side-by-side',
+            },
+            'params': {
+                'skip_download': False,
+            }
+        },
+        # embed.ly video
+        {
+            'url': 'http://www.tested.com/science/weird/460206-tested-grinding-coffee-2000-frames-second/',
+            'info_dict': {
+                'id': '9ODmcdjQcHQ',
+                'ext': 'mp4',
+                'title': 'Tested: Grinding Coffee at 2000 Frames Per Second',
+                'upload_date': '20140225',
+                'description': 'md5:06a40fbf30b220468f1e0957c0f558ff',
+                'uploader': 'Tested',
+                'uploader_id': 'testedcom',
+            },
+            # No need to test YoutubeIE here
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # funnyordie embed
+        {
+            'url': 'http://www.theguardian.com/world/2014/mar/11/obama-zach-galifianakis-between-two-ferns',
+            'md5': '7cf780be104d40fea7bae52eed4a470e',
+            'info_dict': {
+                'id': '18e820ec3f',
+                'ext': 'mp4',
+                'title': 'Between Two Ferns with Zach Galifianakis: President Barack Obama',
+                'description': 'Episode 18: President Barack Obama sits down with Zach Galifianakis for his most memorable interview yet.',
+            },
+        },
+        # RUTV embed
+        {
+            'url': 'http://www.rg.ru/2014/03/15/reg-dfo/anklav-anons.html',
+            'info_dict': {
+                'id': '776940',
+                'ext': 'mp4',
+                'title': 'Охотское море стало целиком российским',
+                'description': 'md5:5ed62483b14663e2a95ebbe115eb8f43',
+            },
+            'params': {
+                # m3u8 download
+                'skip_download': True,
+            },
+        },
+        # Embedded TED video
+        {
+            'url': 'http://en.support.wordpress.com/videos/ted-talks/',
+            'md5': 'deeeabcc1085eb2ba205474e7235a3d5',
+            'info_dict': {
+                'id': '981',
+                'ext': 'mp4',
+                'title': 'My web playroom',
+                'uploader': 'Ze Frank',
+                'description': 'md5:ddb2a40ecd6b6a147e400e535874947b',
+            }
+        },
+        # Embeded Ustream video
+        {
+            'url': 'http://www.american.edu/spa/pti/nsa-privacy-janus-2014.cfm',
+            'md5': '27b99cdb639c9b12a79bca876a073417',
+            'info_dict': {
+                'id': '45734260',
+                'ext': 'flv',
+                'uploader': 'AU SPA:  The NSA and Privacy',
+                'title': 'NSA and Privacy Forum Debate featuring General Hayden and Barton Gellman'
+            }
+        },
+        # nowvideo embed hidden behind percent encoding
+        {
+            'url': 'http://www.waoanime.tv/the-super-dimension-fortress-macross-episode-1/',
+            'md5': '2baf4ddd70f697d94b1c18cf796d5107',
+            'info_dict': {
+                'id': '06e53103ca9aa',
+                'ext': 'flv',
+                'title': 'Macross Episode 001  Watch Macross Episode 001 onl',
+                'description': 'No description',
+            },
+        },
+        # arte embed
+        {
+            'url': 'http://www.tv-replay.fr/redirection/20-03-14/x-enius-arte-10753389.html',
+            'md5': '7653032cbb25bf6c80d80f217055fa43',
+            'info_dict': {
+                'id': '048195-004_PLUS7-F',
+                'ext': 'flv',
+                'title': 'X:enius',
+                'description': 'md5:d5fdf32ef6613cdbfd516ae658abf168',
+                'upload_date': '20140320',
+            },
+            'params': {
+                'skip_download': 'Requires rtmpdump'
+            }
+        },
+        # smotri embed
+        {
+            'url': 'http://rbctv.rbc.ru/archive/news/562949990879132.shtml',
+            'md5': 'ec40048448e9284c9a1de77bb188108b',
+            'info_dict': {
+                'id': 'v27008541fad',
+                'ext': 'mp4',
+                'title': 'Крым и Севастополь вошли в состав России',
+                'description': 'md5:fae01b61f68984c7bd2fa741e11c3175',
+                'duration': 900,
+                'upload_date': '20140318',
+                'uploader': 'rbctv_2012_4',
+                'uploader_id': 'rbctv_2012_4',
+            },
+        },
+        # Condé Nast embed
+        {
+            'url': 'http://www.wired.com/2014/04/honda-asimo/',
+            'md5': 'ba0dfe966fa007657bd1443ee672db0f',
+            'info_dict': {
+                'id': '53501be369702d3275860000',
+                'ext': 'mp4',
+                'title': 'Honda’s  New Asimo Robot Is More Human Than Ever',
+            }
+        },
+        # Dailymotion embed
+        {
+            'url': 'http://www.spi0n.com/zap-spi0n-com-n216/',
+            'md5': '441aeeb82eb72c422c7f14ec533999cd',
+            'info_dict': {
+                'id': 'k2mm4bCdJ6CQ2i7c8o2',
+                'ext': 'mp4',
+                'title': 'Le Zap de Spi0n n°216 - Zapping du Web',
+                'uploader': 'Spi0n',
+            },
+            'add_ie': ['Dailymotion'],
+        }
     ]
 
     def report_download_webpage(self, video_id):
@@ -125,9 +286,14 @@ class GenericIE(InfoExtractor):
                     newurl = newurl.replace(' ', '%20')
                     newheaders = dict((k,v) for k,v in req.headers.items()
                                       if k.lower() not in ("content-length", "content-type"))
+                    try:
+                        # This function was deprecated in python 3.3 and removed in 3.4
+                        origin_req_host = req.get_origin_req_host()
+                    except AttributeError:
+                        origin_req_host = req.origin_req_host
                     return HEADRequest(newurl,
                                        headers=newheaders,
-                                       origin_req_host=req.get_origin_req_host(),
+                                       origin_req_host=origin_req_host,
                                        unverifiable=True)
                 else:
                     raise compat_urllib_error.HTTPError(req.get_full_url(), code, msg, headers, fp)
@@ -159,23 +325,56 @@ class GenericIE(InfoExtractor):
             raise ExtractorError('Invalid URL protocol')
         return response
 
+    def _extract_rss(self, url, video_id, doc):
+        playlist_title = doc.find('./channel/title').text
+        playlist_desc_el = doc.find('./channel/description')
+        playlist_desc = None if playlist_desc_el is None else playlist_desc_el.text
+
+        entries = [{
+            '_type': 'url',
+            'url': e.find('link').text,
+            'title': e.find('title').text,
+        } for e in doc.findall('./channel/item')]
+
+        return {
+            '_type': 'playlist',
+            'id': url,
+            'title': playlist_title,
+            'description': playlist_desc,
+            'entries': entries,
+        }
+
     def _real_extract(self, url):
+        if url.startswith('//'):
+            return {
+                '_type': 'url',
+                'url': self.http_scheme() + url,
+            }
+
         parsed_url = compat_urlparse.urlparse(url)
         if not parsed_url.scheme:
             default_search = self._downloader.params.get('default_search')
             if default_search is None:
-                default_search = 'auto'
+                default_search = 'auto_warning'
 
-            if default_search == 'auto':
+            if default_search in ('auto', 'auto_warning'):
                 if '/' in url:
                     self._downloader.report_warning('The url doesn\'t specify the protocol, trying with http')
                     return self.url_result('http://' + url)
                 else:
+                    if default_search == 'auto_warning':
+                        if re.match(r'^(?:url|URL)$', url):
+                            raise ExtractorError(
+                                'Invalid URL:  %r . Call youtube-dl like this:  youtube-dl -v "https://www.youtube.com/watch?v=BaW_jenozKc"  ' % url,
+                                expected=True)
+                        else:
+                            self._downloader.report_warning(
+                                'Falling back to youtube search for  %s . Set --default-search to "auto" to suppress this warning.' % url)
                     return self.url_result('ytsearch:' + url)
             else:
                 assert ':' in default_search
                 return self.url_result(default_search + url)
-        video_id = os.path.splitext(url.split('/')[-1])[0]
+        video_id = os.path.splitext(url.rstrip('/').split('/')[-1])[0]
 
         self.to_screen('%s: Requesting header' % video_id)
 
@@ -219,6 +418,19 @@ class GenericIE(InfoExtractor):
 
         self.report_extraction(video_id)
 
+        # Is it an RSS feed?
+        try:
+            doc = parse_xml(webpage)
+            if doc.tag == 'rss':
+                return self._extract_rss(url, video_id, doc)
+        except compat_xml_parse_error:
+            pass
+
+        # Sometimes embedded video player is hidden behind percent encoding
+        # (e.g. https://github.com/rg3/youtube-dl/issues/2448)
+        # Unescaping the whole page allows to handle those cases in a generic way
+        webpage = compat_urllib_parse.unquote(webpage)
+
         # it's tempting to parse this further, but you would
         # have to take into account all the variations like
         #   Video Title - Site Name
@@ -252,9 +464,9 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded (iframe) Vimeo player
         mobj = re.search(
-            r'<iframe[^>]+?src="((?:https?:)?//player\.vimeo\.com/video/.+?)"', webpage)
+            r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//player\.vimeo\.com/video/.+?)\1', webpage)
         if mobj:
-            player_url = unescapeHTML(mobj.group(1))
+            player_url = unescapeHTML(mobj.group('url'))
             surl = smuggle_url(player_url, {'Referer': url})
             return self.url_result(surl, 'Vimeo')
 
@@ -280,7 +492,7 @@ class GenericIE(InfoExtractor):
         matches = re.findall(
             r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?dailymotion\.com/embed/video/.+?)\1', webpage)
         if matches:
-            urlrs = [self.url_result(unescapeHTML(tuppl[1]), 'Dailymotion')
+            urlrs = [self.url_result(unescapeHTML(tuppl[1]))
                      for tuppl in matches]
             return self.playlist_result(
                 urlrs, playlist_id=video_id, playlist_title=video_title)
@@ -306,6 +518,22 @@ class GenericIE(InfoExtractor):
         if mobj:
             return self.url_result(mobj.group(1), 'BlipTV')
 
+        # Look for embedded condenast player
+        matches = re.findall(
+            r'<iframe\s+(?:[a-zA-Z-]+="[^"]+"\s+)*?src="(https?://player\.cnevids\.com/embed/[^"]+")',
+            webpage)
+        if matches:
+            return {
+                '_type': 'playlist',
+                'entries': [{
+                    '_type': 'url',
+                    'ie_key': 'CondeNast',
+                    'url': ma,
+                } for ma in matches],
+                'title': video_title,
+                'id': video_id,
+            }
+
         # Look for Bandcamp pages with custom domain
         mobj = re.search(r'<meta property="og:url"[^>]*?content="(.*?bandcamp\.com.*?)"', webpage)
         if mobj is not None:
@@ -320,12 +548,13 @@ class GenericIE(InfoExtractor):
             return self.url_result(mobj.group('url'))
 
         # Look for Ooyala videos
-        mobj = re.search(r'player.ooyala.com/[^"?]+\?[^"]*?(?:embedCode|ec)=([^"&]+)', webpage)
+        mobj = (re.search(r'player.ooyala.com/[^"?]+\?[^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
+             re.search(r'OO.Player.create\([\'"].*?[\'"],\s*[\'"](?P<ec>.{32})[\'"]', webpage))
         if mobj is not None:
-            return OoyalaIE._build_url_result(mobj.group(1))
+            return OoyalaIE._build_url_result(mobj.group('ec'))
 
         # Look for Aparat videos
-        mobj = re.search(r'<iframe src="(http://www\.aparat\.com/video/[^"]+)"', webpage)
+        mobj = re.search(r'<iframe .*?src="(http://www\.aparat\.com/video/[^"]+)"', webpage)
         if mobj is not None:
             return self.url_result(mobj.group(1), 'Aparat')
 
@@ -334,11 +563,18 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group(1), 'Mpora')
 
-        # Look for embedded Novamov player
+        # Look for embedded NovaMov-based player
         mobj = re.search(
-            r'<iframe[^>]+?src=(["\'])(?P<url>http://(?:(?:embed|www)\.)?novamov\.com/embed\.php.+?)\1', webpage)
+            r'''(?x)<(?:pagespeed_)?iframe[^>]+?src=(["\'])
+                    (?P<url>http://(?:(?:embed|www)\.)?
+                        (?:novamov\.com|
+                           nowvideo\.(?:ch|sx|eu|at|ag|co)|
+                           videoweed\.(?:es|com)|
+                           movshare\.(?:net|sx|ag)|
+                           divxstage\.(?:eu|net|ch|co|at|ag))
+                        /embed\.php.+?)\1''', webpage)
         if mobj is not None:
-            return self.url_result(mobj.group('url'), 'Novamov')
+            return self.url_result(mobj.group('url'))
 
         # Look for embedded Facebook player
         mobj = re.search(
@@ -346,58 +582,142 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'Facebook')
 
+        # Look for embedded VK player
+        mobj = re.search(r'<iframe[^>]+?src=(["\'])(?P<url>https?://vk\.com/video_ext\.php.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'VK')
+
         # Look for embedded Huffington Post player
         mobj = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>https?://embed\.live\.huffingtonpost\.com/.+?)\1', webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'HuffPost')
 
+        # Look for embed.ly
+        mobj = re.search(r'class=["\']embedly-card["\'][^>]href=["\'](?P<url>[^"\']+)', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+        mobj = re.search(r'class=["\']embedly-embed["\'][^>]src=["\'][^"\']*url=(?P<url>[^&]+)', webpage)
+        if mobj is not None:
+            return self.url_result(compat_urllib_parse.unquote(mobj.group('url')))
+
+        # Look for funnyordie embed
+        matches = re.findall(r'<iframe[^>]+?src="(https?://(?:www\.)?funnyordie\.com/embed/[^"]+)"', webpage)
+        if matches:
+            urlrs = [self.url_result(unescapeHTML(eurl), 'FunnyOrDie')
+                     for eurl in matches]
+            return self.playlist_result(
+                urlrs, playlist_id=video_id, playlist_title=video_title)
+
+        # Look for embedded RUTV player
+        rutv_url = RUTVIE._extract_url(webpage)
+        if rutv_url:
+            return self.url_result(rutv_url, 'RUTV')
+
+        # Look for embedded TED player
+        mobj = re.search(
+            r'<iframe[^>]+?src=(["\'])(?P<url>http://embed\.ted\.com/.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'TED')
+
+        # Look for embedded Ustream videos
+        mobj = re.search(
+            r'<iframe[^>]+?src=(["\'])(?P<url>http://www\.ustream\.tv/embed/.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Ustream')
+
+        # Look for embedded arte.tv player
+        mobj = re.search(
+            r'<script [^>]*?src="(?P<url>http://www\.arte\.tv/playerv2/embed[^"]+)"',
+            webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'ArteTVEmbed')
+
+        # Look for embedded smotri.com player
+        smotri_url = SmotriIE._extract_url(webpage)
+        if smotri_url:
+            return self.url_result(smotri_url, 'Smotri')
+
+        # Look for embeded soundcloud player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://(?:w\.)?soundcloud\.com/player[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url)
+
         # Start with something easy: JW Player in SWFObject
-        mobj = re.search(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)
-        if mobj is None:
+        found = re.findall(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)
+        if not found:
             # Look for gorilla-vid style embedding
-            mobj = re.search(r'(?s)(?:jw_plugins|JWPlayerOptions).*?file\s*:\s*["\'](.*?)["\']', webpage)
-        if mobj is None:
+            found = re.findall(r'''(?sx)
+                (?:
+                    jw_plugins|
+                    JWPlayerOptions|
+                    jwplayer\s*\(\s*["'][^'"]+["']\s*\)\s*\.setup
+                )
+                .*?file\s*:\s*["\'](.*?)["\']''', webpage)
+        if not found:
             # Broaden the search a little bit
-            mobj = re.search(r'[^A-Za-z0-9]?(?:file|source)=(http[^\'"&]*)', webpage)
-        if mobj is None:
-            # Broaden the search a little bit: JWPlayer JS loader
-            mobj = re.search(r'[^A-Za-z0-9]?file["\']?:\s*["\'](http(?![^\'"]+\.[0-9]+[\'"])[^\'"]+)["\']', webpage)
-        if mobj is None:
+            found = re.findall(r'[^A-Za-z0-9]?(?:file|source)=(http[^\'"&]*)', webpage)
+        if not found:
+            # Broaden the findall a little bit: JWPlayer JS loader
+            found = re.findall(r'[^A-Za-z0-9]?file["\']?:\s*["\'](http(?![^\'"]+\.[0-9]+[\'"])[^\'"]+)["\']', webpage)
+        if not found:
             # Try to find twitter cards info
-            mobj = re.search(r'<meta (?:property|name)="twitter:player:stream" (?:content|value)="(.+?)"', webpage)
-        if mobj is None:
+            found = re.findall(r'<meta (?:property|name)="twitter:player:stream" (?:content|value)="(.+?)"', webpage)
+        if not found:
             # We look for Open Graph info:
             # We have to match any number spaces between elements, some sites try to align them (eg.: statigr.am)
-            m_video_type = re.search(r'<meta.*?property="og:video:type".*?content="video/(.*?)"', webpage)
+            m_video_type = re.findall(r'<meta.*?property="og:video:type".*?content="video/(.*?)"', webpage)
             # We only look in og:video if the MIME type is a video, don't try if it's a Flash player:
             if m_video_type is not None:
-                mobj = re.search(r'<meta.*?property="og:video".*?content="(.*?)"', webpage)
-        if mobj is None:
+                found = re.findall(r'<meta.*?property="og:video".*?content="(.*?)"', webpage)
+        if not found:
             # HTML5 video
-            mobj = re.search(r'<video[^<]*(?:>.*?<source.*?)? src="([^"]+)"', webpage, flags=re.DOTALL)
-        if mobj is None:
+            found = re.findall(r'(?s)<video[^<]*(?:>.*?<source.*?)? src="([^"]+)"', webpage)
+        if not found:
+            found = re.search(
+                r'(?i)<meta\s+(?=(?:[a-z-]+="[^"]+"\s+)*http-equiv="refresh")'
+                r'(?:[a-z-]+="[^"]+"\s+)*?content="[0-9]{,2};url=\'([^\']+)\'"',
+                webpage)
+            if found:
+                new_url = found.group(1)
+                self.report_following_redirect(new_url)
+                return {
+                    '_type': 'url',
+                    'url': new_url,
+                }
+        if not found:
             raise ExtractorError('Unsupported URL: %s' % url)
 
-        # It's possible that one of the regexes
-        # matched, but returned an empty group:
-        if mobj.group(1) is None:
-            raise ExtractorError('Did not find a valid video URL at %s' % url)
+        entries = []
+        for video_url in found:
+            video_url = compat_urlparse.urljoin(url, video_url)
+            video_id = compat_urllib_parse.unquote(os.path.basename(video_url))
 
-        video_url = mobj.group(1)
-        video_url = compat_urlparse.urljoin(url, video_url)
-        video_id = compat_urllib_parse.unquote(os.path.basename(video_url))
+            # Sometimes, jwplayer extraction will result in a YouTube URL
+            if YoutubeIE.suitable(video_url):
+                entries.append(self.url_result(video_url, 'Youtube'))
+                continue
 
-        # Sometimes, jwplayer extraction will result in a YouTube URL
-        if YoutubeIE.suitable(video_url):
-            return self.url_result(video_url, 'Youtube')
+            # here's a fun little line of code for you:
+            video_id = os.path.splitext(video_id)[0]
 
-        # here's a fun little line of code for you:
-        video_id = os.path.splitext(video_id)[0]
+            entries.append({
+                'id': video_id,
+                'url': video_url,
+                'uploader': video_uploader,
+                'title': video_title,
+            })
 
-        return {
-            'id': video_id,
-            'url': video_url,
-            'uploader': video_uploader,
-            'title': video_title,
-        }
+        if len(entries) == 1:
+            return entries[0]
+        else:
+            for num, e in enumerate(entries, start=1):
+                e['title'] = '%s (%d)' % (e['title'], num)
+            return {
+                '_type': 'playlist',
+                'entries': entries,
+            }
+

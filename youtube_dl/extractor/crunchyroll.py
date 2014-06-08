@@ -1,7 +1,11 @@
 # encoding: utf-8
 from __future__ import unicode_literals
 
-import re, base64, zlib
+import re
+import json
+import base64
+import zlib
+
 from hashlib import sha1
 from math import pow, sqrt, floor
 from .common import InfoExtractor
@@ -19,13 +23,15 @@ from ..aes import (
     inc,
 )
 
+
 class CrunchyrollIE(InfoExtractor):
-    _VALID_URL = r'(?:https?://)?(?:(?P<prefix>www|m)\.)?(?P<url>crunchyroll\.com/(?:[^/]*/[^/?&]*?|media/\?id=)(?P<video_id>[0-9]+))(?:[/?&]|$)'
-    _TESTS = [{
+    _VALID_URL = r'https?://(?:(?P<prefix>www|m)\.)?(?P<url>crunchyroll\.com/(?:[^/]*/[^/?&]*?|media/\?id=)(?P<video_id>[0-9]+))(?:[/?&]|$)'
+    _TEST = {
         'url': 'http://www.crunchyroll.com/wanna-be-the-strongest-in-the-world/episode-1-an-idol-wrestler-is-born-645513',
-        'file': '645513.flv',
         #'md5': 'b1639fd6ddfaa43788c85f6d1dddd412',
         'info_dict': {
+            'id': '645513',
+            'ext': 'flv',
             'title': 'Wanna be the Strongest in the World Episode 1 – An Idol-Wrestler is Born!',
             'description': 'md5:2d17137920c64f2f49981a7797d275ef',
             'thumbnail': 'http://img1.ak.crunchyroll.com/i/spire1-tmb/20c6b5e10f1a47b10516877d3c039cae1380951166_full.jpg',
@@ -36,7 +42,7 @@ class CrunchyrollIE(InfoExtractor):
             # rtmp
             'skip_download': True,
         },
-    }]
+    }
 
     _FORMAT_IDS = {
         '360': ('60', '106'),
@@ -68,7 +74,7 @@ class CrunchyrollIE(InfoExtractor):
             shaHash = bytes_to_intlist(sha1(prefix + str(num4).encode('ascii')).digest())
             # Extend 160 Bit hash to 256 Bit
             return shaHash + [0] * 12
-        
+
         key = obfuscate_key(id)
         class Counter:
             __value = iv
@@ -80,9 +86,8 @@ class CrunchyrollIE(InfoExtractor):
         return zlib.decompress(decrypted_data)
 
     def _convert_subtitles_to_srt(self, subtitles):
-        i=1
         output = ''
-        for start, end, text in re.findall(r'<event [^>]*?start="([^"]+)" [^>]*?end="([^"]+)" [^>]*?text="([^"]+)"[^>]*?>', subtitles):
+        for i, (start, end, text) in enumerate(re.findall(r'<event [^>]*?start="([^"]+)" [^>]*?end="([^"]+)" [^>]*?text="([^"]+)"[^>]*?>', subtitles), 1):
             start = start.replace('.', ',')
             end = end.replace('.', ',')
             text = clean_html(text)
@@ -90,7 +95,6 @@ class CrunchyrollIE(InfoExtractor):
             if not text:
                 continue
             output += '%d\n%s --> %s\n%s\n\n' % (i, start, end, text)
-            i+=1
         return output
 
     def _real_extract(self,url):
@@ -108,6 +112,12 @@ class CrunchyrollIE(InfoExtractor):
         if note_m:
             raise ExtractorError(note_m)
 
+        mobj = re.search(r'Page\.messaging_box_controller\.addItems\(\[(?P<msg>{.+?})\]\)', webpage)
+        if mobj:
+            msg = json.loads(mobj.group('msg'))
+            if msg.get('type') == 'error':
+                raise ExtractorError('crunchyroll returned error: %s' % msg['message_body'], expected=True)
+
         video_title = self._html_search_regex(r'<h1[^>]*>(.+?)</h1>', webpage, 'video_title', flags=re.DOTALL)
         video_title = re.sub(r' {2,}', ' ', video_title)
         video_description = self._html_search_regex(r'"description":"([^"]+)', webpage, 'video_description', default='')
@@ -123,7 +133,7 @@ class CrunchyrollIE(InfoExtractor):
         playerdata_req.data = compat_urllib_parse.urlencode({'current_page': webpage_url})
         playerdata_req.add_header('Content-Type', 'application/x-www-form-urlencoded')
         playerdata = self._download_webpage(playerdata_req, video_id, note='Downloading media info')
-        
+
         stream_id = self._search_regex(r'<media_id>([^<]+)', playerdata, 'stream_id')
         video_thumbnail = self._search_regex(r'<episode_image_url>([^<]+)', playerdata, 'thumbnail', fatal=False)
 
@@ -161,7 +171,7 @@ class CrunchyrollIE(InfoExtractor):
             data = base64.b64decode(data)
 
             subtitle = self._decrypt_subtitles(data, iv, id).decode('utf-8')
-            lang_code = self._search_regex(r'lang_code=\'([^\']+)', subtitle, 'subtitle_lang_code', fatal=False)
+            lang_code = self._search_regex(r'lang_code=["\']([^"\']+)', subtitle, 'subtitle_lang_code', fatal=False)
             if not lang_code:
                 continue
             subtitles[lang_code] = self._convert_subtitles_to_srt(subtitle)

@@ -6,7 +6,8 @@ import re
 from .common import InfoExtractor
 from ..utils import (
     int_or_none,
-    unified_strdate
+    unified_strdate,
+    ExtractorError,
 )
 
 
@@ -32,13 +33,11 @@ class LifeNewsIE(InfoExtractor):
         mobj = re.match(self._VALID_URL, url)
         video_id = mobj.group('id')
 
-        webpage = self._download_webpage('http://lifenews.ru/mobile/news/%s' % video_id, video_id, 'Downloading page')
+        webpage = self._download_webpage('http://lifenews.ru/news/%s' % video_id, video_id, 'Downloading page')
 
-        video_url = self._html_search_regex(
-            r'<video.*?src="([^"]+)".*?></video>', webpage, 'video URL')
-
-        thumbnail = self._html_search_regex(
-            r'<video.*?poster="([^"]+)".*?"></video>', webpage, 'video thumbnail')
+        videos = re.findall(r'<video.*?poster="(?P<poster>[^"]+)".*?src="(?P<video>[^"]+)".*?></video>', webpage)
+        if not videos:
+            raise ExtractorError('No media links available for %s' % video_id)
 
         title = self._og_search_title(webpage)
         TITLE_SUFFIX = ' - Первый по срочным новостям — LIFE | NEWS'
@@ -50,20 +49,26 @@ class LifeNewsIE(InfoExtractor):
         view_count = self._html_search_regex(
             r'<div class=\'views\'>(\d+)</div>', webpage, 'view count', fatal=False)
         comment_count = self._html_search_regex(
-            r'<div class=\'comments\'>(\d+)</div>', webpage, 'comment count', fatal=False)
+            r'<div class=\'comments\'>\s*<span class=\'counter\'>(\d+)</span>', webpage, 'comment count', fatal=False)
 
         upload_date = self._html_search_regex(
             r'<time datetime=\'([^\']+)\'>', webpage, 'upload date',fatal=False)
         if upload_date is not None:
             upload_date = unified_strdate(upload_date)
 
-        return {
-            'id': video_id,
-            'url': video_url,
-            'thumbnail': thumbnail,
-            'title': title,
-            'description': description,
-            'view_count': int_or_none(view_count),
-            'comment_count': int_or_none(comment_count),
-            'upload_date': upload_date,
-        }
+        def make_entry(video_id, media, video_number=None):
+            return {
+                'id': video_id,
+                'url': media[1],
+                'thumbnail': media[0],
+                'title': title if video_number is None else '%s-video%s' % (title, video_number),
+                'description': description,
+                'view_count': int_or_none(view_count),
+                'comment_count': int_or_none(comment_count),
+                'upload_date': upload_date,
+            }
+
+        if len(videos) == 1:
+            return make_entry(video_id, videos[0])
+        else:
+            return [make_entry(video_id, media, video_number+1) for video_number, media in enumerate(videos)]
