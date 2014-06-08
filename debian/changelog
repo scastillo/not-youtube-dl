@@ -1,3 +1,11 @@
+youtube-dl (2014.06.07-1~1.gbp415fdb) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @415fdb62500dca2e22067a05008dfbf87c75b662 **
+
+  * Imported Upstream version 2014.06.07.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 08 Jun 2014 10:58:53 -0300
+
 youtube-dl (2014.02.17-1) unstable; urgency=medium
 
   * The "Way too many changes release".
