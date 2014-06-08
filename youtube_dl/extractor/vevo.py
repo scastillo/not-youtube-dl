@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import re
 import xml.etree.ElementTree
-import datetime
 
 from .common import InfoExtractor
 from ..utils import (
@@ -17,22 +16,55 @@ class VevoIE(InfoExtractor):
     (currently used by MTVIE)
     """
     _VALID_URL = r'''(?x)
-        (?:https?://www\.vevo\.com/watch/(?:[^/]+/[^/]+/)?|
+        (?:https?://www\.vevo\.com/watch/(?:[^/]+/(?:[^/]+/)?)?|
            https?://cache\.vevo\.com/m/html/embed\.html\?video=|
            https?://videoplayer\.vevo\.com/embed/embedded\?videoId=|
            vevo:)
         (?P<id>[^&?#]+)'''
+
     _TESTS = [{
         'url': 'http://www.vevo.com/watch/hurts/somebody-to-die-for/GB1101300280',
-        'file': 'GB1101300280.mp4',
         "md5": "06bea460acb744eab74a9d7dcb4bfd61",
         'info_dict': {
+            'id': 'GB1101300280',
+            'ext': 'mp4',
             "upload_date": "20130624",
             "uploader": "Hurts",
             "title": "Somebody to Die For",
             "duration": 230.12,
             "width": 1920,
             "height": 1080,
+            # timestamp and upload_date are often incorrect; seem to change randomly
+            'timestamp': int,
+        }
+    }, {
+        'note': 'v3 SMIL format',
+        'url': 'http://www.vevo.com/watch/cassadee-pope/i-wish-i-could-break-your-heart/USUV71302923',
+        'md5': '893ec0e0d4426a1d96c01de8f2bdff58',
+        'info_dict': {
+            'id': 'USUV71302923',
+            'ext': 'mp4',
+            'upload_date': '20140219',
+            'uploader': 'Cassadee Pope',
+            'title': 'I Wish I Could Break Your Heart',
+            'duration': 226.101,
+            'age_limit': 0,
+            'timestamp': int,
+        }
+    }, {
+        'note': 'Age-limited video',
+        'url': 'https://www.vevo.com/watch/justin-timberlake/tunnel-vision-explicit/USRV81300282',
+        'info_dict': {
+            'id': 'USRV81300282',
+            'ext': 'mp4',
+            'age_limit': 18,
+            'title': 'Tunnel Vision (Explicit)',
+            'uploader': 'Justin Timberlake',
+            'upload_date': 're:2013070[34]',
+            'timestamp': int,
+        },
+        'params': {
+            'skip_download': 'true',
         }
     }]
     _SMIL_BASE_URL = 'http://smil.lvl3.vevo.com/'
@@ -102,12 +134,40 @@ class VevoIE(InfoExtractor):
         video_id = mobj.group('id')
 
         json_url = 'http://videoplayer.vevo.com/VideoService/AuthenticateVideo?isrc=%s' % video_id
-        video_info = self._download_json(json_url, video_id)['video']
+        response = self._download_json(json_url, video_id)
+        video_info = response['video']
+
+        if not video_info:
+            if 'statusMessage' in response:
+                raise ExtractorError('%s said: %s' % (self.IE_NAME, response['statusMessage']), expected=True)
+            raise ExtractorError('Unable to extract videos')
 
         formats = self._formats_from_json(video_info)
+
+        is_explicit = video_info.get('isExplicit')
+        if is_explicit is True:
+            age_limit = 18
+        elif is_explicit is False:
+            age_limit = 0
+        else:
+            age_limit = None
+
+        # Download SMIL
+        smil_blocks = sorted((
+            f for f in video_info['videoVersions']
+            if f['sourceType'] == 13),
+            key=lambda f: f['version'])
+
+        smil_url = '%s/Video/V2/VFILE/%s/%sr.smil' % (
+            self._SMIL_BASE_URL, video_id, video_id.lower())
+        if smil_blocks:
+            smil_url_m = self._search_regex(
+                r'url="([^"]+)"', smil_blocks[-1]['data'], 'SMIL URL',
+                fatal=False)
+            if smil_url_m is not None:
+                smil_url = smil_url_m
+
         try:
-            smil_url = '%s/Video/V2/VFILE/%s/%sr.smil' % (
-                self._SMIL_BASE_URL, video_id, video_id.lower())
             smil_xml = self._download_webpage(smil_url, video_id,
                                               'Downloading SMIL info')
             formats.extend(self._formats_from_smil(smil_xml))
@@ -119,13 +179,14 @@ class VevoIE(InfoExtractor):
 
         timestamp_ms = int(self._search_regex(
             r'/Date\((\d+)\)/', video_info['launchDate'], 'launch date'))
-        upload_date = datetime.datetime.fromtimestamp(timestamp_ms // 1000)
+
         return {
             'id': video_id,
             'title': video_info['title'],
             'formats': formats,
             'thumbnail': video_info['imageUrl'],
-            'upload_date': upload_date.strftime('%Y%m%d'),
+            'timestamp': timestamp_ms // 1000,
             'uploader': video_info['mainArtists'][0]['artistName'],
             'duration': video_info['duration'],
+            'age_limit': age_limit,
         }

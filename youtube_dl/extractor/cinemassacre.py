@@ -1,84 +1,94 @@
 # encoding: utf-8
+from __future__ import unicode_literals
+
 import re
 
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
+    int_or_none,
 )
 
 
 class CinemassacreIE(InfoExtractor):
-    _VALID_URL = r'(?:http://)?(?:www\.)?(?P<url>cinemassacre\.com/(?P<date_Y>[0-9]{4})/(?P<date_m>[0-9]{2})/(?P<date_d>[0-9]{2})/.+?)(?:[/?].*)?'
-    _TESTS = [{
-        u'url': u'http://cinemassacre.com/2012/11/10/avgn-the-movie-trailer/',
-        u'file': u'19911.flv',
-        u'info_dict': {
-            u'upload_date': u'20121110',
-            u'title': u'“Angry Video Game Nerd: The Movie” – Trailer',
-            u'description': u'md5:fb87405fcb42a331742a0dce2708560b',
+    _VALID_URL = r'http://(?:www\.)?cinemassacre\.com/(?P<date_Y>[0-9]{4})/(?P<date_m>[0-9]{2})/(?P<date_d>[0-9]{2})/(?P<display_id>[^?#/]+)'
+    _TESTS = [
+        {
+            'url': 'http://cinemassacre.com/2012/11/10/avgn-the-movie-trailer/',
+            'md5': 'fde81fbafaee331785f58cd6c0d46190',
+            'info_dict': {
+                'id': '19911',
+                'ext': 'mp4',
+                'upload_date': '20121110',
+                'title': '“Angry Video Game Nerd: The Movie” – Trailer',
+                'description': 'md5:fb87405fcb42a331742a0dce2708560b',
+            },
         },
-        u'params': {
-            # rtmp download
-            u'skip_download': True,
-        },
-    },
-    {
-        u'url': u'http://cinemassacre.com/2013/10/02/the-mummys-hand-1940',
-        u'file': u'521be8ef82b16.flv',
-        u'info_dict': {
-            u'upload_date': u'20131002',
-            u'title': u'The Mummy’s Hand (1940)',
-        },
-        u'params': {
-            # rtmp download
-            u'skip_download': True,
-        },
-    }]
+        {
+            'url': 'http://cinemassacre.com/2013/10/02/the-mummys-hand-1940',
+            'md5': 'd72f10cd39eac4215048f62ab477a511',
+            'info_dict': {
+                'id': '521be8ef82b16',
+                'ext': 'mp4',
+                'upload_date': '20131002',
+                'title': 'The Mummy’s Hand (1940)',
+            },
+        }
+    ]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
+        display_id = mobj.group('display_id')
 
-        webpage_url = u'http://' + mobj.group('url')
-        webpage = self._download_webpage(webpage_url, None) # Don't know video id yet
+        webpage = self._download_webpage(url, display_id)
         video_date = mobj.group('date_Y') + mobj.group('date_m') + mobj.group('date_d')
         mobj = re.search(r'src="(?P<embed_url>http://player\.screenwavemedia\.com/play/[a-zA-Z]+\.php\?id=(?:Cinemassacre-)?(?P<video_id>.+?))"', webpage)
         if not mobj:
-            raise ExtractorError(u'Can\'t extract embed url and video id')
-        playerdata_url = mobj.group(u'embed_url')
-        video_id = mobj.group(u'video_id')
+            raise ExtractorError('Can\'t extract embed url and video id')
+        playerdata_url = mobj.group('embed_url')
+        video_id = mobj.group('video_id')
 
-        video_title = self._html_search_regex(r'<title>(?P<title>.+?)\|',
-            webpage, u'title')
-        video_description = self._html_search_regex(r'<div class="entry-content">(?P<description>.+?)</div>',
-            webpage, u'description', flags=re.DOTALL, fatal=False)
-        if len(video_description) == 0:
-            video_description = None
+        video_title = self._html_search_regex(
+            r'<title>(?P<title>.+?)\|', webpage, 'title')
+        video_description = self._html_search_regex(
+            r'<div class="entry-content">(?P<description>.+?)</div>',
+            webpage, 'description', flags=re.DOTALL, fatal=False)
 
-        playerdata = self._download_webpage(playerdata_url, video_id)
-        url = self._html_search_regex(r'\'streamer\': \'(?P<url>[^\']+)\'', playerdata, u'url')
+        playerdata = self._download_webpage(playerdata_url, video_id, 'Downloading player webpage')
+        video_thumbnail = self._search_regex(
+            r'image: \'(?P<thumbnail>[^\']+)\'', playerdata, 'thumbnail', fatal=False)
+        sd_url = self._search_regex(r'file: \'([^\']+)\', label: \'SD\'', playerdata, 'sd_file')
+        videolist_url = self._search_regex(r'file: \'([^\']+\.smil)\'}', playerdata, 'videolist_url')
 
-        sd_file = self._html_search_regex(r'\'file\': \'(?P<sd_file>[^\']+)\'', playerdata, u'sd_file')
-        hd_file = self._html_search_regex(r'\'?file\'?: "(?P<hd_file>[^"]+)"', playerdata, u'hd_file')
-        video_thumbnail = self._html_search_regex(r'\'image\': \'(?P<thumbnail>[^\']+)\'', playerdata, u'thumbnail', fatal=False)
+        videolist = self._download_xml(videolist_url, video_id, 'Downloading videolist XML')
 
-        formats = [
-            {
-                'url': url,
-                'play_path': 'mp4:' + sd_file,
-                'rtmp_live': True, # workaround
-                'ext': 'flv',
-                'format': 'sd',
-                'format_id': 'sd',
-            },
-            {
-                'url': url,
-                'play_path': 'mp4:' + hd_file,
-                'rtmp_live': True, # workaround
-                'ext': 'flv',
-                'format': 'hd',
-                'format_id': 'hd',
-            },
-        ]
+        formats = []
+        baseurl = sd_url[:sd_url.rfind('/')+1]
+        for video in videolist.findall('.//video'):
+            src = video.get('src')
+            if not src:
+                continue
+            file_ = src.partition(':')[-1]
+            width = int_or_none(video.get('width'))
+            height = int_or_none(video.get('height'))
+            bitrate = int_or_none(video.get('system-bitrate'))
+            format = {
+                'url': baseurl + file_,
+                'format_id': src.rpartition('.')[0].rpartition('_')[-1],
+            }
+            if width or height:
+                format.update({
+                    'tbr': bitrate // 1000 if bitrate else None,
+                    'width': width,
+                    'height': height,
+                })
+            else:
+                format.update({
+                    'abr': bitrate // 1000 if bitrate else None,
+                    'vcodec': 'none',
+                })
+            formats.append(format)
+        self._sort_formats(formats)
 
         return {
             'id': video_id,

@@ -1,7 +1,7 @@
 all: youtube-dl README.md README.txt youtube-dl.1 youtube-dl.bash-completion
 
 clean:
-	rm -rf youtube-dl.1 youtube-dl.bash-completion README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz
+	rm -rf youtube-dl.1.temp.md youtube-dl.1 youtube-dl.bash-completion README.txt MANIFEST build/ dist/ .coverage cover/ youtube-dl.tar.gz
 
 cleanall: clean
 	rm -f youtube-dl youtube-dl.exe
@@ -55,7 +55,9 @@ README.txt: README.md
 	pandoc -f markdown -t plain README.md -o README.txt
 
 youtube-dl.1: README.md
-	pandoc -s -f markdown -t man README.md -o youtube-dl.1
+	python devscripts/prepare_manpage.py >youtube-dl.1.temp.md
+	pandoc -s -f markdown -t man youtube-dl.1.temp.md -o youtube-dl.1
+	rm -f youtube-dl.1.temp.md
 
 youtube-dl.bash-completion: youtube_dl/*.py youtube_dl/*/*.py devscripts/bash-completion.in
 	python devscripts/bash-completion.py
@@ -72,8 +74,9 @@ youtube-dl.tar.gz: youtube-dl README.md README.txt youtube-dl.1 youtube-dl.bash-
 		--exclude '__pycache' \
 		--exclude '.git' \
 		--exclude 'testdata' \
+		--exclude 'docs/_build' \
 		-- \
-		bin devscripts test youtube_dl \
-		CHANGELOG LICENSE README.md README.txt \
+		bin devscripts test youtube_dl docs \
+		LICENSE README.md README.txt \
 		Makefile MANIFEST.in youtube-dl.1 youtube-dl.bash-completion setup.py \
 		youtube-dl
