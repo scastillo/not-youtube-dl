@@ -1,11 +1,10 @@
-youtube-dl (2014.06.07-1~1.gbp415fdb) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @415fdb62500dca2e22067a05008dfbf87c75b662 **
+youtube-dl (2014.06.07-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.06.07. Closes: #743005, #749828,
     #746345.
+  * debian/control: Annotate with bug numbers closed by this release.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 08 Jun 2014 10:58:53 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 08 Jun 2014 12:39:54 -0300
 
 youtube-dl (2014.02.17-1) unstable; urgency=medium
 
