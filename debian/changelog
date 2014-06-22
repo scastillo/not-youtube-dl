@@ -1,13 +1,12 @@
-youtube-dl (2014.06.19-1~1.gbpd88ade) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @d88adeed4f0a22f14db3a2b3fd3c59b266b97a78 **
+youtube-dl (2014.06.19-1) unstable; urgency=medium
 
   * debian/upstream-signing-key.asc: Add keys from upstream.
   * Rename: debian/upstream-signing-key.asc -> debian/upstream/signing-key.asc
   * debian/watch: Make use of the signing key from upstream.
   * Imported Upstream version 2014.06.19. Closes: #752139.
+  * debian/changelog: Annotate with bugs being closed.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 22 Jun 2014 11:48:43 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 22 Jun 2014 11:53:20 -0300
 
 youtube-dl (2014.06.07-1) unstable; urgency=medium
 
