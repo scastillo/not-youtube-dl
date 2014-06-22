@@ -109,6 +109,7 @@ from .gdcvault import GDCVaultIE
 from .generic import GenericIE
 from .googleplus import GooglePlusIE
 from .googlesearch import GoogleSearchIE
+from .gorillavid import GorillaVidIE
 from .hark import HarkIE
 from .helsinki import HelsinkiIE
 from .hentaistigma import HentaiStigmaIE
@@ -216,6 +217,7 @@ from .pornotube import PornotubeIE
 from .prosiebensat1 import ProSiebenSat1IE
 from .pyvideo import PyvideoIE
 from .radiofrance import RadioFranceIE
+from .rai import RaiIE
 from .rbmaradio import RBMARadioIE
 from .redtube import RedTubeIE
 from .ringtv import RingTVIE
@@ -332,6 +334,7 @@ from .viki import VikiIE
 from .vk import VKIE
 from .vube import VubeIE
 from .vuclip import VuClipIE
+from .vulture import VultureIE
 from .washingtonpost import WashingtonPostIE
 from .wat import WatIE
 from .wdr import (
@@ -343,6 +346,7 @@ from .weibo import WeiboIE
 from .wimp import WimpIE
 from .wistia import WistiaIE
 from .worldstarhiphop import WorldStarHipHopIE
+from .wrzuta import WrzutaIE
 from .xbef import XBefIE
 from .xhamster import XHamsterIE
 from .xnxx import XNXXIE

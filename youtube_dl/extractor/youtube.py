@@ -440,7 +440,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
 
     def _parse_sig_js(self, jscode):
         funcname = self._search_regex(
-            r'signature=([a-zA-Z]+)', jscode,
+            r'signature=([$a-zA-Z]+)', jscode,
              u'Initial JS player signature function name')
 
         jsi = JSInterpreter(jscode)
@@ -1386,13 +1386,13 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor):
                         |  p/
                         )
                         (
-                            (?:PL|EC|UU|FL|RD)?[0-9A-Za-z-_]{10,}
+                            (?:PL|LL|EC|UU|FL|RD)?[0-9A-Za-z-_]{10,}
                             # Top tracks, they can also include dots 
                             |(?:MC)[\w\.]*
                         )
                         .*
                      |
-                        ((?:PL|EC|UU|FL|RD)[0-9A-Za-z-_]{10,})
+                        ((?:PL|LL|EC|UU|FL|RD)[0-9A-Za-z-_]{10,})
                      )"""
     _TEMPLATE_URL = 'https://www.youtube.com/playlist?list=%s'
     _MORE_PAGES_INDICATOR = r'data-link-type="next"'

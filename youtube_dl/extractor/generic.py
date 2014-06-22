@@ -260,7 +260,24 @@ class GenericIE(InfoExtractor):
                 'uploader': 'Spi0n',
             },
             'add_ie': ['Dailymotion'],
-        }
+        },
+        # YouTube embed
+        {
+            'url': 'http://www.badzine.de/ansicht/datum/2014/06/09/so-funktioniert-die-neue-englische-badminton-liga.html',
+            'info_dict': {
+                'id': 'FXRb4ykk4S0',
+                'ext': 'mp4',
+                'title': 'The NBL Auction 2014',
+                'uploader': 'BADMINTON England',
+                'uploader_id': 'BADMINTONEvents',
+                'upload_date': '20140603',
+                'description': 'md5:9ef128a69f1e262a700ed83edb163a73',
+            },
+            'add_ie': ['Youtube'],
+            'params': {
+                'skip_download': True,
+            }
+        },
     ]
 
     def report_download_webpage(self, video_id):
@@ -478,8 +495,13 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded YouTube player
         matches = re.findall(r'''(?x)
-            (?:<iframe[^>]+?src=|embedSWF\(\s*)
-            (["\'])(?P<url>(?:https?:)?//(?:www\.)?youtube\.com/
+            (?:
+                <iframe[^>]+?src=|
+                <embed[^>]+?src=|
+                embedSWF\(?:\s*
+            )
+            (["\'])
+                (?P<url>(?:https?:)?//(?:www\.)?youtube\.com/
                 (?:embed|v)/.+?)
             \1''', webpage)
         if matches:
@@ -645,6 +667,14 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             url = unescapeHTML(mobj.group('url'))
             return self.url_result(url)
+
+        # Look for embedded vulture.com player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://video\.vulture\.com/[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url, ie='Vulture')
 
         # Start with something easy: JW Player in SWFObject
         found = re.findall(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)
