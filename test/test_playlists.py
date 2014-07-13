@@ -28,8 +28,9 @@ from youtube_dl.extractor import (
     SoundcloudSetIE,
     SoundcloudUserIE,
     SoundcloudPlaylistIE,
-    TeacherTubeClassroomIE,
+    TeacherTubeUserIE,
     LivestreamIE,
+    LivestreamOriginalIE,
     NHLVideocenterIE,
     BambuserChannelIE,
     BandcampAlbumIE,
@@ -40,6 +41,7 @@ from youtube_dl.extractor import (
     KhanAcademyIE,
     EveryonesMixtapeIE,
     RutubeChannelIE,
+    RutubePersonIE,
     GoogleSearchIE,
     GenericIE,
     TEDIE,
@@ -154,6 +156,14 @@ class TestPlaylists(unittest.TestCase):
         self.assertEqual(result['title'], 'TEDCity2.0 (English)')
         self.assertTrue(len(result['entries']) >= 4)
 
+    def test_livestreamoriginal_folder(self):
+        dl = FakeYDL()
+        ie = LivestreamOriginalIE(dl)
+        result = ie.extract('https://www.livestream.com/newplay/folder?dirId=a07bf706-d0e4-4e75-a747-b021d84f2fd3')
+        self.assertIsPlaylist(result)
+        self.assertEqual(result['id'], 'a07bf706-d0e4-4e75-a747-b021d84f2fd3')
+        self.assertTrue(len(result['entries']) >= 28)
+
     def test_nhl_videocenter(self):
         dl = FakeYDL()
         ie = NHLVideocenterIE(dl)
@@ -256,10 +266,18 @@ class TestPlaylists(unittest.TestCase):
     def test_rutube_channel(self):
         dl = FakeYDL()
         ie = RutubeChannelIE(dl)
-        result = ie.extract('http://rutube.ru/tags/video/1409')
+        result = ie.extract('http://rutube.ru/tags/video/1800/')
         self.assertIsPlaylist(result)
-        self.assertEqual(result['id'], '1409')
-        self.assertTrue(len(result['entries']) >= 34)
+        self.assertEqual(result['id'], '1800')
+        self.assertTrue(len(result['entries']) >= 68)
+
+    def test_rutube_person(self):
+        dl = FakeYDL()
+        ie = RutubePersonIE(dl)
+        result = ie.extract('http://rutube.ru/video/person/313878/')
+        self.assertIsPlaylist(result)
+        self.assertEqual(result['id'], '313878')
+        self.assertTrue(len(result['entries']) >= 37)
 
     def test_multiple_brightcove_videos(self):
         # https://github.com/rg3/youtube-dl/issues/2283
@@ -361,13 +379,13 @@ class TestPlaylists(unittest.TestCase):
             result['title'], 'Brace Yourself - Today\'s Weirdest News')
         self.assertTrue(len(result['entries']) >= 10)
 
-    def test_TeacherTubeClassroom(self):
+    def test_TeacherTubeUser(self):
         dl = FakeYDL()
-        ie = TeacherTubeClassroomIE(dl)
-        result = ie.extract('http://www.teachertube.com/view_classroom.php?user=rbhagwati2')
+        ie = TeacherTubeUserIE(dl)
+        result = ie.extract('http://www.teachertube.com/user/profile/rbhagwati2')
         self.assertIsPlaylist(result)
         self.assertEqual(result['id'], 'rbhagwati2')
-        self.assertTrue(len(result['entries']) >= 20)
+        self.assertTrue(len(result['entries']) >= 179)
 
 if __name__ == '__main__':
     unittest.main()

@@ -82,8 +82,9 @@ OPTIONS
     --default-search PREFIX          Use this prefix for unqualified URLs. For
                                      example "gvsearch2:" downloads two videos
                                      from google videos for  youtube-dl "large
-                                     apple". By default (with value "auto")
-                                     youtube-dl guesses.
+                                     apple". Use the value "auto" to let
+                                     youtube-dl guess. The default value "error"
+                                     just throws an error.
     --ignore-config                  Do not read configuration files. When given
                                      in the global configuration file /etc
                                      /youtube-dl.conf: do not read the user
@@ -678,3 +679,4 @@ youtube-dl is released into the public domain by the copyright holders.
 This README file was originally written by Daniel Bolton
 (https://github.com/dbbolton) and is likewise released into the public
 domain.
+
