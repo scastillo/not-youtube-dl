@@ -278,6 +278,17 @@ class GenericIE(InfoExtractor):
                 'skip_download': True,
             }
         },
+        # MTVSercices embed
+        {
+            'url': 'http://www.gametrailers.com/news-post/76093/north-america-europe-is-getting-that-mario-kart-8-mercedes-dlc-too',
+            'md5': '35727f82f58c76d996fc188f9755b0d5',
+            'info_dict': {
+                'id': '0306a69b-8adf-4fb5-aace-75f8e8cbfca9',
+                'ext': 'mp4',
+                'title': 'Review',
+                'description': 'Mario\'s life in the fast lane has never looked so good.',
+            },
+        },
     ]
 
     def report_download_webpage(self, video_id):
@@ -372,7 +383,7 @@ class GenericIE(InfoExtractor):
         if not parsed_url.scheme:
             default_search = self._downloader.params.get('default_search')
             if default_search is None:
-                default_search = 'auto_warning'
+                default_search = 'error'
 
             if default_search in ('auto', 'auto_warning'):
                 if '/' in url:
@@ -386,8 +397,13 @@ class GenericIE(InfoExtractor):
                                 expected=True)
                         else:
                             self._downloader.report_warning(
-                                'Falling back to youtube search for  %s . Set --default-search to "auto" to suppress this warning.' % url)
+                                'Falling back to youtube search for  %s . Set --default-search "auto" to suppress this warning.' % url)
                     return self.url_result('ytsearch:' + url)
+            elif default_search == 'error':
+                raise ExtractorError(
+                    ('%r is not a valid URL. '
+                     'Set --default-search "ytseach" (or run  youtube-dl "ytsearch:%s" ) to search YouTube'
+                    ) % (url, url), expected=True)
             else:
                 assert ':' in default_search
                 return self.url_result(default_search + url)
@@ -609,6 +625,11 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'VK')
 
+        # Look for embedded ivi player
+        mobj = re.search(r'<embed[^>]+?src=(["\'])(?P<url>https?://(?:www\.)?ivi\.ru/video/player.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Ivi')
+
         # Look for embedded Huffington Post player
         mobj = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>https?://embed\.live\.huffingtonpost\.com/.+?)\1', webpage)
@@ -675,6 +696,14 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             url = unescapeHTML(mobj.group('url'))
             return self.url_result(url, ie='Vulture')
+
+        # Look for embedded mtvservices player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://media\.mtvnservices\.com/embed/[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url, ie='MTVServicesEmbedded')
 
         # Start with something easy: JW Player in SWFObject
         found = re.findall(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)

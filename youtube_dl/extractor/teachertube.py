@@ -14,7 +14,7 @@ class TeacherTubeIE(InfoExtractor):
     IE_NAME = 'teachertube'
     IE_DESC = 'teachertube.com videos'
 
-    _VALID_URL = r'https?://(?:www\.)?teachertube\.com/(viewVideo\.php\?video_id=|music\.php\?music_id=)(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?teachertube\.com/(viewVideo\.php\?video_id=|music\.php\?music_id=|video/(?:[\da-z-]+-)?|audio/)(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'http://www.teachertube.com/viewVideo.php?video_id=339997',
@@ -22,8 +22,8 @@ class TeacherTubeIE(InfoExtractor):
         'info_dict': {
             'id': '339997',
             'ext': 'mp4',
-            'title': 'Measures of dispersion from a frequency table_x264',
-            'description': 'md5:a3e9853487185e9fcd7181a07164650b',
+            'title': 'Measures of dispersion from a frequency table',
+            'description': 'Measures of dispersion from a frequency table',
             'thumbnail': 're:http://.*\.jpg',
         },
     }, {
@@ -33,7 +33,7 @@ class TeacherTubeIE(InfoExtractor):
             'id': '340064',
             'ext': 'mp4',
             'title': 'How to Make Paper Dolls _ Paper Art Projects',
-            'description': 'md5:2ca52b20cd727773d1dc418b3d6bd07b',
+            'description': 'Learn how to make paper dolls in this simple',
             'thumbnail': 're:http://.*\.jpg',
         },
     }, {
@@ -43,7 +43,16 @@ class TeacherTubeIE(InfoExtractor):
             'id': '8805',
             'ext': 'mp3',
             'title': 'PER ASPERA AD ASTRA',
-            'description': 'RADIJSKA EMISIJA ZRAKOPLOVNE TEHNIČKE ŠKOLE PER ASPERA AD ASTRA',
+            'description': 'RADIJSKA EMISIJA ZRAKOPLOVNE TEHNI?KE ?KOLE P',
+        },
+    }, {
+        'url': 'http://www.teachertube.com/video/intro-video-schleicher-297790',
+        'md5': '9c79fbb2dd7154823996fc28d4a26998',
+        'info_dict': {
+            'id': '297790',
+            'ext': 'mp4',
+            'title': 'Intro Video - Schleicher',
+            'description': 'Intro Video - Why to flip, how flipping will',
         },
     }]
 
@@ -53,9 +62,20 @@ class TeacherTubeIE(InfoExtractor):
 
         webpage = self._download_webpage(url, video_id)
 
+        title = self._html_search_meta('title', webpage, 'title')
+        TITLE_SUFFIX = ' - TeacherTube'
+        if title.endswith(TITLE_SUFFIX):
+            title = title[:-len(TITLE_SUFFIX)].strip()
+
+        description = self._html_search_meta('description', webpage, 'description')
+        if description:
+            description = description.strip()
+
         quality = qualities(['mp3', 'flv', 'mp4'])
 
-        _, media_urls = zip(*re.findall(r'([\'"])file\1\s*:\s*"([^"]+)"', webpage))
+        media_urls = re.findall(r'data-contenturl="([^"]+)"', webpage)
+        media_urls.extend(re.findall(r'var\s+filePath\s*=\s*"([^"]+)"', webpage))
+        media_urls.extend(re.findall(r'\'file\'\s*:\s*["\']([^"\']+)["\'],', webpage))
 
         formats = [
             {
@@ -68,28 +88,37 @@ class TeacherTubeIE(InfoExtractor):
 
         return {
             'id': video_id,
-            'title': self._og_search_title(webpage),
-            'thumbnail': self._og_search_thumbnail(webpage),
+            'title': title,
+            'thumbnail': self._html_search_regex(r'\'image\'\s*:\s*["\']([^"\']+)["\']', webpage, 'thumbnail'),
             'formats': formats,
-            'description': self._og_search_description(webpage),
+            'description': description,
         }
 
 
-class TeacherTubeClassroomIE(InfoExtractor):
-    IE_NAME = 'teachertube:classroom'
-    IE_DESC = 'teachertube.com online classrooms'
+class TeacherTubeUserIE(InfoExtractor):
+    IE_NAME = 'teachertube:user:collection'
+    IE_DESC = 'teachertube.com user and collection videos'
 
-    _VALID_URL = r'https?://(?:www\.)?teachertube\.com/view_classroom\.php\?user=(?P<user>[0-9a-zA-Z]+)'
+    _VALID_URL = r'https?://(?:www\.)?teachertube\.com/(user/profile|collection)/(?P<user>[0-9a-zA-Z]+)/?'
+
+    _MEDIA_RE = r'(?s)"sidebar_thumb_time">[0-9:]+</div>.+?<a href="(https?://(?:www\.)?teachertube\.com/(?:video|audio)/[^"]+)">'
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         user_id = mobj.group('user')
 
-        rss = self._download_xml('http://www.teachertube.com/rssclassroom.php?mode=user&username=%s' % user_id,
-                                      user_id, 'Downloading classroom RSS')
+        urls = []
+        webpage = self._download_webpage(url, user_id)
+        urls.extend(re.findall(self._MEDIA_RE, webpage))
+        
+        pages = re.findall(r'/ajax-user/user-videos/%s\?page=([0-9]+)' % user_id, webpage)[1:-1]
+        for p in pages:
+            more = 'http://www.teachertube.com/ajax-user/user-videos/%s?page=%s' % (user_id, p)
+            webpage = self._download_webpage(more, user_id, 'Downloading page %s/%s' % (p, len(pages) + 1))
+            urls.extend(re.findall(self._MEDIA_RE, webpage))
 
         entries = []
-        for url in rss.findall('.//{http://search.yahoo.com/mrss/}player'):
-            entries.append(self.url_result(url.attrib['url'], 'TeacherTube'))
+        for url in urls:
+            entries.append(self.url_result(url, 'TeacherTube'))
 
         return self.playlist_result(entries, user_id)
