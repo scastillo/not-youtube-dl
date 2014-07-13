@@ -1,11 +1,9 @@
-youtube-dl (2014.07.11-1~1.gbpbeb6d3) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @beb6d38e0a0a4091007847a27022bf08c59f971c **
+youtube-dl (2014.07.11-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.07.11.
     Closes: #754569, #740616, #752740, #754628, #754585.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 13 Jul 2014 12:25:01 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 13 Jul 2014 12:31:12 -0300
 
 youtube-dl (2014.06.19-1) unstable; urgency=medium
 
