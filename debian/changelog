@@ -1,3 +1,11 @@
+youtube-dl (2014.07.15-1~1.gbp75535d) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @75535d182355c0cc00271ceae302e8e4aba9c04e **
+
+  * Imported Upstream version 2014.07.15
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 15 Jul 2014 22:32:14 -0300
+
 youtube-dl (2014.07.11-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.07.11.
