@@ -111,7 +111,7 @@ class TestPlaylists(unittest.TestCase):
         ie = VineUserIE(dl)
         result = ie.extract('https://vine.co/Visa')
         self.assertIsPlaylist(result)
-        self.assertTrue(len(result['entries']) >= 50)
+        self.assertTrue(len(result['entries']) >= 47)
 
     def test_ustream_channel(self):
         dl = FakeYDL()
@@ -136,6 +136,14 @@ class TestPlaylists(unittest.TestCase):
         self.assertIsPlaylist(result)
         self.assertEqual(result['id'], '9615865')
         self.assertTrue(len(result['entries']) >= 12)
+
+    def test_soundcloud_likes(self):
+        dl = FakeYDL()
+        ie = SoundcloudUserIE(dl)
+        result = ie.extract('https://soundcloud.com/the-concept-band/likes')
+        self.assertIsPlaylist(result)
+        self.assertEqual(result['id'], '9615865')
+        self.assertTrue(len(result['entries']) >= 1)
 
     def test_soundcloud_playlist(self):
         dl = FakeYDL()

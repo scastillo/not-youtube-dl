@@ -283,7 +283,7 @@ Post-processing Options:
                                      128K (default 5)
     --recode-video FORMAT            Encode the video to another format if
                                      necessary (currently supported:
-                                     mp4|flv|ogg|webm)
+                                     mp4|flv|ogg|webm|mkv)
     -k, --keep-video                 keeps the video file on disk after the
                                      post-processing; the video is erased by
                                      default
