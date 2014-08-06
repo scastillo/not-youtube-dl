@@ -1,5 +1,7 @@
+from .abc import ABCIE
 from .academicearth import AcademicEarthCourseIE
 from .addanime import AddAnimeIE
+from .adultswim import AdultSwimIE
 from .aftonbladet import AftonbladetIE
 from .anitube import AnitubeIE
 from .aol import AolIE
@@ -52,6 +54,7 @@ from .cnn import (
 from .collegehumor import CollegeHumorIE
 from .comedycentral import ComedyCentralIE, ComedyCentralShowsIE
 from .condenast import CondeNastIE
+from .cracked import CrackedIE
 from .criterion import CriterionIE
 from .crunchyroll import CrunchyrollIE
 from .cspan import CSpanIE
@@ -62,6 +65,7 @@ from .dailymotion import (
     DailymotionUserIE,
 )
 from .daum import DaumIE
+from .dfb import DFBIE
 from .dotsub import DotsubIE
 from .dreisat import DreiSatIE
 from .drtv import DRTVIE
@@ -108,9 +112,11 @@ from .funnyordie import FunnyOrDieIE
 from .gamekings import GamekingsIE
 from .gameone import GameOneIE
 from .gamespot import GameSpotIE
+from .gamestar import GameStarIE
 from .gametrailers import GametrailersIE
 from .gdcvault import GDCVaultIE
 from .generic import GenericIE
+from .godtube import GodTubeIE
 from .googleplus import GooglePlusIE
 from .googlesearch import GoogleSearchIE
 from .gorillavid import GorillaVidIE
@@ -137,6 +143,7 @@ from .ivi import (
     IviIE,
     IviCompilationIE
 )
+from .izlesene import IzleseneIE
 from .jadorecettepub import JadoreCettePubIE
 from .jeuxvideo import JeuxVideoIE
 from .jukebox import JukeboxIE
@@ -148,6 +155,7 @@ from .khanacademy import KhanAcademyIE
 from .kickstarter import KickStarterIE
 from .keek import KeekIE
 from .kontrtube import KontrTubeIE
+from .krasview import KrasViewIE
 from .ku6 import Ku6IE
 from .la7 import LA7IE
 from .lifenews import LifeNewsIE
@@ -170,6 +178,7 @@ from .metacafe import MetacafeIE
 from .metacritic import MetacriticIE
 from .mit import TechTVMITIE, MITIE, OCWMITIE
 from .mixcloud import MixcloudIE
+from .mlb import MLBIE
 from .mpora import MporaIE
 from .mofosex import MofosexIE
 from .mooshare import MooshareIE
@@ -249,10 +258,12 @@ from .rutube import (
     RutubePersonIE,
 )
 from .rutv import RUTVIE
+from .sapo import SapoIE
 from .savefrom import SaveFromIE
 from .scivee import SciVeeIE
 from .screencast import ScreencastIE
 from .servingsys import ServingSysIE
+from .shared import SharedIE
 from .sina import SinaIE
 from .slideshare import SlideshareIE
 from .slutload import SlutloadIE
@@ -262,6 +273,8 @@ from .smotri import (
     SmotriUserIE,
     SmotriBroadcastIE,
 )
+from .snotr import SnotrIE
+from .sockshare import SockshareIE
 from .sohu import SohuIE
 from .soundcloud import (
     SoundcloudIE,
@@ -313,6 +326,8 @@ from .tumblr import TumblrIE
 from .tutv import TutvIE
 from .tvigle import TvigleIE
 from .tvp import TvpIE
+from .tvplay import TVPlayIE
+from .ubu import UbuIE
 from .udemy import (
     UdemyIE,
     UdemyCourseIE
@@ -334,6 +349,7 @@ from .videofyme import VideofyMeIE
 from .videopremium import VideoPremiumIE
 from .videott import VideoTtIE
 from .videoweed import VideoWeedIE
+from .vidme import VidmeIE
 from .vimeo import (
     VimeoIE,
     VimeoChannelIE,
@@ -396,6 +412,7 @@ from .youtube import (
     YoutubeUserIE,
     YoutubeWatchLaterIE,
 )
+
 from .zdf import ZDFIE
 
 

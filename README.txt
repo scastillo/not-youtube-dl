@@ -15,7 +15,7 @@ To install it right away for all UNIX users (Linux, OS X, etc.), type:
 
 If you do not have curl, you can alternatively use a recent wget:
 
-    sudo wget https://yt-dl.org/downloads/2014.05.13/youtube-dl -O /usr/local/bin/youtube-dl
+    sudo wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
     sudo chmod a+x /usr/local/bin/youtube-dl
 
 Windows users can download a .exe file and place it in their home
@@ -50,12 +50,6 @@ OPTIONS
                                      playlist or the command line) if an error
                                      occurs
     --dump-user-agent                display the current browser identification
-    --user-agent UA                  specify a custom user agent
-    --referer REF                    specify a custom referer, use if the video
-                                     access is restricted to one domain
-    --add-header FIELD:VALUE         specify a custom HTTP header and its value,
-                                     separated by a colon ':'. You can use this
-                                     option multiple times
     --list-extractors                List all supported extractors and the URLs
                                      they would handle
     --extractor-descriptions         Output descriptions of all supported
@@ -63,35 +57,22 @@ OPTIONS
     --proxy URL                      Use the specified HTTP/HTTPS proxy. Pass in
                                      an empty string (--proxy "") for direct
                                      connection
-    --no-check-certificate           Suppress HTTPS certificate validation.
-    --prefer-insecure                Use an unencrypted connection to retrieve
-                                     information about the video. (Currently
-                                     supported only for YouTube)
-    --cache-dir DIR                  Location in the filesystem where youtube-dl
-                                     can store some downloaded information
-                                     permanently. By default $XDG_CACHE_HOME
-                                     /youtube-dl or ~/.cache/youtube-dl . At the
-                                     moment, only YouTube player files (for
-                                     videos with obfuscated signatures) are
-                                     cached, but that may change.
-    --no-cache-dir                   Disable filesystem caching
     --socket-timeout None            Time to wait before giving up, in seconds
-    --bidi-workaround                Work around terminals that lack
-                                     bidirectional text support. Requires bidiv
-                                     or fribidi executable in PATH
     --default-search PREFIX          Use this prefix for unqualified URLs. For
                                      example "gvsearch2:" downloads two videos
                                      from google videos for  youtube-dl "large
                                      apple". Use the value "auto" to let
-                                     youtube-dl guess. The default value "error"
-                                     just throws an error.
+                                     youtube-dl guess ("auto_warning" to emit a
+                                     warning when guessing). "error" just throws
+                                     an error. The default value "fixup_error"
+                                     repairs broken URLs, but emits an error if
+                                     this is not possible instead of searching.
     --ignore-config                  Do not read configuration files. When given
                                      in the global configuration file /etc
                                      /youtube-dl.conf: do not read the user
                                      configuration in ~/.config/youtube-dl.conf
                                      (%APPDATA%/youtube-dl/config.txt on
                                      Windows)
-    --encoding ENCODING              Force the specified encoding (experimental)
 
 Video Selection:
 ----------------
@@ -143,9 +124,9 @@ Download Options:
 Filesystem Options:
 -------------------
 
-    -t, --title                      use title in file name (default)
+    -a, --batch-file FILE            file containing URLs to download ('-' for
+                                     stdin)
     --id                             use only video ID in file name
-    -l, --literal                    [deprecated] alias of --title
     -A, --auto-number                number downloaded files starting from 00000
     -o, --output TEMPLATE            output filename template. Use %(title)s to
                                      get the title, %(uploader)s for the
@@ -178,18 +159,15 @@ Filesystem Options:
     --restrict-filenames             Restrict filenames to only ASCII
                                      characters, and avoid "&" and spaces in
                                      filenames
-    -a, --batch-file FILE            file containing URLs to download ('-' for
-                                     stdin)
-    --load-info FILE                 json file containing the video information
-                                     (created with the "--write-json" option)
+    -t, --title                      [deprecated] use title in file name
+                                     (default)
+    -l, --literal                    [deprecated] alias of --title
     -w, --no-overwrites              do not overwrite files
     -c, --continue                   force resume of partially downloaded files.
                                      By default, youtube-dl will resume
                                      downloads if possible.
     --no-continue                    do not resume partially downloaded files
                                      (restart from beginning)
-    --cookies FILE                   file to read cookies from and dump cookie
-                                     jar in
     --no-part                        do not use .part files
     --no-mtime                       do not use the Last-modified header to set
                                      the file modification time
@@ -199,6 +177,19 @@ Filesystem Options:
     --write-annotations              write video annotations to a .annotation
                                      file
     --write-thumbnail                write thumbnail image to disk
+    --load-info FILE                 json file containing the video information
+                                     (created with the "--write-json" option)
+    --cookies FILE                   file to read cookies from and dump cookie
+                                     jar in
+    --cache-dir DIR                  Location in the filesystem where youtube-dl
+                                     can store some downloaded information
+                                     permanently. By default $XDG_CACHE_HOME
+                                     /youtube-dl or ~/.cache/youtube-dl . At the
+                                     moment, only YouTube player files (for
+                                     videos with obfuscated signatures) are
+                                     cached, but that may change.
+    --no-cache-dir                   Disable filesystem caching
+    --rm-cache-dir                   Delete all filesystem cache files
 
 Verbosity / Simulation Options:
 -------------------------------
@@ -229,6 +220,24 @@ Verbosity / Simulation Options:
                                      files in the current directory to debug
                                      problems
     --print-traffic                  Display sent and read HTTP traffic
+
+Workarounds:
+------------
+
+    --encoding ENCODING              Force the specified encoding (experimental)
+    --no-check-certificate           Suppress HTTPS certificate validation.
+    --prefer-insecure                Use an unencrypted connection to retrieve
+                                     information about the video. (Currently
+                                     supported only for YouTube)
+    --user-agent UA                  specify a custom user agent
+    --referer REF                    specify a custom referer, use if the video
+                                     access is restricted to one domain
+    --add-header FIELD:VALUE         specify a custom HTTP header and its value,
+                                     separated by a colon ':'. You can use this
+                                     option multiple times
+    --bidi-workaround                Work around terminals that lack
+                                     bidirectional text support. Requires bidiv
+                                     or fribidi executable in PATH
 
 Video Format Options:
 ---------------------

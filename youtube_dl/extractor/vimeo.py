@@ -98,7 +98,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
             'info_dict': {
                 'id': '54469442',
                 'ext': 'mp4',
-                'title': 'Kathy Sierra: Building the minimum Badass User, Business of Software',
+                'title': 'Kathy Sierra: Building the minimum Badass User, Business of Software 2012',
                 'uploader': 'The BLN & Business of Software',
                 'uploader_id': 'theblnbusinessofsoftware',
                 'duration': 3610,
@@ -119,6 +119,21 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
             },
             'params': {
                 'videopassword': 'youtube-dl',
+            },
+        },
+        {
+            'url': 'http://vimeo.com/channels/keypeele/75629013',
+            'md5': '2f86a05afe9d7abc0b9126d229bbe15d',
+            'note': 'Video is freely available via original URL '
+                    'and protected with password when accessed via http://vimeo.com/75629013',
+            'info_dict': {
+                'id': '75629013',
+                'ext': 'mp4',
+                'title': 'Key & Peele: Terrorist Interrogation',
+                'description': 'md5:8678b246399b070816b12313e8b4eb5c',
+                'uploader_id': 'atencio',
+                'uploader': 'Peter Atencio',
+                'duration': 187,
             },
         },
         {
@@ -196,8 +211,6 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         video_id = mobj.group('id')
         if mobj.group('pro') or mobj.group('player'):
             url = 'http://player.vimeo.com/video/' + video_id
-        else:
-            url = 'https://vimeo.com/' + video_id
 
         # Retrieve video webpage to extract further information
         request = compat_urllib_request.Request(url, None, headers)
@@ -263,7 +276,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         if video_thumbnail is None:
             video_thumbs = config["video"].get("thumbs")
             if video_thumbs and isinstance(video_thumbs, dict):
-                _, video_thumbnail = sorted((int(width), t_url) for (width, t_url) in video_thumbs.items())[-1]
+                _, video_thumbnail = sorted((int(width if width.isdigit() else 0), t_url) for (width, t_url) in video_thumbs.items())[-1]
 
         # Extract video description
         video_description = None

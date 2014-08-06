@@ -64,18 +64,20 @@ __authors__  = (
     'Adam Malcontenti-Wilson',
     'Tobias Bell',
     'Naglis Jonaitis',
+    'Charles Chen',
+    'Hassaan Ali',
+    'Dobrosław Żybort',
 )
 
 __license__ = 'Public Domain'
 
 import codecs
 import io
-import locale
 import optparse
 import os
 import random
-import re
 import shlex
+import shutil
 import sys
 
 
@@ -97,7 +99,7 @@ from .utils import (
     write_string,
 )
 from .update import update_self
-from .FileDownloader import (
+from .downloader import (
     FileDownloader,
 )
 from .extractor import gen_extractors
@@ -222,6 +224,7 @@ def parseOpts(overrideArguments=None):
     downloader     = optparse.OptionGroup(parser, 'Download Options')
     postproc       = optparse.OptionGroup(parser, 'Post-processing Options')
     filesystem     = optparse.OptionGroup(parser, 'Filesystem Options')
+    workarounds    = optparse.OptionGroup(parser, 'Workarounds')
     verbosity      = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
 
     general.add_option('-h', '--help',
@@ -238,14 +241,6 @@ def parseOpts(overrideArguments=None):
     general.add_option('--dump-user-agent',
             action='store_true', dest='dump_user_agent',
             help='display the current browser identification', default=False)
-    general.add_option('--user-agent',
-            dest='user_agent', help='specify a custom user agent', metavar='UA')
-    general.add_option('--referer',
-            dest='referer', help='specify a custom referer, use if the video access is restricted to one domain',
-            metavar='REF', default=None)
-    general.add_option('--add-header',
-            dest='headers', help='specify a custom HTTP header and its value, separated by a colon \':\'. You can use this option multiple times', action="append",
-            metavar='FIELD:VALUE')
     general.add_option('--list-extractors',
             action='store_true', dest='list_extractors',
             help='List all supported extractors and the URLs they would handle', default=False)
@@ -255,33 +250,17 @@ def parseOpts(overrideArguments=None):
     general.add_option(
         '--proxy', dest='proxy', default=None, metavar='URL',
         help='Use the specified HTTP/HTTPS proxy. Pass in an empty string (--proxy "") for direct connection')
-    general.add_option('--no-check-certificate', action='store_true', dest='no_check_certificate', default=False, help='Suppress HTTPS certificate validation.')
-    general.add_option(
-        '--prefer-insecure', '--prefer-unsecure', action='store_true', dest='prefer_insecure',
-        help='Use an unencrypted connection to retrieve information about the video. (Currently supported only for YouTube)')
-    general.add_option(
-        '--cache-dir', dest='cachedir', default=get_cachedir(), metavar='DIR',
-        help='Location in the filesystem where youtube-dl can store some downloaded information permanently. By default $XDG_CACHE_HOME/youtube-dl or ~/.cache/youtube-dl . At the moment, only YouTube player files (for videos with obfuscated signatures) are cached, but that may change.')
-    general.add_option(
-        '--no-cache-dir', action='store_const', const=None, dest='cachedir',
-        help='Disable filesystem caching')
     general.add_option(
         '--socket-timeout', dest='socket_timeout',
         type=float, default=None, help=u'Time to wait before giving up, in seconds')
     general.add_option(
-        '--bidi-workaround', dest='bidi_workaround', action='store_true',
-        help=u'Work around terminals that lack bidirectional text support. Requires bidiv or fribidi executable in PATH')
-    general.add_option(
         '--default-search',
         dest='default_search', metavar='PREFIX',
-        help='Use this prefix for unqualified URLs. For example "gvsearch2:" downloads two videos from google videos for  youtube-dl "large apple". Use the value "auto" to let youtube-dl guess. The default value "error" just throws an error.')
+        help='Use this prefix for unqualified URLs. For example "gvsearch2:" downloads two videos from google videos for  youtube-dl "large apple". Use the value "auto" to let youtube-dl guess ("auto_warning" to emit a warning when guessing). "error" just throws an error. The default value "fixup_error" repairs broken URLs, but emits an error if this is not possible instead of searching.')
     general.add_option(
         '--ignore-config',
         action='store_true',
         help='Do not read configuration files. When given in the global configuration file /etc/youtube-dl.conf: do not read the user configuration in ~/.config/youtube-dl.conf (%APPDATA%/youtube-dl/config.txt on Windows)')
-    general.add_option(
-        '--encoding', dest='encoding', metavar='ENCODING',
-        help='Force the specified encoding (experimental)')
 
     selection.add_option(
         '--playlist-start',
@@ -382,6 +361,33 @@ def parseOpts(overrideArguments=None):
             help='do not automatically adjust the buffer size. By default, the buffer size is automatically resized from an initial value of SIZE.', default=False)
     downloader.add_option('--test', action='store_true', dest='test', default=False, help=optparse.SUPPRESS_HELP)
 
+    workarounds.add_option(
+        '--encoding', dest='encoding', metavar='ENCODING',
+        help='Force the specified encoding (experimental)')
+    workarounds.add_option(
+        '--no-check-certificate', action='store_true',
+        dest='no_check_certificate', default=False,
+        help='Suppress HTTPS certificate validation.')
+    workarounds.add_option(
+        '--prefer-insecure', '--prefer-unsecure', action='store_true', dest='prefer_insecure',
+        help='Use an unencrypted connection to retrieve information about the video. (Currently supported only for YouTube)')
+    workarounds.add_option(
+        '--user-agent', metavar='UA',
+        dest='user_agent', help='specify a custom user agent')
+    workarounds.add_option(
+        '--referer', metavar='REF',
+        dest='referer', default=None,
+        help='specify a custom referer, use if the video access is restricted to one domain',
+    )
+    workarounds.add_option(
+        '--add-header', metavar='FIELD:VALUE',
+        dest='headers', action='append',
+        help='specify a custom HTTP header and its value, separated by a colon \':\'. You can use this option multiple times',
+    )
+    workarounds.add_option(
+        '--bidi-workaround', dest='bidi_workaround', action='store_true',
+        help=u'Work around terminals that lack bidirectional text support. Requires bidiv or fribidi executable in PATH')
+
     verbosity.add_option('-q', '--quiet',
             action='store_true', dest='quiet', help='activates quiet mode', default=False)
     verbosity.add_option(
@@ -439,12 +445,10 @@ def parseOpts(overrideArguments=None):
             help='Display sent and read HTTP traffic')
 
 
-    filesystem.add_option('-t', '--title',
-            action='store_true', dest='usetitle', help='use title in file name (default)', default=False)
+    filesystem.add_option('-a', '--batch-file',
+            dest='batchfile', metavar='FILE', help='file containing URLs to download (\'-\' for stdin)')
     filesystem.add_option('--id',
             action='store_true', dest='useid', help='use only video ID in file name', default=False)
-    filesystem.add_option('-l', '--literal',
-            action='store_true', dest='usetitle', help='[deprecated] alias of --title', default=False)
     filesystem.add_option('-A', '--auto-number',
             action='store_true', dest='autonumber',
             help='number downloaded files starting from 00000', default=False)
@@ -470,11 +474,10 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option('--restrict-filenames',
             action='store_true', dest='restrictfilenames',
             help='Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames', default=False)
-    filesystem.add_option('-a', '--batch-file',
-            dest='batchfile', metavar='FILE', help='file containing URLs to download (\'-\' for stdin)')
-    filesystem.add_option('--load-info',
-            dest='load_info_filename', metavar='FILE',
-            help='json file containing the video information (created with the "--write-json" option)')
+    filesystem.add_option('-t', '--title',
+            action='store_true', dest='usetitle', help='[deprecated] use title in file name (default)', default=False)
+    filesystem.add_option('-l', '--literal',
+            action='store_true', dest='usetitle', help='[deprecated] alias of --title', default=False)
     filesystem.add_option('-w', '--no-overwrites',
             action='store_true', dest='nooverwrites', help='do not overwrite files', default=False)
     filesystem.add_option('-c', '--continue',
@@ -482,8 +485,6 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option('--no-continue',
             action='store_false', dest='continue_dl',
             help='do not resume partially downloaded files (restart from beginning)')
-    filesystem.add_option('--cookies',
-            dest='cookiefile', metavar='FILE', help='file to read cookies from and dump cookie jar in')
     filesystem.add_option('--no-part',
             action='store_true', dest='nopart', help='do not use .part files', default=False)
     filesystem.add_option('--no-mtime',
@@ -501,6 +502,20 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option('--write-thumbnail',
             action='store_true', dest='writethumbnail',
             help='write thumbnail image to disk', default=False)
+    filesystem.add_option('--load-info',
+            dest='load_info_filename', metavar='FILE',
+            help='json file containing the video information (created with the "--write-json" option)')
+    filesystem.add_option('--cookies',
+            dest='cookiefile', metavar='FILE', help='file to read cookies from and dump cookie jar in')
+    filesystem.add_option(
+        '--cache-dir', dest='cachedir', default=get_cachedir(), metavar='DIR',
+        help='Location in the filesystem where youtube-dl can store some downloaded information permanently. By default $XDG_CACHE_HOME/youtube-dl or ~/.cache/youtube-dl . At the moment, only YouTube player files (for videos with obfuscated signatures) are cached, but that may change.')
+    filesystem.add_option(
+        '--no-cache-dir', action='store_const', const=None, dest='cachedir',
+        help='Disable filesystem caching')
+    filesystem.add_option(
+        '--rm-cache-dir', action='store_true', dest='rm_cachedir',
+        help='Delete all filesystem cache files')
 
 
     postproc.add_option('-x', '--extract-audio', action='store_true', dest='extractaudio', default=False,
@@ -534,6 +549,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(downloader)
     parser.add_option_group(filesystem)
     parser.add_option_group(verbosity)
+    parser.add_option_group(workarounds)
     parser.add_option_group(video_format)
     parser.add_option_group(subtitles)
     parser.add_option_group(authentication)
@@ -633,7 +649,7 @@ def _real_main(argv=None):
             if desc is False:
                 continue
             if hasattr(ie, 'SEARCH_KEY'):
-                _SEARCHES = (u'cute kittens', u'slithering pythons', u'falling cat', u'angry poodle', u'purple fish', u'running tortoise')
+                _SEARCHES = (u'cute kittens', u'slithering pythons', u'falling cat', u'angry poodle', u'purple fish', u'running tortoise', u'sleeping bunny')
                 _COUNTS = (u'', u'5', u'10', u'all')
                 desc += u' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
             compat_print(desc)
@@ -694,7 +710,7 @@ def _real_main(argv=None):
         date = DateRange.day(opts.date)
     else:
         date = DateRange(opts.dateafter, opts.datebefore)
-    if opts.default_search not in ('auto', 'auto_warning', None) and ':' not in opts.default_search:
+    if opts.default_search not in ('auto', 'auto_warning', 'error', 'fixup_error', None) and ':' not in opts.default_search:
         parser.error(u'--default-search invalid; did you forget a colon (:) at the end?')
 
     # Do not download videos when there are audio-only formats
@@ -833,9 +849,26 @@ def _real_main(argv=None):
         if opts.update_self:
             update_self(ydl.to_screen, opts.verbose)
 
+        # Remove cache dir
+        if opts.rm_cachedir:
+            if opts.cachedir is None:
+                ydl.to_screen(u'No cache dir specified (Did you combine --no-cache-dir and --rm-cache-dir?)')
+            else:
+                if ('.cache' not in opts.cachedir) or ('youtube-dl' not in opts.cachedir):
+                    ydl.to_screen(u'Not removing directory %s - this does not look like a cache dir')
+                    retcode = 141
+                else:
+                    ydl.to_screen(
+                        u'Removing cache dir %s .' % opts.cachedir,
+                        skip_eol=True)
+                    if os.path.exists(opts.cachedir):
+                        ydl.to_screen(u'.', skip_eol=True)
+                        shutil.rmtree(opts.cachedir)
+                    ydl.to_screen(u'.')
+
         # Maybe do nothing
         if (len(all_urls) < 1) and (opts.load_info_filename is None):
-            if not opts.update_self:
+            if not (opts.update_self or opts.rm_cachedir):
                 parser.error(u'you must provide at least one URL')
             else:
                 sys.exit()
