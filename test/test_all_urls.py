@@ -14,7 +14,7 @@ from test.helper import gettestcases
 from youtube_dl.extractor import (
     FacebookIE,
     gen_extractors,
-    JustinTVIE,
+    TwitchIE,
     YoutubeIE,
 )
 
@@ -72,21 +72,17 @@ class TestAllURLsMatching(unittest.TestCase):
         self.assertMatch('http://www.youtube.com/results?search_query=making+mustard', ['youtube:search_url'])
         self.assertMatch('https://www.youtube.com/results?baz=bar&search_query=youtube-dl+test+video&filters=video&lclk=video', ['youtube:search_url'])
 
-    def test_justin_tv_channelid_matching(self):
-        self.assertTrue(JustinTVIE.suitable('justin.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('twitch.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('www.justin.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('www.twitch.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('http://www.justin.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('http://www.twitch.tv/vanillatv'))
-        self.assertTrue(JustinTVIE.suitable('http://www.justin.tv/vanillatv/'))
-        self.assertTrue(JustinTVIE.suitable('http://www.twitch.tv/vanillatv/'))
+    def test_twitch_channelid_matching(self):
+        self.assertTrue(TwitchIE.suitable('twitch.tv/vanillatv'))
+        self.assertTrue(TwitchIE.suitable('www.twitch.tv/vanillatv'))
+        self.assertTrue(TwitchIE.suitable('http://www.twitch.tv/vanillatv'))
+        self.assertTrue(TwitchIE.suitable('http://www.twitch.tv/vanillatv/'))
 
-    def test_justintv_videoid_matching(self):
-        self.assertTrue(JustinTVIE.suitable('http://www.twitch.tv/vanillatv/b/328087483'))
+    def test_twitch_videoid_matching(self):
+        self.assertTrue(TwitchIE.suitable('http://www.twitch.tv/vanillatv/b/328087483'))
 
-    def test_justin_tv_chapterid_matching(self):
-        self.assertTrue(JustinTVIE.suitable('http://www.twitch.tv/tsm_theoddone/c/2349361'))
+    def test_twitch_chapterid_matching(self):
+        self.assertTrue(TwitchIE.suitable('http://www.twitch.tv/tsm_theoddone/c/2349361'))
 
     def test_youtube_extract(self):
         assertExtractId = lambda url, id: self.assertEqual(YoutubeIE.extract_id(url), id)
@@ -99,6 +95,7 @@ class TestAllURLsMatching(unittest.TestCase):
 
     def test_facebook_matching(self):
         self.assertTrue(FacebookIE.suitable('https://www.facebook.com/Shiniknoh#!/photo.php?v=10153317450565268'))
+        self.assertTrue(FacebookIE.suitable('https://www.facebook.com/cindyweather?fref=ts#!/photo.php?v=10152183998945793'))
 
     def test_no_duplicates(self):
         ies = gen_extractors()
@@ -108,7 +105,9 @@ class TestAllURLsMatching(unittest.TestCase):
                 if type(ie).__name__ in ('GenericIE', tc['name'] + 'IE'):
                     self.assertTrue(ie.suitable(url), '%s should match URL %r' % (type(ie).__name__, url))
                 else:
-                    self.assertFalse(ie.suitable(url), '%s should not match URL %r' % (type(ie).__name__, url))
+                    self.assertFalse(
+                        ie.suitable(url),
+                        '%s should not match URL %r . That URL belongs to %s.' % (type(ie).__name__, url, tc['name']))
 
     def test_keywords(self):
         self.assertMatch(':ytsubs', ['youtube:subscriptions'])
@@ -139,32 +138,6 @@ class TestAllURLsMatching(unittest.TestCase):
         # https://github.com/rg3/youtube-dl/issues/2350
         self.assertMatch('http://video.pbs.org/viralplayer/2365173446/', ['PBS'])
         self.assertMatch('http://video.pbs.org/widget/partnerplayer/980042464/', ['PBS'])
-
-    def test_ComedyCentralShows(self):
-        self.assertMatch(
-            'http://thedailyshow.cc.com/extended-interviews/xm3fnq/andrew-napolitano-extended-interview',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thecolbertreport.cc.com/videos/29w6fx/-realhumanpraise-for-fox-news',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thecolbertreport.cc.com/videos/gh6urb/neil-degrasse-tyson-pt--1?xrs=eml_col_031114',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thedailyshow.cc.com/guests/michael-lewis/3efna8/exclusive---michael-lewis-extended-interview-pt--3',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thedailyshow.cc.com/episodes/sy7yv0/april-8--2014---denis-leary',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thecolbertreport.cc.com/episodes/8ase07/april-8--2014---jane-goodall',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thedailyshow.cc.com/video-playlists/npde3s/the-daily-show-19088-highlights',
-            ['ComedyCentralShows'])
-        self.assertMatch(
-            'http://thedailyshow.cc.com/special-editions/2l8fdb/special-edition---a-look-back-at-food',
-            ['ComedyCentralShows'])
 
     def test_yahoo_https(self):
         # https://github.com/rg3/youtube-dl/issues/2701

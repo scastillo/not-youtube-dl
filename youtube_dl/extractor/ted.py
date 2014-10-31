@@ -51,13 +51,35 @@ class TEDIE(SubtitlesInfoExtractor):
         }
     }, {
         'url': 'http://www.ted.com/talks/gabby_giffords_and_mark_kelly_be_passionate_be_courageous_be_your_best',
-        'md5': '49144e345a899b8cb34d315f3b9cfeeb',
         'info_dict': {
             'id': '1972',
             'ext': 'mp4',
             'title': 'Be passionate. Be courageous. Be your best.',
             'uploader': 'Gabby Giffords and Mark Kelly',
             'description': 'md5:5174aed4d0f16021b704120360f72b92',
+        },
+    }, {
+        'url': 'http://www.ted.com/playlists/who_are_the_hackers',
+        'info_dict': {
+            'id': '10',
+            'title': 'Who are the hackers?',
+        },
+        'playlist_mincount': 6,
+    }, {
+        # contains a youtube video
+        'url': 'https://www.ted.com/talks/douglas_adams_parrots_the_universe_and_everything',
+        'add_ie': ['Youtube'],
+        'info_dict': {
+            'id': '_ZG8HBuDjgc',
+            'ext': 'mp4',
+            'title': 'Douglas Adams: Parrots the Universe and Everything',
+            'description': 'md5:01ad1e199c49ac640cb1196c0e9016af',
+            'uploader': 'University of California Television (UCTV)',
+            'uploader_id': 'UCtelevision',
+            'upload_date': '20080522',
+        },
+        'params': {
+            'skip_download': True,
         },
     }]
 
@@ -108,6 +130,13 @@ class TEDIE(SubtitlesInfoExtractor):
 
         talk_info = self._extract_info(webpage)['talks'][0]
 
+        if talk_info.get('external') is not None:
+            self.to_screen('Found video from %s' % talk_info['external']['service'])
+            return {
+                '_type': 'url',
+                'url': talk_info['external']['uri'],
+            }
+
         formats = [{
             'url': format_url,
             'format_id': format_id,
@@ -143,7 +172,7 @@ class TEDIE(SubtitlesInfoExtractor):
             thumbnail = 'http://' + thumbnail
         return {
             'id': video_id,
-            'title': talk_info['title'],
+            'title': talk_info['title'].strip(),
             'uploader': talk_info['speaker'],
             'thumbnail': thumbnail,
             'description': self._og_search_description(webpage),

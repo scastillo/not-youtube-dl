@@ -20,7 +20,7 @@ class XTubeIE(InfoExtractor):
             'id': 'kVTUy_G222_',
             'ext': 'mp4',
             'title': 'strange erotica',
-            'description': 'surreal gay themed erotica...almost an ET kind of thing',
+            'description': 'http://www.xtube.com an ET kind of thing',
             'uploader': 'greenshowers',
             'duration': 450,
             'age_limit': 18,
@@ -77,9 +77,17 @@ class XTubeIE(InfoExtractor):
             'age_limit': 18,
         }
 
+
 class XTubeUserIE(InfoExtractor):
     IE_DESC = 'XTube user profile'
     _VALID_URL = r'https?://(?:www\.)?xtube\.com/community/profile\.php\?(.*?)user=(?P<username>[^&#]+)(?:$|[&#])'
+    _TEST = {
+        'url': 'http://www.xtube.com/community/profile.php?user=greenshowers',
+        'info_dict': {
+            'id': 'greenshowers',
+        },
+        'playlist_mincount': 155,
+    }
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)

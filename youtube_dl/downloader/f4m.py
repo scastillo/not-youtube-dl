@@ -16,6 +16,7 @@ from ..utils import (
     format_bytes,
     encodeFilename,
     sanitize_open,
+    xpath_text,
 )
 
 
@@ -243,14 +244,23 @@ class F4mFD(FileDownloader):
                 lambda f: int(f[0]) == requested_bitrate, formats))[0]
 
         base_url = compat_urlparse.urljoin(man_url, media.attrib['url'])
-        bootstrap = base64.b64decode(doc.find(_add_ns('bootstrapInfo')).text)
+        bootstrap_node = doc.find(_add_ns('bootstrapInfo'))
+        if bootstrap_node.text is None:
+            bootstrap_url = compat_urlparse.urljoin(
+                base_url, bootstrap_node.attrib['url'])
+            bootstrap = self.ydl.urlopen(bootstrap_url).read()
+        else:
+            bootstrap = base64.b64decode(bootstrap_node.text)
         metadata = base64.b64decode(media.find(_add_ns('metadata')).text)
         boot_info = read_bootstrap_info(bootstrap)
+
         fragments_list = build_fragments_list(boot_info)
         if self.params.get('test', False):
             # We only download the first fragment
             fragments_list = fragments_list[:1]
         total_frags = len(fragments_list)
+        # For some akamai manifests we'll need to add a query to the fragment url
+        akamai_pv = xpath_text(doc, _add_ns('pv-2.0'))
 
         tmpfilename = self.temp_name(filename)
         (dest_stream, tmpfilename) = sanitize_open(tmpfilename, 'wb')
@@ -290,6 +300,8 @@ class F4mFD(FileDownloader):
         for (seg_i, frag_i) in fragments_list:
             name = 'Seg%d-Frag%d' % (seg_i, frag_i)
             url = base_url + name
+            if akamai_pv:
+                url += '?' + akamai_pv.strip(';')
             frag_filename = '%s-%s' % (tmpfilename, name)
             success = http_dl.download(frag_filename, {'url': url})
             if not success:

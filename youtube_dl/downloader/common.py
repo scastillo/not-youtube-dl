@@ -42,6 +42,7 @@ class FileDownloader(object):
     Subclasses of this one must re-define the real_download method.
     """
 
+    _TEST_FILE_SIZE = 10241
     params = None
 
     def __init__(self, ydl, params):
@@ -292,7 +293,7 @@ class FileDownloader(object):
 
     def real_download(self, filename, info_dict):
         """Real download process. Redefine in subclasses."""
-        raise NotImplementedError(u'This method must be implemented by sublcasses')
+        raise NotImplementedError(u'This method must be implemented by subclasses')
 
     def _hook_progress(self, status):
         for ph in self._progress_hooks:

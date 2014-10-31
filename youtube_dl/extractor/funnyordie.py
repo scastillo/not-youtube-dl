@@ -21,7 +21,7 @@ class FunnyOrDieIE(InfoExtractor):
         },
     }, {
         'url': 'http://www.funnyordie.com/embed/e402820827',
-        'md5': 'ff4d83318f89776ed0250634cfaa8d36',
+        'md5': '29f4c5e5a61ca39dfd7e8348a75d0aad',
         'info_dict': {
             'id': 'e402820827',
             'ext': 'mp4',
@@ -37,7 +37,7 @@ class FunnyOrDieIE(InfoExtractor):
         video_id = mobj.group('id')
         webpage = self._download_webpage(url, video_id)
 
-        links = re.findall(r'<source src="([^"]+/v)\d+\.([^"]+)" type=\'video', webpage)
+        links = re.findall(r'<source src="([^"]+/v)[^"]+\.([^"]+)" type=\'video', webpage)
         if not links:
             raise ExtractorError('No media links available for %s' % video_id)
 
