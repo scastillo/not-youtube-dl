@@ -17,6 +17,14 @@ If you do not have curl, you can alternatively use a recent wget:
 
 Windows users can [download a .exe file](https://yt-dl.org/latest/youtube-dl.exe) and place it in their home directory or any other location on their [PATH](http://en.wikipedia.org/wiki/PATH_%28variable%29).
 
+OS X users can install **youtube-dl** with [Homebrew](http://brew.sh/).
+
+    brew install youtube-dl
+
+You can also use pip:
+
+    sudo pip install youtube-dl
+
 Alternatively, refer to the developer instructions below for how to check out and work with the git repository. For further options, including PGP signatures, see https://rg3.github.io/youtube-dl/download.html .
 
 # DESCRIPTION
@@ -61,6 +69,8 @@ which means you can modify it, redistribute it or use it however you like.
                                      configuration in ~/.config/youtube-dl.conf
                                      (%APPDATA%/youtube-dl/config.txt on
                                      Windows)
+    --flat-playlist                  Do not extract the videos of a playlist,
+                                     only list them.
 
 ## Video Selection:
     --playlist-start NUMBER          playlist video to start at (default is 1)
@@ -91,8 +101,6 @@ which means you can modify it, redistribute it or use it however you like.
                                      downloaded videos in it.
     --include-ads                    Download advertisements as well
                                      (experimental)
-    --youtube-include-dash-manifest  Try to download the DASH manifest on
-                                     YouTube videos (experimental)
 
 ## Download Options:
     -r, --rate-limit LIMIT           maximum download rate in bytes per second
@@ -150,7 +158,8 @@ which means you can modify it, redistribute it or use it however you like.
                                      downloads if possible.
     --no-continue                    do not resume partially downloaded files
                                      (restart from beginning)
-    --no-part                        do not use .part files
+    --no-part                        do not use .part files - write directly
+                                     into output file
     --no-mtime                       do not use the Last-modified header to set
                                      the file modification time
     --write-description              write video description to a .description
@@ -190,6 +199,10 @@ which means you can modify it, redistribute it or use it however you like.
     -j, --dump-json                  simulate, quiet but print JSON information.
                                      See --output for a description of available
                                      keys.
+    -J, --dump-single-json           simulate, quiet but print JSON information
+                                     for each command-line argument. If the URL
+                                     refers to a playlist, dump the whole
+                                     playlist information in a single line.
     --newline                        output progress bar as new lines
     --no-progress                    do not print progress bar
     --console-title                  display progress in console titlebar
@@ -208,7 +221,7 @@ which means you can modify it, redistribute it or use it however you like.
                                      information about the video. (Currently
                                      supported only for YouTube)
     --user-agent UA                  specify a custom user agent
-    --referer REF                    specify a custom referer, use if the video
+    --referer URL                    specify a custom referer, use if the video
                                      access is restricted to one domain
     --add-header FIELD:VALUE         specify a custom HTTP header and its value,
                                      separated by a colon ':'. You can use this
@@ -219,17 +232,22 @@ which means you can modify it, redistribute it or use it however you like.
 
 ## Video Format Options:
     -f, --format FORMAT              video format code, specify the order of
-                                     preference using slashes: "-f 22/17/18".
-                                     "-f mp4" and "-f flv" are also supported.
-                                     You can also use the special names "best",
-                                     "bestvideo", "bestaudio", "worst",
-                                     "worstvideo" and "worstaudio". By default,
-                                     youtube-dl will pick the best quality.
+                                     preference using slashes: -f 22/17/18 .  -f
+                                     mp4 , -f m4a and  -f flv  are also
+                                     supported. You can also use the special
+                                     names "best", "bestvideo", "bestaudio",
+                                     "worst", "worstvideo" and "worstaudio". By
+                                     default, youtube-dl will pick the best
+                                     quality. Use commas to download multiple
+                                     audio formats, such as  -f
+                                     136/137/mp4/bestvideo,140/m4a/bestaudio
     --all-formats                    download all available video formats
     --prefer-free-formats            prefer free video formats unless a specific
                                      one is requested
     --max-quality FORMAT             highest quality format to download
     -F, --list-formats               list all available formats
+    --youtube-skip-dash-manifest     Do not download the DASH manifest on
+                                     YouTube videos
 
 ## Subtitle Options:
     --write-sub                      write subtitle file
@@ -245,8 +263,9 @@ which means you can modify it, redistribute it or use it however you like.
                                      language tags like 'en,pt'
 
 ## Authentication Options:
-    -u, --username USERNAME          account username
+    -u, --username USERNAME          login with this account ID
     -p, --password PASSWORD          account password
+    -2, --twofactor TWOFACTOR        two-factor auth code
     -n, --netrc                      use .netrc authentication data
     --video-password PASSWORD        video password (vimeo, smotri)
 
@@ -255,7 +274,7 @@ which means you can modify it, redistribute it or use it however you like.
                                      (requires ffmpeg or avconv and ffprobe or
                                      avprobe)
     --audio-format FORMAT            "best", "aac", "vorbis", "mp3", "m4a",
-                                     "opus", or "wav"; best by default
+                                     "opus", or "wav"; "best" by default
     --audio-quality QUALITY          ffmpeg/avconv audio quality specification,
                                      insert a value between 0 (better) and 9
                                      (worse) for VBR or a specific bitrate like
@@ -279,6 +298,10 @@ which means you can modify it, redistribute it or use it however you like.
                                      postprocessors (default)
     --prefer-ffmpeg                  Prefer ffmpeg over avconv for running the
                                      postprocessors
+    --exec CMD                       Execute a command on the file after
+                                     downloading, similar to find's -exec
+                                     syntax. Example: --exec 'adb push {}
+                                     /sdcard/Music/ && rm {}'
 
 # CONFIGURATION
 
@@ -303,10 +326,12 @@ The current default template is `%(title)s-%(id)s.%(ext)s`.
 
 In some cases, you don't want special characters such as 中, spaces, or &, such as when transferring the downloaded filename to a Windows system or the filename through an 8bit-unsafe channel. In these cases, add the `--restrict-filenames` flag to get a shorter title:
 
-    $ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc
-    youtube-dl test video ''_ä↭𝕐.mp4    # All kinds of weird characters
-    $ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc --restrict-filenames
-    youtube-dl_test_video_.mp4          # A simple file name
+```bash
+$ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc
+youtube-dl test video ''_ä↭𝕐.mp4    # All kinds of weird characters
+$ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc --restrict-filenames
+youtube-dl_test_video_.mp4          # A simple file name
+```
 
 # VIDEO SELECTION
 
@@ -317,16 +342,50 @@ Videos can be filtered by their upload date using the options `--date`, `--dateb
  
 Examples:
 
-    # Download only the videos uploaded in the last 6 months
-    $ youtube-dl --dateafter now-6months
+```bash
+# Download only the videos uploaded in the last 6 months
+$ youtube-dl --dateafter now-6months
 
-    # Download only the videos uploaded on January 1, 1970
-    $ youtube-dl --date 19700101
+# Download only the videos uploaded on January 1, 1970
+$ youtube-dl --date 19700101
 
-    $ # will only download the videos uploaded in the 200x decade
-    $ youtube-dl --dateafter 20000101 --datebefore 20091231
+$ # will only download the videos uploaded in the 200x decade
+$ youtube-dl --dateafter 20000101 --datebefore 20091231
+```
 
 # FAQ
+
+### How do I update youtube-dl?
+
+If you've followed [our manual installation instructions](http://rg3.github.io/youtube-dl/download.html), you can simply run `youtube-dl -U` (or, on Linux, `sudo youtube-dl -U`).
+
+If you have used pip, a simple `sudo pip install -U youtube-dl` is sufficient to update.
+
+If you have installed youtube-dl using a package manager like *apt-get* or *yum*, use the standard system update mechanism to update. Note that distribution packages are often outdated. As a rule of thumb, youtube-dl releases at least once a month, and often weekly or even daily. Simply go to http://yt-dl.org/ to find out the current version. Unfortunately, there is nothing we youtube-dl developers can do if your distributions serves a really outdated version. You can (and should) complain to your distribution in their bugtracker or support forum.
+
+As a last resort, you can also uninstall the version installed by your package manager and follow our manual installation instructions. For that, remove the distribution's package, with a line like
+
+    sudo apt-get remove -y youtube-dl
+
+Afterwards, simply follow [our manual installation instructions](http://rg3.github.io/youtube-dl/download.html):
+
+```
+sudo wget https://yt-dl.org/latest/youtube-dl -O /usr/local/bin/youtube-dl
+sudo chmod a+x /usr/local/bin/youtube-dl
+hash -r
+```
+
+Again, from then on you'll be able to update with `sudo youtube-dl -U`.
+
+### I'm getting an error `Unable to extract OpenGraph title` on YouTube playlists
+
+YouTube changed their playlist format in March 2014 and later on, so you'll need at least youtube-dl 2014.07.25 to download all YouTube videos.
+
+If you have installed youtube-dl with a package manager, pip, setup.py or a tarball, please use that to update. Note that Ubuntu packages do not seem to get updated anymore. Since we are not affiliated with Ubuntu, there is little we can do. Feel free to report bugs to the Ubuntu packaging guys - all they have to do is update the package to a somewhat recent version. See above for a way to update.
+
+### Do I always have to pass in `--max-quality FORMAT`, or `-citw`?
+
+By default, youtube-dl intends to have the best options (incidentally, if you have a convincing case that these should be different, [please file an issue where you explain that](https://yt-dl.org/bug)). Therefore, it is unnecessary and sometimes harmful to copy long option strings from webpages. In particular, `--max-quality` *limits* the video quality (so if you want the best quality, do NOT pass it in), and the only option out of `-citw` that is regularly useful is `-i`.
 
 ### Can you please put the -b option back?
 
@@ -399,49 +458,46 @@ If you want to add support for a new site, you can follow this quick list (assum
 2. Check out the source code with `git clone git@github.com:YOUR_GITHUB_USERNAME/youtube-dl.git`
 3. Start a new git branch with `cd youtube-dl; git checkout -b yourextractor`
 4. Start with this simple template and save it to `youtube_dl/extractor/yourextractor.py`:
+    ```python
+    # coding: utf-8
+    from __future__ import unicode_literals
 
-        # coding: utf-8
-        from __future__ import unicode_literals
+    from .common import InfoExtractor
 
-        import re
 
-        from .common import InfoExtractor
-        
-        
-        class YourExtractorIE(InfoExtractor):
-            _VALID_URL = r'https?://(?:www\.)?yourextractor\.com/watch/(?P<id>[0-9]+)'
-            _TEST = {
-                'url': 'http://yourextractor.com/watch/42',
-                'md5': 'TODO: md5 sum of the first 10KiB of the video file',
-                'info_dict': {
-                    'id': '42',
-                    'ext': 'mp4',
-                    'title': 'Video title goes here',
-                    # TODO more properties, either as:
-                    # * A value
-                    # * MD5 checksum; start the string with md5:
-                    # * A regular expression; start the string with re:
-                    # * Any Python type (for example int or float)
-                }
+    class YourExtractorIE(InfoExtractor):
+        _VALID_URL = r'https?://(?:www\.)?yourextractor\.com/watch/(?P<id>[0-9]+)'
+        _TEST = {
+            'url': 'http://yourextractor.com/watch/42',
+            'md5': 'TODO: md5 sum of the first 10241 bytes of the video file (use --test)',
+            'info_dict': {
+                'id': '42',
+                'ext': 'mp4',
+                'title': 'Video title goes here',
+                'thumbnail': 're:^https?://.*\.jpg$',
+                # TODO more properties, either as:
+                # * A value
+                # * MD5 checksum; start the string with md5:
+                # * A regular expression; start the string with re:
+                # * Any Python type (for example int or float)
             }
+        }
 
-            def _real_extract(self, url):
-                mobj = re.match(self._VALID_URL, url)
-                video_id = mobj.group('id')
+        def _real_extract(self, url):
+            video_id = self._match_id(url)
 
-                # TODO more code goes here, for example ...
-                webpage = self._download_webpage(url, video_id)
-                title = self._html_search_regex(r'<h1>(.*?)</h1>', webpage, 'title')
+            # TODO more code goes here, for example ...
+            webpage = self._download_webpage(url, video_id)
+            title = self._html_search_regex(r'<h1>(.*?)</h1>', webpage, 'title')
 
-                return {
-                    'id': video_id,
-                    'title': title,
-                    # TODO more properties (see youtube_dl/extractor/common.py)
-                }
-
-
+            return {
+                'id': video_id,
+                'title': title,
+                # TODO more properties (see youtube_dl/extractor/common.py)
+            }
+    ```
 5. Add an import in [`youtube_dl/extractor/__init__.py`](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/__init__.py).
-6. Run `python test/test_download.py TestDownload.test_YourExtractor`. This *should fail* at first, but you can continually re-run it until you're done.
+6. Run `python test/test_download.py TestDownload.test_YourExtractor`. This *should fail* at first, but you can continually re-run it until you're done. If you decide to add more than one test, then rename ``_TEST`` to ``_TESTS`` and make it into a list of dictionaries. The tests will be then be named `TestDownload.test_YourExtractor`, `TestDownload.test_YourExtractor_1`, `TestDownload.test_YourExtractor_2`, etc.
 7. Have a look at [`youtube_dl/common/extractor/common.py`](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py) for possible helper methods and a [detailed description of what your extractor should return](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py#L38). Add tests and code for as many as you want.
 8. If you can, check the code with [pyflakes](https://pypi.python.org/pypi/pyflakes) (a good idea) and [pep8](https://pypi.python.org/pypi/pep8) (optional, ignore E501).
 9. When the tests pass, [add](https://www.kernel.org/pub/software/scm/git/docs/git-add.html) the new files and [commit](https://www.kernel.org/pub/software/scm/git/docs/git-commit.html) them and [push](https://www.kernel.org/pub/software/scm/git/docs/git-push.html) the result, like this:
@@ -454,6 +510,20 @@ If you want to add support for a new site, you can follow this quick list (assum
 10. Finally, [create a pull request](https://help.github.com/articles/creating-a-pull-request). We'll then review and merge it.
 
 In any case, thank you very much for your contributions!
+
+# EMBEDDING YOUTUBE-DL
+
+youtube-dl makes the best effort to be a good command-line program, and thus should be callable from any programming language. If you encounter any problems parsing its output, feel free to [create a report](https://github.com/rg3/youtube-dl/issues/new).
+
+From a Python program, you can embed youtube-dl in a more powerful fashion, like this:
+
+    import youtube_dl
+
+    ydl_opts = {}
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download(['http://www.youtube.com/watch?v=BaW_jenozKc'])
+
+Most likely, you'll want to use various options. For a list of what can be done, have a look at [youtube_dl/YoutubeDL.py](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/YoutubeDL.py#L69). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
 
 # BUGS
 

@@ -10,8 +10,8 @@ from ..utils import (
     unified_strdate,
     determine_ext,
     get_element_by_id,
-    compat_str,
     get_element_by_attribute,
+    int_or_none,
 )
 
 # There are different sources of video in arte.tv, the extraction process 
@@ -78,22 +78,36 @@ class ArteTVPlus7IE(InfoExtractor):
 
     def _extract_from_webpage(self, webpage, video_id, lang):
         json_url = self._html_search_regex(
-            r'arte_vp_url="(.*?)"', webpage, 'json vp url')
+            [r'arte_vp_url=["\'](.*?)["\']', r'data-url=["\']([^"]+)["\']'],
+            webpage, 'json vp url')
         return self._extract_from_json_url(json_url, video_id, lang)
 
     def _extract_from_json_url(self, json_url, video_id, lang):
         info = self._download_json(json_url, video_id)
         player_info = info['videoJsonPlayer']
 
+        upload_date_str = player_info.get('shootingDate')
+        if not upload_date_str:
+            upload_date_str = player_info.get('VDA', '').split(' ')[0]
+
+        title = player_info['VTI'].strip()
+        subtitle = player_info.get('VSU', '').strip()
+        if subtitle:
+            title += ' - %s' % subtitle
+
         info_dict = {
             'id': player_info['VID'],
-            'title': player_info['VTI'],
+            'title': title,
             'description': player_info.get('VDE'),
-            'upload_date': unified_strdate(player_info.get('VDA', '').split(' ')[0]),
+            'upload_date': unified_strdate(upload_date_str),
             'thumbnail': player_info.get('programImage') or player_info.get('VTU', {}).get('IUR'),
         }
 
-        all_formats = player_info['VSR'].values()
+        all_formats = []
+        for format_id, format_dict in player_info['VSR'].items():
+            fmt = dict(format_dict)
+            fmt['format_id'] = format_id
+            all_formats.append(fmt)
         # Some formats use the m3u8 protocol
         all_formats = list(filter(lambda f: f.get('videoFormat') != 'M3U8', all_formats))
         def _match_lang(f):
@@ -109,15 +123,19 @@ class ArteTVPlus7IE(InfoExtractor):
             regexes = [r'VO?%s' % l, r'VO?.-ST%s' % l]
             return any(re.match(r, f['versionCode']) for r in regexes)
         # Some formats may not be in the same language as the url
+        # TODO: Might want not to drop videos that does not match requested language
+        # but to process those formats with lower precedence
         formats = filter(_match_lang, all_formats)
-        formats = list(formats) # in python3 filter returns an iterator
+        formats = list(formats)  # in python3 filter returns an iterator
         if not formats:
             # Some videos are only available in the 'Originalversion'
             # they aren't tagged as being in French or German
-            if all(f['versionCode'] == 'VO' or f['versionCode'] == 'VA' for f in all_formats):
-                formats = all_formats
-            else:
-                raise ExtractorError(u'The formats list is empty')
+            # Sometimes there are neither videos of requested lang code
+            # nor original version videos available
+            # For such cases we just take all_formats as is
+            formats = all_formats
+            if not formats:
+                raise ExtractorError('The formats list is empty')
 
         if re.match(r'[A-Z]Q', formats[0]['quality']) is not None:
             def sort_key(f):
@@ -140,22 +158,12 @@ class ArteTVPlus7IE(InfoExtractor):
                 )
         formats = sorted(formats, key=sort_key)
         def _format(format_info):
-            quality = ''
-            height = format_info.get('height')
-            if height is not None:
-                quality = compat_str(height)
-            bitrate = format_info.get('bitrate')
-            if bitrate is not None:
-                quality += '-%d' % bitrate
-            if format_info.get('versionCode') is not None:
-                format_id = '%s-%s' % (quality, format_info['versionCode'])
-            else:
-                format_id = quality
             info = {
-                'format_id': format_id,
-                'format_note': format_info.get('versionLibelle'),
-                'width': format_info.get('width'),
-                'height': height,
+                'format_id': format_info['format_id'],
+                'format_note': '%s, %s' % (format_info.get('versionCode'), format_info.get('versionLibelle')),
+                'width': int_or_none(format_info.get('width')),
+                'height': int_or_none(format_info.get('height')),
+                'tbr': int_or_none(format_info.get('bitrate')),
             }
             if format_info['mediaType'] == 'rtmp':
                 info['url'] = format_info['streamer']
@@ -173,16 +181,26 @@ class ArteTVPlus7IE(InfoExtractor):
 # It also uses the arte_vp_url url from the webpage to extract the information
 class ArteTVCreativeIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:creative'
-    _VALID_URL = r'https?://creative\.arte\.tv/(?P<lang>fr|de)/magazine?/(?P<id>.+)'
+    _VALID_URL = r'https?://creative\.arte\.tv/(?P<lang>fr|de)/(?:magazine?/)?(?P<id>[^?#]+)'
 
-    _TEST = {
+    _TESTS = [{
         'url': 'http://creative.arte.tv/de/magazin/agentur-amateur-corporate-design',
         'info_dict': {
-            'id': '050489-002',
+            'id': '72176',
             'ext': 'mp4',
-            'title': 'Agentur Amateur / Agence Amateur #2 : Corporate Design',
+            'title': 'Folge 2 - Corporate Design',
+            'upload_date': '20131004',
         },
-    }
+    }, {
+        'url': 'http://creative.arte.tv/fr/Monty-Python-Reunion',
+        'info_dict': {
+            'id': '160676',
+            'ext': 'mp4',
+            'title': 'Monty Python live (mostly)',
+            'description': 'Événement ! Quarante-cinq ans après leurs premiers succès, les légendaires Monty Python remontent sur scène.\n',
+            'upload_date': '20140805',
+        }
+    }]
 
 
 class ArteTVFutureIE(ArteTVPlus7IE):

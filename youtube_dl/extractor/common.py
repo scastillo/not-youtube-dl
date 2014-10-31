@@ -1,4 +1,7 @@
+from __future__ import unicode_literals
+
 import base64
+import datetime
 import hashlib
 import json
 import netrc
@@ -13,11 +16,13 @@ from ..utils import (
     compat_http_client,
     compat_urllib_error,
     compat_urllib_parse_urlparse,
+    compat_urlparse,
     compat_str,
 
     clean_html,
     compiled_regex_type,
     ExtractorError,
+    float_or_none,
     int_or_none,
     RegexNotFoundError,
     sanitize_filename,
@@ -67,6 +72,7 @@ class InfoExtractor(object):
                     * acodec     Name of the audio codec in use
                     * asr        Audio sampling rate in Hertz
                     * vbr        Average video bitrate in KBit/s
+                    * fps        Frame rate
                     * vcodec     Name of the video codec in use
                     * container  Name of the container format
                     * filesize   The number of bytes, if known in advance
@@ -84,6 +90,16 @@ class InfoExtractor(object):
                                  format, irrespective of the file format.
                                  -1 for default (order by other properties),
                                  -2 or smaller for less than default.
+                    * source_preference  Order number for this video source
+                                  (quality takes higher priority)
+                                 -1 for default (order by other properties),
+                                 -2 or smaller for less than default.
+                    * http_referer  HTTP Referer header value to set.
+                    * http_method  HTTP method to use for the download.
+                    * http_headers  A dictionary of additional HTTP headers
+                                 to add to the request.
+                    * http_post_data  Additional data to send with a POST
+                                 request.
     url:            Final video URL.
     ext:            Video filename extension.
     format:         The video format, defaults to ext (used for --get-format)
@@ -108,7 +124,7 @@ class InfoExtractor(object):
     upload_date:    Video upload date (YYYYMMDD).
                     If not explicitly set, calculated from timestamp.
     uploader_id:    Nickname or id of the video uploader.
-    location:       Physical location of the video.
+    location:       Physical location where the video was filmed.
     subtitles:      The subtitle file contents as a dictionary in the format
                     {language: subtitles}.
     duration:       Length of the video in seconds, as an integer.
@@ -122,8 +138,12 @@ class InfoExtractor(object):
                     by YoutubeDL if it's missing)
     categories:     A list of categories that the video falls in, for example
                     ["Sports", "Berlin"]
+    is_live:        True, False, or None (=unknown). Whether this video is a
+                    live stream that goes on instead of a fixed-length video.
 
     Unless mentioned otherwise, the fields should be Unicode strings.
+
+    Unless mentioned otherwise, None is equivalent to absence of information.
 
     Subclasses of this one should re-define the _real_initialize() and
     _real_extract() methods and define a _VALID_URL regexp.
@@ -152,6 +172,14 @@ class InfoExtractor(object):
         if '_VALID_URL_RE' not in cls.__dict__:
             cls._VALID_URL_RE = re.compile(cls._VALID_URL)
         return cls._VALID_URL_RE.match(url) is not None
+
+    @classmethod
+    def _match_id(cls, url):
+        if '_VALID_URL_RE' not in cls.__dict__:
+            cls._VALID_URL_RE = re.compile(cls._VALID_URL)
+        m = cls._VALID_URL_RE.match(url)
+        assert m
+        return m.group('id')
 
     @classmethod
     def working(cls):
@@ -196,17 +224,17 @@ class InfoExtractor(object):
             self.report_download_webpage(video_id)
         elif note is not False:
             if video_id is None:
-                self.to_screen(u'%s' % (note,))
+                self.to_screen('%s' % (note,))
             else:
-                self.to_screen(u'%s: %s' % (video_id, note))
+                self.to_screen('%s: %s' % (video_id, note))
         try:
             return self._downloader.urlopen(url_or_request)
         except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
             if errnote is False:
                 return False
             if errnote is None:
-                errnote = u'Unable to download webpage'
-            errmsg = u'%s: %s' % (errnote, compat_str(err))
+                errnote = 'Unable to download webpage'
+            errmsg = '%s: %s' % (errnote, compat_str(err))
             if fatal:
                 raise ExtractorError(errmsg, sys.exc_info()[2], cause=err)
             else:
@@ -215,7 +243,6 @@ class InfoExtractor(object):
 
     def _download_webpage_handle(self, url_or_request, video_id, note=None, errnote=None, fatal=True):
         """ Returns a tuple (page content as string, URL handle) """
-
         # Strip hashes from the URL (#1038)
         if isinstance(url_or_request, (compat_str, str)):
             url_or_request = url_or_request.partition('#')[0]
@@ -224,6 +251,10 @@ class InfoExtractor(object):
         if urlh is False:
             assert not fatal
             return False
+        content = self._webpage_read_content(urlh, url_or_request, video_id, note, errnote, fatal)
+        return (content, urlh)
+
+    def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True):
         content_type = urlh.headers.get('Content-Type', '')
         webpage_bytes = urlh.read()
         m = re.match(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+\s*;\s*charset=(.+)', content_type)
@@ -243,7 +274,7 @@ class InfoExtractor(object):
                 url = url_or_request.get_full_url()
             except AttributeError:
                 url = url_or_request
-            self.to_screen(u'Dumping request to ' + url)
+            self.to_screen('Dumping request to ' + url)
             dump = base64.b64encode(webpage_bytes).decode('ascii')
             self._downloader.to_screen(dump)
         if self._downloader.params.get('write_pages', False):
@@ -253,11 +284,17 @@ class InfoExtractor(object):
                 url = url_or_request
             basen = '%s_%s' % (video_id, url)
             if len(basen) > 240:
-                h = u'___' + hashlib.md5(basen.encode('utf-8')).hexdigest()
+                h = '___' + hashlib.md5(basen.encode('utf-8')).hexdigest()
                 basen = basen[:240 - len(h)] + h
             raw_filename = basen + '.dump'
             filename = sanitize_filename(raw_filename, restricted=True)
-            self.to_screen(u'Saving request to ' + filename)
+            self.to_screen('Saving request to ' + filename)
+            # Working around MAX_PATH limitation on Windows (see
+            # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+            if os.name == 'nt':
+                absfilepath = os.path.abspath(filename)
+                if len(absfilepath) > 259:
+                    filename = '\\\\?\\' + absfilepath
             with open(filename, 'wb') as outf:
                 outf.write(webpage_bytes)
 
@@ -266,17 +303,17 @@ class InfoExtractor(object):
         except LookupError:
             content = webpage_bytes.decode('utf-8', 'replace')
 
-        if (u'<title>Access to this site is blocked</title>' in content and
-                u'Websense' in content[:512]):
-            msg = u'Access to this webpage has been blocked by Websense filtering software in your network.'
+        if ('<title>Access to this site is blocked</title>' in content and
+                'Websense' in content[:512]):
+            msg = 'Access to this webpage has been blocked by Websense filtering software in your network.'
             blocked_iframe = self._html_search_regex(
                 r'<iframe src="([^"]+)"', content,
-                u'Websense information URL', default=None)
+                'Websense information URL', default=None)
             if blocked_iframe:
-                msg += u' Visit %s for more details' % blocked_iframe
+                msg += ' Visit %s for more details' % blocked_iframe
             raise ExtractorError(msg, expected=True)
 
-        return (content, urlh)
+        return content
 
     def _download_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True):
         """ Returns the data of the page as a string """
@@ -288,7 +325,7 @@ class InfoExtractor(object):
             return content
 
     def _download_xml(self, url_or_request, video_id,
-                      note=u'Downloading XML', errnote=u'Unable to download XML',
+                      note='Downloading XML', errnote='Unable to download XML',
                       transform_source=None, fatal=True):
         """Return the xml as an xml.etree.ElementTree.Element"""
         xml_string = self._download_webpage(
@@ -300,8 +337,8 @@ class InfoExtractor(object):
         return xml.etree.ElementTree.fromstring(xml_string.encode('utf-8'))
 
     def _download_json(self, url_or_request, video_id,
-                       note=u'Downloading JSON metadata',
-                       errnote=u'Unable to download JSON metadata',
+                       note='Downloading JSON metadata',
+                       errnote='Unable to download JSON metadata',
                        transform_source=None,
                        fatal=True):
         json_string = self._download_webpage(
@@ -313,32 +350,36 @@ class InfoExtractor(object):
         try:
             return json.loads(json_string)
         except ValueError as ve:
-            raise ExtractorError('Failed to download JSON', cause=ve)
+            errmsg = '%s: Failed to parse JSON ' % video_id
+            if fatal:
+                raise ExtractorError(errmsg, cause=ve)
+            else:
+                self.report_warning(errmsg + str(ve))
 
     def report_warning(self, msg, video_id=None):
-        idstr = u'' if video_id is None else u'%s: ' % video_id
+        idstr = '' if video_id is None else '%s: ' % video_id
         self._downloader.report_warning(
-            u'[%s] %s%s' % (self.IE_NAME, idstr, msg))
+            '[%s] %s%s' % (self.IE_NAME, idstr, msg))
 
     def to_screen(self, msg):
         """Print msg to screen, prefixing it with '[ie_name]'"""
-        self._downloader.to_screen(u'[%s] %s' % (self.IE_NAME, msg))
+        self._downloader.to_screen('[%s] %s' % (self.IE_NAME, msg))
 
     def report_extraction(self, id_or_name):
         """Report information extraction."""
-        self.to_screen(u'%s: Extracting information' % id_or_name)
+        self.to_screen('%s: Extracting information' % id_or_name)
 
     def report_download_webpage(self, video_id):
         """Report webpage download."""
-        self.to_screen(u'%s: Downloading webpage' % video_id)
+        self.to_screen('%s: Downloading webpage' % video_id)
 
     def report_age_confirmation(self):
         """Report attempt to confirm age."""
-        self.to_screen(u'Confirming age')
+        self.to_screen('Confirming age')
 
     def report_login(self):
         """Report attempt to log in."""
-        self.to_screen(u'Logging in')
+        self.to_screen('Logging in')
 
     #Methods for following #608
     @staticmethod
@@ -378,7 +419,7 @@ class InfoExtractor(object):
                     break
 
         if os.name != 'nt' and sys.stderr.isatty():
-            _name = u'\033[0;34m%s\033[0m' % name
+            _name = '\033[0;34m%s\033[0m' % name
         else:
             _name = name
 
@@ -388,10 +429,10 @@ class InfoExtractor(object):
         elif default is not _NO_DEFAULT:
             return default
         elif fatal:
-            raise RegexNotFoundError(u'Unable to extract %s' % _name)
+            raise RegexNotFoundError('Unable to extract %s' % _name)
         else:
-            self._downloader.report_warning(u'unable to extract %s; '
-                u'please report this issue on http://yt-dl.org/bug' % _name)
+            self._downloader.report_warning('unable to extract %s; '
+                'please report this issue on http://yt-dl.org/bug' % _name)
             return None
 
     def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0):
@@ -430,9 +471,25 @@ class InfoExtractor(object):
                 else:
                     raise netrc.NetrcParseError('No authenticators for %s' % self._NETRC_MACHINE)
             except (IOError, netrc.NetrcParseError) as err:
-                self._downloader.report_warning(u'parsing .netrc: %s' % compat_str(err))
+                self._downloader.report_warning('parsing .netrc: %s' % compat_str(err))
         
         return (username, password)
+
+    def _get_tfa_info(self):
+        """
+        Get the two-factor authentication info
+        TODO - asking the user will be required for sms/phone verify
+        currently just uses the command line option
+        If there's no info available, return None
+        """
+        if self._downloader is None:
+            return None
+        downloader_params = self._downloader.params
+
+        if downloader_params.get('twofactor', None) is not None:
+            return downloader_params['twofactor']
+
+        return None
 
     # Helper functions for extracting OpenGraph info
     @staticmethod
@@ -454,7 +511,7 @@ class InfoExtractor(object):
         return unescapeHTML(escaped)
 
     def _og_search_thumbnail(self, html, **kargs):
-        return self._og_search_property('image', html, u'thumbnail url', fatal=False, **kargs)
+        return self._og_search_property('image', html, 'thumbnail url', fatal=False, **kargs)
 
     def _og_search_description(self, html, **kargs):
         return self._og_search_property('description', html, fatal=False, **kargs)
@@ -463,8 +520,9 @@ class InfoExtractor(object):
         return self._og_search_property('title', html, **kargs)
 
     def _og_search_video_url(self, html, name='video url', secure=True, **kargs):
-        regexes = self._og_regexes('video')
-        if secure: regexes = self._og_regexes('video:secure_url') + regexes
+        regexes = self._og_regexes('video') + self._og_regexes('video:url')
+        if secure:
+            regexes = self._og_regexes('video:secure_url') + regexes
         return self._html_search_regex(regexes, html, name, **kargs)
 
     def _og_search_url(self, html, **kargs):
@@ -512,7 +570,7 @@ class InfoExtractor(object):
 
     def _sort_formats(self, formats):
         if not formats:
-            raise ExtractorError(u'No video formats found')
+            raise ExtractorError('No video formats found')
 
         def _formats_key(f):
             # TODO remove the following workaround
@@ -532,9 +590,9 @@ class InfoExtractor(object):
 
             if f.get('vcodec') == 'none':  # audio only
                 if self._downloader.params.get('prefer_free_formats'):
-                    ORDER = [u'aac', u'mp3', u'm4a', u'webm', u'ogg', u'opus']
+                    ORDER = ['aac', 'mp3', 'm4a', 'webm', 'ogg', 'opus']
                 else:
-                    ORDER = [u'webm', u'opus', u'ogg', u'mp3', u'aac', u'm4a']
+                    ORDER = ['webm', 'opus', 'ogg', 'mp3', 'aac', 'm4a']
                 ext_preference = 0
                 try:
                     audio_ext_preference = ORDER.index(f['ext'])
@@ -542,9 +600,9 @@ class InfoExtractor(object):
                     audio_ext_preference = -1
             else:
                 if self._downloader.params.get('prefer_free_formats'):
-                    ORDER = [u'flv', u'mp4', u'webm']
+                    ORDER = ['flv', 'mp4', 'webm']
                 else:
-                    ORDER = [u'webm', u'flv', u'mp4']
+                    ORDER = ['webm', 'flv', 'mp4']
                 try:
                     ext_preference = ORDER.index(f['ext'])
                 except ValueError:
@@ -561,14 +619,16 @@ class InfoExtractor(object):
                 f.get('vbr') if f.get('vbr') is not None else -1,
                 f.get('abr') if f.get('abr') is not None else -1,
                 audio_ext_preference,
+                f.get('fps') if f.get('fps') is not None else -1,
                 f.get('filesize') if f.get('filesize') is not None else -1,
                 f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
+                f.get('source_preference') if f.get('source_preference') is not None else -1,
                 f.get('format_id'),
             )
         formats.sort(key=_formats_key)
 
     def http_scheme(self):
-        """ Either "https:" or "https:", depending on the user's preferences """
+        """ Either "http:" or "https:", depending on the user's preferences """
         return (
             'http:'
             if self._downloader.params.get('prefer_insecure', False)
@@ -586,7 +646,7 @@ class InfoExtractor(object):
 
     def _sleep(self, timeout, video_id, msg_template=None):
         if msg_template is None:
-            msg_template = u'%(video_id)s: Waiting for %(timeout)s seconds'
+            msg_template = '%(video_id)s: Waiting for %(timeout)s seconds'
         msg = msg_template % {'video_id': video_id, 'timeout': timeout}
         self.to_screen(msg)
         time.sleep(timeout)
@@ -597,17 +657,116 @@ class InfoExtractor(object):
             'Unable to download f4m manifest')
 
         formats = []
-        for media_el in manifest.findall('{http://ns.adobe.com/f4m/1.0}media'):
+        media_nodes = manifest.findall('{http://ns.adobe.com/f4m/1.0}media')
+        for i, media_el in enumerate(media_nodes):
+            tbr = int_or_none(media_el.attrib.get('bitrate'))
+            format_id = 'f4m-%d' % (i if tbr is None else tbr)
             formats.append({
+                'format_id': format_id,
                 'url': manifest_url,
                 'ext': 'flv',
-                'tbr': int_or_none(media_el.attrib.get('bitrate')),
+                'tbr': tbr,
                 'width': int_or_none(media_el.attrib.get('width')),
                 'height': int_or_none(media_el.attrib.get('height')),
             })
         self._sort_formats(formats)
 
         return formats
+
+    def _extract_m3u8_formats(self, m3u8_url, video_id, ext=None,
+                              entry_protocol='m3u8', preference=None):
+
+        formats = [{
+            'format_id': 'm3u8-meta',
+            'url': m3u8_url,
+            'ext': ext,
+            'protocol': 'm3u8',
+            'preference': -1,
+            'resolution': 'multiple',
+            'format_note': 'Quality selection URL',
+        }]
+
+        format_url = lambda u: (
+            u
+            if re.match(r'^https?://', u)
+            else compat_urlparse.urljoin(m3u8_url, u))
+
+        m3u8_doc = self._download_webpage(
+            m3u8_url, video_id,
+            note='Downloading m3u8 information',
+            errnote='Failed to download m3u8 information')
+        last_info = None
+        kv_rex = re.compile(
+            r'(?P<key>[a-zA-Z_-]+)=(?P<val>"[^"]+"|[^",]+)(?:,|$)')
+        for line in m3u8_doc.splitlines():
+            if line.startswith('#EXT-X-STREAM-INF:'):
+                last_info = {}
+                for m in kv_rex.finditer(line):
+                    v = m.group('val')
+                    if v.startswith('"'):
+                        v = v[1:-1]
+                    last_info[m.group('key')] = v
+            elif line.startswith('#') or not line.strip():
+                continue
+            else:
+                if last_info is None:
+                    formats.append({'url': format_url(line)})
+                    continue
+                tbr = int_or_none(last_info.get('BANDWIDTH'), scale=1000)
+
+                f = {
+                    'format_id': 'm3u8-%d' % (tbr if tbr else len(formats)),
+                    'url': format_url(line.strip()),
+                    'tbr': tbr,
+                    'ext': ext,
+                    'protocol': entry_protocol,
+                    'preference': preference,
+                }
+                codecs = last_info.get('CODECS')
+                if codecs:
+                    # TODO: looks like video codec is not always necessarily goes first
+                    va_codecs = codecs.split(',')
+                    if va_codecs[0]:
+                        f['vcodec'] = va_codecs[0].partition('.')[0]
+                    if len(va_codecs) > 1 and va_codecs[1]:
+                        f['acodec'] = va_codecs[1].partition('.')[0]
+                resolution = last_info.get('RESOLUTION')
+                if resolution:
+                    width_str, height_str = resolution.split('x')
+                    f['width'] = int(width_str)
+                    f['height'] = int(height_str)
+                formats.append(f)
+                last_info = {}
+        self._sort_formats(formats)
+        return formats
+
+    def _live_title(self, name):
+        """ Generate the title for a live video """
+        now = datetime.datetime.now()
+        now_str = now.strftime("%Y-%m-%d %H:%M")
+        return name + ' ' + now_str
+
+    def _int(self, v, name, fatal=False, **kwargs):
+        res = int_or_none(v, **kwargs)
+        if 'get_attr' in kwargs:
+            print(getattr(v, kwargs['get_attr']))
+        if res is None:
+            msg = 'Failed to extract %s: Could not parse value %r' % (name, v)
+            if fatal:
+                raise ExtractorError(msg)
+            else:
+                self._downloader.report_warning(msg)
+        return res
+
+    def _float(self, v, name, fatal=False, **kwargs):
+        res = float_or_none(v, **kwargs)
+        if res is None:
+            msg = 'Failed to extract %s: Could not parse value %r' % (name, v)
+            if fatal:
+                raise ExtractorError(msg)
+            else:
+                self._downloader.report_warning(msg)
+        return res
 
 
 class SearchInfoExtractor(InfoExtractor):
@@ -628,7 +787,7 @@ class SearchInfoExtractor(InfoExtractor):
     def _real_extract(self, query):
         mobj = re.match(self._make_valid_url(), query)
         if mobj is None:
-            raise ExtractorError(u'Invalid search query "%s"' % query)
+            raise ExtractorError('Invalid search query "%s"' % query)
 
         prefix = mobj.group('prefix')
         query = mobj.group('query')
@@ -639,9 +798,9 @@ class SearchInfoExtractor(InfoExtractor):
         else:
             n = int(prefix)
             if n <= 0:
-                raise ExtractorError(u'invalid download number %s for query "%s"' % (n, query))
+                raise ExtractorError('invalid download number %s for query "%s"' % (n, query))
             elif n > self._MAX_RESULTS:
-                self._downloader.report_warning(u'%s returns max %i results (you requested %i)' % (self._SEARCH_KEY, self._MAX_RESULTS, n))
+                self._downloader.report_warning('%s returns max %i results (you requested %i)' % (self._SEARCH_KEY, self._MAX_RESULTS, n))
                 n = self._MAX_RESULTS
             return self._get_n_results(query, n)
 
