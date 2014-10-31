@@ -1,11 +1,10 @@
-youtube-dl (2014.10.30-1~1.gbp6d835d) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @6d835d4d6903cf5e18ad01844736929e06d16004 **
+youtube-dl (2014.10.30-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.10.30.
     Closes: #765997, #762046.
+  * debian/control: Confirm that the package conforms to policy 3.9.6.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 31 Oct 2014 18:42:52 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 31 Oct 2014 18:57:02 -0200
 
 youtube-dl (2014.08.05-1) unstable; urgency=medium
 
