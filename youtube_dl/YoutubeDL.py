@@ -22,13 +22,15 @@ import traceback
 if os.name == 'nt':
     import ctypes
 
-from .utils import (
+from .compat import (
     compat_cookiejar,
     compat_expanduser,
     compat_http_client,
     compat_str,
     compat_urllib_error,
     compat_urllib_request,
+)
+from .utils import (
     escape_url,
     ContentTooShortError,
     date_from_str,
@@ -62,6 +64,7 @@ from .utils import (
 from .cache import Cache
 from .extractor import get_info_extractor, gen_extractors
 from .downloader import get_suitable_downloader
+from .downloader.rtmp import rtmpdump_version
 from .postprocessor import FFmpegMergerPP, FFmpegPostProcessor
 from .version import __version__
 
@@ -621,7 +624,7 @@ class YoutubeDL(object):
 
             return self.process_ie_result(
                 new_result, download=download, extra_info=extra_info)
-        elif result_type == 'playlist':
+        elif result_type == 'playlist' or playlist == 'multi_video':
             # We process each entry in the playlist
             playlist = ie_result.get('title', None) or ie_result.get('id', None)
             self.to_screen('[download] Downloading playlist: %s' % playlist)
@@ -655,6 +658,8 @@ class YoutubeDL(object):
                 extra = {
                     'n_entries': n_entries,
                     'playlist': playlist,
+                    'playlist_id': ie_result.get('id'),
+                    'playlist_title': ie_result.get('title'),
                     'playlist_index': i + playliststart,
                     'extractor': ie_result['extractor'],
                     'webpage_url': ie_result['webpage_url'],
@@ -674,6 +679,9 @@ class YoutubeDL(object):
             ie_result['entries'] = playlist_results
             return ie_result
         elif result_type == 'compat_list':
+            self.report_warning(
+                'Extractor %s returned a compat_list result. '
+                'It needs to be updated.' % ie_result.get('extractor'))
             def _fixup(r):
                 self.add_extra_info(r,
                     {
@@ -833,6 +841,13 @@ class YoutubeDL(object):
                         formats_info = (self.select_format(format_1, formats),
                             self.select_format(format_2, formats))
                         if all(formats_info):
+                            # The first format must contain the video and the
+                            # second the audio
+                            if formats_info[0].get('vcodec') == 'none':
+                                self.report_error('The first format must '
+                                    'contain the video, try using '
+                                    '"-f %s+%s"' % (format_2, format_1))
+                                return
                             selected_format = {
                                 'requested_formats': formats_info,
                                 'format': rf,
@@ -989,7 +1004,7 @@ class YoutubeDL(object):
             else:
                 self.to_screen('[info] Writing video description metadata as JSON to: ' + infofn)
                 try:
-                    write_json_file(info_dict, encodeFilename(infofn))
+                    write_json_file(info_dict, infofn)
                 except (OSError, IOError):
                     self.report_error('Cannot write metadata to JSON file ' + infofn)
                     return
@@ -1294,11 +1309,13 @@ class YoutubeDL(object):
             self.report_warning(
                 'Your Python is broken! Update to a newer and supported version')
 
+        stdout_encoding = getattr(
+            sys.stdout, 'encoding', 'missing (%s)' % type(sys.stdout).__name__)
         encoding_str = (
             '[debug] Encodings: locale %s, fs %s, out %s, pref %s\n' % (
                 locale.getpreferredencoding(),
                 sys.getfilesystemencoding(),
-                sys.stdout.encoding,
+                stdout_encoding,
                 self.get_encoding()))
         write_string(encoding_str, encoding=None)
 
@@ -1321,6 +1338,7 @@ class YoutubeDL(object):
             platform.python_version(), platform_name()))
 
         exe_versions = FFmpegPostProcessor.get_versions()
+        exe_versions['rtmpdump'] = rtmpdump_version()
         exe_str = ', '.join(
             '%s %s' % (exe, v)
             for exe, v in sorted(exe_versions.items())

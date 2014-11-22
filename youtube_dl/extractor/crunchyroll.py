@@ -17,7 +17,6 @@ from ..utils import (
     bytes_to_intlist,
     intlist_to_bytes,
     unified_strdate,
-    clean_html,
     urlencode_postdata,
 )
 from ..aes import (
@@ -265,8 +264,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if not lang_code:
                 continue
             sub_root = xml.etree.ElementTree.fromstring(subtitle)
-            if not sub_root:
-                subtitles[lang_code] = ''
             if sub_format == 'ass':
                 subtitles[lang_code] = self._convert_subtitles_to_ass(sub_root)
             else:

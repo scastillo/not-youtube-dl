@@ -7,11 +7,12 @@ import re
 
 from .common import InfoExtractor
 from .youtube import YoutubeIE
-from ..utils import (
+from ..compat import (
     compat_urllib_parse,
     compat_urlparse,
     compat_xml_parse_error,
-
+)
+from ..utils import (
     determine_ext,
     ExtractorError,
     float_or_none,
@@ -97,6 +98,22 @@ class GenericIE(InfoExtractor):
                 'title': 'Видео. Удаление Дзагоева (ЦСКА)',
                 'description': 'Онлайн-трансляция матча ЦСКА - "Волга"',
                 'uploader': 'Championat',
+            },
+        },
+        {
+            # https://github.com/rg3/youtube-dl/issues/3541
+            'add_ie': ['Brightcove'],
+            'url': 'http://www.kijk.nl/sbs6/leermijvrouwenkennen/videos/jqMiXKAYan2S/aflevering-1',
+            'info_dict': {
+                'id': '3866516442001',
+                'ext': 'mp4',
+                'title': 'Leer mij vrouwen kennen: Aflevering 1',
+                'description': 'Leer mij vrouwen kennen: Aflevering 1',
+                'uploader': 'SBS Broadcasting',
+            },
+            'skip': 'Restricted to Netherlands',
+            'params': {
+                'skip_download': True,  # m3u8 download
             },
         },
         # Direct link to a video
@@ -417,7 +434,17 @@ class GenericIE(InfoExtractor):
                 'title': 'Chet Chat 171 - Oct 29, 2014',
                 'upload_date': '20141029',
             }
-        }
+        },
+        # Livestream embed
+        {
+            'url': 'http://www.esa.int/Our_Activities/Space_Science/Rosetta/Philae_comet_touch-down_webcast',
+            'info_dict': {
+                'id': '67864563',
+                'ext': 'flv',
+                'upload_date': '20141112',
+                'title': 'Rosetta #CometLanding webcast HL 10',
+            }
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -559,6 +586,7 @@ class GenericIE(InfoExtractor):
             return {
                 'id': video_id,
                 'title': os.path.splitext(url_basename(url))[0],
+                'direct': True,
                 'formats': [{
                     'format_id': m.group('format_id'),
                     'url': url,
@@ -887,7 +915,7 @@ class GenericIE(InfoExtractor):
             return self.url_result(mobj.group('url'), 'SBS')
 
         mobj = re.search(
-            r'<iframe[^>]+?src=(["\'])(?P<url>https?://m\.mlb\.com/shared/video/embed/embed\.html\?.+?)\1',
+            r'<iframe[^>]+?src=(["\'])(?P<url>https?://m(?:lb)?\.mlb\.com/shared/video/embed/embed\.html\?.+?)\1',
             webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'MLB')
@@ -897,6 +925,12 @@ class GenericIE(InfoExtractor):
             webpage)
         if mobj is not None:
             return self.url_result(self._proto_relative_url(mobj.group('url'), scheme='http:'), 'CondeNast')
+
+        mobj = re.search(
+            r'<iframe[^>]+src="(?P<url>https?://new\.livestream\.com/[^"]+/player[^"]+)"',
+            webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Livestream')
 
         def check_video(vurl):
             vpath = compat_urlparse.urlparse(vurl).path

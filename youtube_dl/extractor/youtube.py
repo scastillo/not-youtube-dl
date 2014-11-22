@@ -274,6 +274,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         '138': {'ext': 'mp4', 'height': 2160, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40},
         '160': {'ext': 'mp4', 'height': 144, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40},
         '264': {'ext': 'mp4', 'height': 1440, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40},
+        '298': {'ext': 'mp4', 'height': 720, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'fps': 60, 'vcodec': 'h264'},
+        '299': {'ext': 'mp4', 'height': 1080, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'fps': 60, 'vcodec': 'h264'},
+        '266': {'ext': 'mp4', 'height': 2160, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'vcodec': 'h264'},
 
         # Dash mp4 audio
         '139': {'ext': 'm4a', 'format_note': 'DASH audio', 'vcodec': 'none', 'abr': 48, 'preference': -50},
@@ -304,10 +307,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         '171': {'ext': 'webm', 'vcodec': 'none', 'format_note': 'DASH audio', 'abr': 128, 'preference': -50},
         '172': {'ext': 'webm', 'vcodec': 'none', 'format_note': 'DASH audio', 'abr': 256, 'preference': -50},
 
-        # Dash mov
-        '298': {'ext': 'mov', 'height': 720, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'fps': 60, 'vcodec': 'h264'},
-        '299': {'ext': 'mov', 'height': 1080, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'fps': 60, 'vcodec': 'h264'},
-        '266': {'ext': 'mov', 'height': 2160, 'format_note': 'DASH video', 'acodec': 'none', 'preference': -40, 'vcodec': 'h264'},
+        # Dash webm audio with opus inside
+        '249': {'ext': 'webm', 'vcodec': 'none', 'format_note': 'DASH audio', 'acodec': 'opus', 'abr': 50, 'preference': -50},
+        '250': {'ext': 'webm', 'vcodec': 'none', 'format_note': 'DASH audio', 'acodec': 'opus', 'abr': 70, 'preference': -50},
+        '251': {'ext': 'webm', 'vcodec': 'none', 'format_note': 'DASH audio', 'acodec': 'opus', 'abr': 160, 'preference': -50},
 
         # RTMP (unnamed)
         '_rtmp': {'protocol': 'rtmp'},
@@ -512,7 +515,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
 
     def _parse_sig_js(self, jscode):
         funcname = self._search_regex(
-            r'signature=([$a-zA-Z]+)', jscode,
+            r'\.sig\|\|([a-zA-Z0-9]+)\(', jscode,
              'Initial JS player signature function name')
 
         jsi = JSInterpreter(jscode)
@@ -686,7 +689,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         # Get video info
         self.report_video_info_webpage_download(video_id)
         if re.search(r'player-age-gate-content">', video_webpage) is not None:
-            self.report_age_confirmation()
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
@@ -694,12 +696,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
                 'sts': self._search_regex(
-                    r'"sts"\s*:\s*(\d+)', video_webpage, 'sts'),
+                    r'"sts"\s*:\s*(\d+)', video_webpage, 'sts', default=''),
             })
             video_info_url = proto + '://www.youtube.com/get_video_info?' + data
-            video_info_webpage = self._download_webpage(video_info_url, video_id,
-                                    note=False,
-                                    errnote='unable to download video info webpage')
+            video_info_webpage = self._download_webpage(
+                video_info_url, video_id,
+                note='Refetching age-gated info webpage',
+                errnote='unable to download video info webpage')
             video_info = compat_parse_qs(video_info_webpage)
         else:
             age_gate = False
@@ -993,7 +996,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                         existing_format.update(f)
 
             except (ExtractorError, KeyError) as e:
-                self.report_warning('Skipping DASH manifest: %s' % e, video_id)
+                self.report_warning('Skipping DASH manifest: %r' % e, video_id)
 
         self._sort_formats(formats)
 
@@ -1045,6 +1048,7 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor):
         'url': 'https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re',
         'info_dict': {
             'title': 'ytdl test PL',
+            'id': 'PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re',
         },
         'playlist_count': 3,
     }, {

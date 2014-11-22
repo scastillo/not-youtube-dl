@@ -16,11 +16,11 @@ import json
 import xml.etree.ElementTree
 
 from youtube_dl.utils import (
+    clean_html,
     DateRange,
     encodeFilename,
     find_xpath_attr,
     fix_xml_ampersands,
-    get_meta_content,
     orderedSet,
     OnDemandPagedList,
     InAdvancePagedList,
@@ -46,8 +46,7 @@ from youtube_dl.utils import (
     escape_url,
     js_to_json,
     get_filesystem_encoding,
-    compat_getenv,
-    compat_expanduser,
+    intlist_to_bytes,
 )
 
 
@@ -157,17 +156,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(find_xpath_attr(doc, './/node', 'x', 'a'), doc[1])
         self.assertEqual(find_xpath_attr(doc, './/node', 'y', 'c'), doc[2])
 
-    def test_meta_parser(self):
-        testhtml = '''
-        <head>
-            <meta name="description" content="foo &amp; bar">
-            <meta content='Plato' name='author'/>
-        </head>
-        '''
-        get_meta = lambda name: get_meta_content(name, testhtml)
-        self.assertEqual(get_meta('description'), 'foo & bar')
-        self.assertEqual(get_meta('author'), 'Plato')
-
     def test_xpath_with_ns(self):
         testxml = '''<root xmlns:media="http://example.com/">
             <media:song>
@@ -230,6 +218,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('0m0s'), 0)
         self.assertEqual(parse_duration('0s'), 0)
         self.assertEqual(parse_duration('01:02:03.05'), 3723.05)
+        self.assertEqual(parse_duration('T30M38S'), 1838)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -296,6 +285,10 @@ class TestUtil(unittest.TestCase):
         d = json.loads(stripped)
         self.assertEqual(d, [{"id": "532cb", "x": 3}])
 
+        stripped = strip_jsonp('parseMetadata({"STATUS":"OK"})\n\n\n//epc')
+        d = json.loads(stripped)
+        self.assertEqual(d, {'STATUS': 'OK'})
+
     def test_uppercase_escape(self):
         self.assertEqual(uppercase_escape('aä'), 'aä')
         self.assertEqual(uppercase_escape('\\U0001d550'), '𝕐')
@@ -359,17 +352,14 @@ class TestUtil(unittest.TestCase):
         on = js_to_json('{"abc": true}')
         self.assertEqual(json.loads(on), {'abc': True})
 
-    def test_compat_getenv(self):
-        test_str = 'тест'
-        os.environ['YOUTUBE-DL-TEST'] = (test_str if sys.version_info >= (3, 0)
-            else test_str.encode(get_filesystem_encoding()))
-        self.assertEqual(compat_getenv('YOUTUBE-DL-TEST'), test_str)
+    def test_clean_html(self):
+        self.assertEqual(clean_html('a:\nb'), 'a: b')
+        self.assertEqual(clean_html('a:\n   "b"'), 'a:    "b"')
 
-    def test_compat_expanduser(self):
-        test_str = 'C:\Documents and Settings\тест\Application Data'
-        os.environ['HOME'] = (test_str if sys.version_info >= (3, 0)
-            else test_str.encode(get_filesystem_encoding()))
-        self.assertEqual(compat_expanduser('~'), test_str)
+    def test_intlist_to_bytes(self):
+        self.assertEqual(
+            intlist_to_bytes([0, 1, 127, 128, 255]),
+            b'\x00\x01\x7f\x80\xff')
 
 if __name__ == '__main__':
     unittest.main()
