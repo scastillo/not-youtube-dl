@@ -33,7 +33,7 @@ class MTVServicesInfoExtractor(InfoExtractor):
         m = re.match(r'^rtmpe?://.*?/(?P<finalid>gsp\..+?/.*)$', rtmp_video_url)
         if not m:
             return rtmp_video_url
-        base = 'http://mtvnmobile.vo.llnwd.net/kip0/_pxn=1+_pxI0=Ripod-h264+_pxL0=undefined+_pxM0=+_pxK=18639+_pxE=mp4/44620/mtvnorigin/'
+        base = 'http://viacommtvstrmfs.fplive.net/'
         return base + m.group('finalid')
 
     def _get_feed_url(self, uri):
@@ -145,7 +145,8 @@ class MTVServicesInfoExtractor(InfoExtractor):
         idoc = self._download_xml(
             feed_url + '?' + data, video_id,
             'Downloading info', transform_source=fix_xml_ampersands)
-        return [self._get_video_info(item) for item in idoc.findall('.//item')]
+        return self.playlist_result(
+            [self._get_video_info(item) for item in idoc.findall('.//item')])
 
     def _real_extract(self, url):
         title = url_basename(url)
@@ -186,7 +187,8 @@ class MTVServicesEmbeddedIE(MTVServicesInfoExtractor):
     def _get_feed_url(self, uri):
         video_id = self._id_from_uri(uri)
         site_id = uri.replace(video_id, '')
-        config_url = 'http://media.mtvnservices.com/pmt/e1/players/{0}/config.xml'.format(site_id)
+        config_url = ('http://media.mtvnservices.com/pmt/e1/players/{0}/'
+            'context4/context5/config.xml'.format(site_id))
         config_doc = self._download_xml(config_url, video_id)
         feed_node = config_doc.find('.//feed')
         feed_url = feed_node.text.strip().split('?')[0]

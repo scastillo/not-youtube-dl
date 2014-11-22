@@ -12,13 +12,14 @@ import sys
 import time
 import xml.etree.ElementTree
 
-from ..utils import (
+from ..compat import (
     compat_http_client,
     compat_urllib_error,
     compat_urllib_parse_urlparse,
     compat_urlparse,
     compat_str,
-
+)
+from ..utils import (
     clean_html,
     compiled_regex_type,
     ExtractorError,
@@ -42,7 +43,11 @@ class InfoExtractor(object):
     information possibly downloading the video to the file system, among
     other possible outcomes.
 
-    The dictionaries must include the following fields:
+    The type field determines the the type of the result.
+    By far the most common value (and the default if _type is missing) is
+    "video", which indicates a single video.
+
+    For a video, the dictionaries must include the following fields:
 
     id:             Video identifier.
     title:          Video title, unescaped.
@@ -86,6 +91,11 @@ class InfoExtractor(object):
                                  by this field, regardless of all other values.
                                  -1 for default (order by other properties),
                                  -2 or smaller for less than default.
+                    * language_preference  Is this in the correct requested
+                                 language?
+                                 10 if it's what the URL is about,
+                                 -1 for default (don't know),
+                                 -10 otherwise, other values reserved for now.
                     * quality    Order number of the video quality of this
                                  format, irrespective of the file format.
                                  -1 for default (order by other properties),
@@ -144,6 +154,38 @@ class InfoExtractor(object):
     Unless mentioned otherwise, the fields should be Unicode strings.
 
     Unless mentioned otherwise, None is equivalent to absence of information.
+
+
+    _type "playlist" indicates multiple videos.
+    There must be a key "entries", which is a list or a PagedList object, each
+    element of which is a valid dictionary under this specfication.
+
+    Additionally, playlists can have "title" and "id" attributes with the same
+    semantics as videos (see above).
+
+
+    _type "multi_video" indicates that there are multiple videos that
+    form a single show, for examples multiple acts of an opera or TV episode.
+    It must have an entries key like a playlist and contain all the keys
+    required for a video at the same time.
+
+
+    _type "url" indicates that the video must be extracted from another
+    location, possibly by a different extractor. Its only required key is:
+    "url" - the next URL to extract.
+
+    Additionally, it may have properties believed to be identical to the
+    resolved entity, for example "title" if the title of the referred video is
+    known ahead of time.
+
+
+    _type "url_transparent" entities have the same specification as "url", but
+    indicate that the given additional information is more precise than the one
+    associated with the resolved URL.
+    This is useful when a site employs a video service that hosts the video and
+    its technical metadata, but that video service does not embed a useful
+    title, description etc.
+
 
     Subclasses of this one should re-define the _real_initialize() and
     _real_extract() methods and define a _VALID_URL regexp.
@@ -403,7 +445,7 @@ class InfoExtractor(object):
             video_info['title'] = playlist_title
         return video_info
 
-    def _search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0):
+    def _search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
         """
         Perform a regex search on the given string, using a single or a list of
         patterns returning the first matching group.
@@ -424,8 +466,11 @@ class InfoExtractor(object):
             _name = name
 
         if mobj:
-            # return the first matching group
-            return next(g for g in mobj.groups() if g is not None)
+            if group is None:
+                # return the first matching group
+                return next(g for g in mobj.groups() if g is not None)
+            else:
+                return mobj.group(group)
         elif default is not _NO_DEFAULT:
             return default
         elif fatal:
@@ -435,11 +480,11 @@ class InfoExtractor(object):
                 'please report this issue on http://yt-dl.org/bug' % _name)
             return None
 
-    def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0):
+    def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
         """
         Like _search_regex, but strips HTML tags and unescapes entities.
         """
-        res = self._search_regex(pattern, string, name, default, fatal, flags)
+        res = self._search_regex(pattern, string, name, default, fatal, flags, group)
         if res:
             return clean_html(res).strip()
         else:
@@ -533,9 +578,9 @@ class InfoExtractor(object):
             display_name = name
         return self._html_search_regex(
             r'''(?ix)<meta
-                    (?=[^>]+(?:itemprop|name|property)=["\']?%s["\']?)
-                    [^>]+content=["\']([^"\']+)["\']''' % re.escape(name),
-            html, display_name, fatal=fatal, **kwargs)
+                    (?=[^>]+(?:itemprop|name|property)=(["\']?)%s\1)
+                    [^>]+content=(["\'])(?P<content>.*?)\1''' % re.escape(name),
+            html, display_name, fatal=fatal, group='content', **kwargs)
 
     def _dc_search_uploader(self, html):
         return self._html_search_meta('dc.creator', html, 'uploader')
@@ -611,6 +656,7 @@ class InfoExtractor(object):
 
             return (
                 preference,
+                f.get('language_preference') if f.get('language_preference') is not None else -1,
                 f.get('quality') if f.get('quality') is not None else -1,
                 f.get('height') if f.get('height') is not None else -1,
                 f.get('width') if f.get('width') is not None else -1,

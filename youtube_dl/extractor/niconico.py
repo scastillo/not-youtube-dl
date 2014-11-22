@@ -12,6 +12,7 @@ from ..utils import (
     unified_strdate,
     parse_duration,
     int_or_none,
+    ExtractorError,
 )
 
 
@@ -108,6 +109,9 @@ class NiconicoIE(InfoExtractor):
                 flv_info_request, video_id,
                 note='Downloading flv info', errnote='Unable to download flv info')
 
+        if 'deleted=' in flv_info_webpage:
+            raise ExtractorError('The video has been deleted.',
+                expected=True)
         video_real_url = compat_urlparse.parse_qs(flv_info_webpage)['url'][0]
 
         # Start extracting information
@@ -171,7 +175,8 @@ class NiconicoPlaylistIE(InfoExtractor):
         entries = [{
             '_type': 'url',
             'ie_key': NiconicoIE.ie_key(),
-            'url': 'http://www.nicovideo.jp/watch/%s' % entry['item_id'],
+            'url': ('http://www.nicovideo.jp/watch/%s' %
+                entry['item_data']['video_id']),
         } for entry in entries]
 
         return {

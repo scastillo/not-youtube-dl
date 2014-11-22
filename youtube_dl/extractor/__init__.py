@@ -67,7 +67,6 @@ from .crunchyroll import (
     CrunchyrollShowPlaylistIE
 )
 from .cspan import CSpanIE
-from .d8 import D8IE
 from .dailymotion import (
     DailymotionIE,
     DailymotionPlaylistIE,
@@ -128,6 +127,7 @@ from .francetv import (
 )
 from .freesound import FreesoundIE
 from .freespeech import FreespeechIE
+from .freevideo import FreeVideoIE
 from .funnyordie import FunnyOrDieIE
 from .gamekings import GamekingsIE
 from .gameone import (
@@ -142,6 +142,7 @@ from .generic import GenericIE
 from .glide import GlideIE
 from .globo import GloboIE
 from .godtube import GodTubeIE
+from .goldenmoustache import GoldenMoustacheIE
 from .golem import GolemIE
 from .googleplus import GooglePlusIE
 from .googlesearch import GoogleSearchIE
@@ -324,6 +325,7 @@ from .sbs import SBSIE
 from .scivee import SciVeeIE
 from .screencast import ScreencastIE
 from .servingsys import ServingSysIE
+from .sexu import SexuIE
 from .sexykarma import SexyKarmaIE
 from .shared import SharedIE
 from .sharesix import ShareSixIE
@@ -422,6 +424,7 @@ from .vesti import VestiIE
 from .vevo import VevoIE
 from .vgtv import VGTVIE
 from .vh1 import VH1IE
+from .vice import ViceIE
 from .viddler import ViddlerIE
 from .videobam import VideoBamIE
 from .videodetective import VideoDetectiveIE

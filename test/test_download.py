@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
+
 # Allow direct execution
 import os
 import sys
@@ -23,10 +25,12 @@ import json
 import socket
 
 import youtube_dl.YoutubeDL
-from youtube_dl.utils import (
+from youtube_dl.compat import (
     compat_http_client,
     compat_urllib_error,
     compat_HTTPError,
+)
+from youtube_dl.utils import (
     DownloadError,
     ExtractorError,
     format_bytes,
@@ -94,7 +98,7 @@ def generator(test_case):
             params.setdefault('extract_flat', True)
             params.setdefault('skip_download', True)
 
-        ydl = YoutubeDL(params)
+        ydl = YoutubeDL(params, auto_init=False)
         ydl.add_default_info_extractors()
         finished_hook_called = set()
         def _hook(status):
@@ -208,9 +212,9 @@ for n, test_case in enumerate(defs):
     tname = 'test_' + str(test_case['name'])
     i = 1
     while hasattr(TestDownload, tname):
-        tname = 'test_'  + str(test_case['name']) + '_' + str(i)
+        tname = 'test_%s_%d' % (test_case['name'], i)
         i += 1
-    test_method.__name__ = tname
+    test_method.__name__ = str(tname)
     setattr(TestDownload, test_method.__name__, test_method)
     del test_method
 
