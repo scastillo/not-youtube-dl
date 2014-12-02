@@ -8,6 +8,13 @@ License: public-domain
 Files: *
 Copyright: none
 License: public-domain
+
+Files: debian/*
+Copyright: © 2006, Robert S. Edmonds <edmonds@debian.org>.
+	   © 2009-2012, Rogério Brito <rbrito@ime.usp.br>.
+License: GPL-2+
+
+License: public-domain
     This is free and unencumbered software released into the public domain.
     .
     Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -32,11 +39,6 @@ License: public-domain
     OTHER DEALINGS IN THE SOFTWARE.
     .
     For more information, please refer to <http://unlicense.org/>
-
-Files: debian/*
-Copyright: © 2006, Robert S. Edmonds <edmonds@debian.org>.
-	   © 2009-2012, Rogério Brito <rbrito@ime.usp.br>.
-License: GPL-2+
 
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
