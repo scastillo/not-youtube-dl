@@ -1,10 +1,16 @@
-youtube-dl (2014.12.01-1~1.gbp15b1d1) UNRELEASED; urgency=medium
+youtube-dl (2014.12.01-1~2.gbp6ec58e) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @15b1d10671b48df598afd70e17ba21e9e64ac766 **
+  ** SNAPSHOT build @6ec58e925503be14adcd2282d20834b97a8a7e06 **
 
+  [ Rogério Brito ]
   * Imported Upstream version 2014.11.21
   * Imported Upstream version 2014.11.23
-  * Imported Upstream version 2014.12.01. Closes: #771316, #769602.
+  * Imported Upstream version 2014.12.01.
+    Closes: #771316, #769602.
+
+  [ Ben Finney ]
+  * Record the explicit provenance of public domain status.
+    Closes: #770249.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Tue, 02 Dec 2014 21:06:53 -0200
 
