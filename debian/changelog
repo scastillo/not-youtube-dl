@@ -1,16 +1,15 @@
-youtube-dl (2014.12.01-1~2.gbp2e8612) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @2e86127b07f6a63b7ce457331d600d9486b22b44 **
+youtube-dl (2014.12.01-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.11.21
   * Imported Upstream version 2014.11.23
   * Imported Upstream version 2014.12.01.
     Closes: #771316, #769602.
-  * debian/copyright: Record the explicit provenance of public domain
-    status. Thanks Ben Finney for the patch. Closes: #770249.
-  * debian/copyright: Fix missing-license-paragraph-in-dep5-copyright.
+  * debian/copyright:
+    + Record the explicit provenance of public domain status.
+      Thanks Ben Finney for the patch. Closes: #770249.
+    + Fix missing-license-paragraph-in-dep5-copyright.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 02 Dec 2014 21:17:00 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 02 Dec 2014 21:25:47 -0200
 
 youtube-dl (2014.10.30-1) unstable; urgency=medium
 
