@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from .abc import ABCIE
 from .academicearth import AcademicEarthCourseIE
 from .addanime import AddAnimeIE
@@ -32,9 +34,11 @@ from .bilibili import BiliBiliIE
 from .blinkx import BlinkxIE
 from .bliptv import BlipTVIE, BlipTVUserIE
 from .bloomberg import BloombergIE
+from .bpb import BpbIE
 from .br import BRIE
 from .breakcom import BreakIE
 from .brightcove import BrightcoveIE
+from .buzzfeed import BuzzFeedIE
 from .byutv import BYUtvIE
 from .c56 import C56IE
 from .canal13cl import Canal13clIE
@@ -238,7 +242,7 @@ from .muenchentv import MuenchenTVIE
 from .musicplayon import MusicPlayOnIE
 from .musicvault import MusicVaultIE
 from .muzu import MuzuTVIE
-from .myspace import MySpaceIE
+from .myspace import MySpaceIE, MySpaceAlbumIE
 from .myspass import MySpassIE
 from .myvideo import MyVideoIE
 from .naver import NaverIE
@@ -372,6 +376,7 @@ from .syfy import SyfyIE
 from .sztvhu import SztvHuIE
 from .tagesschau import TagesschauIE
 from .tapely import TapelyIE
+from .tass import TassIE
 from .teachertube import (
     TeacherTubeIE,
     TeacherTubeUserIE,
@@ -392,6 +397,7 @@ from .thesixtyone import TheSixtyOneIE
 from .thisav import ThisAVIE
 from .tinypic import TinyPicIE
 from .tlc import TlcIE, TlcDeIE
+from .tmz import TMZIE
 from .tnaflix import TNAFlixIE
 from .thvideo import (
     THVideoIE,
@@ -405,6 +411,7 @@ from .trutube import TruTubeIE
 from .tube8 import Tube8IE
 from .tudou import TudouIE
 from .tumblr import TumblrIE
+from .tunein import TuneInIE
 from .turbo import TurboIE
 from .tutv import TutvIE
 from .tvigle import TvigleIE
@@ -454,7 +461,10 @@ from .vine import (
     VineUserIE,
 )
 from .viki import VikiIE
-from .vk import VKIE
+from .vk import (
+    VKIE,
+    VKUserVideosIE,
+)
 from .vodlocker import VodlockerIE
 from .vporn import VpornIE
 from .vrt import VRTIE
@@ -478,6 +488,7 @@ from .wrzuta import WrzutaIE
 from .xbef import XBefIE
 from .xboxclips import XboxClipsIE
 from .xhamster import XHamsterIE
+from .xminus import XMinusIE
 from .xnxx import XNXXIE
 from .xvideos import XVideosIE
 from .xtube import XTubeUserIE, XTubeIE
@@ -508,6 +519,10 @@ from .youtube import (
     YoutubeWatchLaterIE,
 )
 from .zdf import ZDFIE
+from .zingmp3 import (
+    ZingMp3SongIE,
+    ZingMp3AlbumIE,
+)
 
 _ALL_CLASSES = [
     klass
@@ -526,4 +541,4 @@ def gen_extractors():
 
 def get_info_extractor(ie_name):
     """Returns the info extractor class with the given ie_name"""
-    return globals()[ie_name+'IE']
+    return globals()[ie_name + 'IE']

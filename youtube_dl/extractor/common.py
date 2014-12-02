@@ -13,6 +13,7 @@ import time
 import xml.etree.ElementTree
 
 from ..compat import (
+    compat_cookiejar,
     compat_http_client,
     compat_urllib_error,
     compat_urllib_parse_urlparse,
@@ -296,9 +297,11 @@ class InfoExtractor(object):
         content = self._webpage_read_content(urlh, url_or_request, video_id, note, errnote, fatal)
         return (content, urlh)
 
-    def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True):
+    def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True, prefix=None):
         content_type = urlh.headers.get('Content-Type', '')
         webpage_bytes = urlh.read()
+        if prefix is not None:
+            webpage_bytes = prefix + webpage_bytes
         m = re.match(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+\s*;\s*charset=(.+)', content_type)
         if m:
             encoding = m.group(1)
@@ -423,17 +426,18 @@ class InfoExtractor(object):
         """Report attempt to log in."""
         self.to_screen('Logging in')
 
-    #Methods for following #608
+    # Methods for following #608
     @staticmethod
     def url_result(url, ie=None, video_id=None):
         """Returns a url that points to a page that should be processed"""
-        #TODO: ie should be the class used for getting the info
+        # TODO: ie should be the class used for getting the info
         video_info = {'_type': 'url',
                       'url': url,
                       'ie_key': ie}
         if video_id is not None:
             video_info['id'] = video_id
         return video_info
+
     @staticmethod
     def playlist_result(entries, playlist_id=None, playlist_title=None):
         """Returns a playlist"""
@@ -477,7 +481,7 @@ class InfoExtractor(object):
             raise RegexNotFoundError('Unable to extract %s' % _name)
         else:
             self._downloader.report_warning('unable to extract %s; '
-                'please report this issue on http://yt-dl.org/bug' % _name)
+                                            'please report this issue on http://yt-dl.org/bug' % _name)
             return None
 
     def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
@@ -517,7 +521,7 @@ class InfoExtractor(object):
                     raise netrc.NetrcParseError('No authenticators for %s' % self._NETRC_MACHINE)
             except (IOError, netrc.NetrcParseError) as err:
                 self._downloader.report_warning('parsing .netrc: %s' % compat_str(err))
-        
+
         return (username, password)
 
     def _get_tfa_info(self):
@@ -611,7 +615,7 @@ class InfoExtractor(object):
 
     def _twitter_search_player(self, html):
         return self._html_search_meta('twitter:player', html,
-            'twitter card player')
+                                      'twitter card player')
 
     def _sort_formats(self, formats):
         if not formats:
@@ -813,6 +817,11 @@ class InfoExtractor(object):
             else:
                 self._downloader.report_warning(msg)
         return res
+
+    def _set_cookie(self, domain, name, value, expire_time=None):
+        cookie = compat_cookiejar.Cookie(0, name, value, None, None, domain, None,
+            None, '/', True, False, expire_time, '', None, None, None)
+        self._downloader.cookiejar.set_cookie(cookie)
 
 
 class SearchInfoExtractor(InfoExtractor):

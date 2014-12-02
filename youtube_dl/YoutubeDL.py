@@ -60,6 +60,7 @@ from .utils import (
     write_string,
     YoutubeDLHandler,
     prepend_extension,
+    args_to_str,
 )
 from .cache import Cache
 from .extractor import get_info_extractor, gen_extractors
@@ -253,6 +254,22 @@ class YoutubeDL(object):
             self.print_debug_header()
             self.add_default_info_extractors()
 
+    def warn_if_short_id(self, argv):
+        # short YouTube ID starting with dash?
+        idxs = [
+            i for i, a in enumerate(argv)
+            if re.match(r'^-[0-9A-Za-z_-]{10}$', a)]
+        if idxs:
+            correct_argv = (
+                ['youtube-dl'] +
+                [a for i, a in enumerate(argv) if i not in idxs] +
+                ['--'] + [argv[i] for i in idxs]
+            )
+            self.report_warning(
+                'Long argument string detected. '
+                'Use -- to separate parameters and URLs, like this:\n%s\n' %
+                args_to_str(correct_argv))
+
     def add_info_extractor(self, ie):
         """Add an InfoExtractor object to the end of the list."""
         self._ies.append(ie)
@@ -297,7 +314,7 @@ class YoutubeDL(object):
         self._output_process.stdin.write((message + '\n').encode('utf-8'))
         self._output_process.stdin.flush()
         res = ''.join(self._output_channel.readline().decode('utf-8')
-                       for _ in range(line_count))
+                      for _ in range(line_count))
         return res[:-len('\n')]
 
     def to_screen(self, message, skip_eol=False):
@@ -534,7 +551,7 @@ class YoutubeDL(object):
 
             try:
                 ie_result = ie.extract(url)
-                if ie_result is None: # Finished already (backwards compatibility; listformats and friends should be moved here)
+                if ie_result is None:  # Finished already (backwards compatibility; listformats and friends should be moved here)
                     break
                 if isinstance(ie_result, list):
                     # Backwards compatibility: old IE result format
@@ -547,7 +564,7 @@ class YoutubeDL(object):
                     return self.process_ie_result(ie_result, download, extra_info)
                 else:
                     return ie_result
-            except ExtractorError as de: # An error we somewhat expected
+            except ExtractorError as de:  # An error we somewhat expected
                 self.report_error(compat_str(de), de.format_traceback())
                 break
             except MaxDownloadsReached:
@@ -682,14 +699,17 @@ class YoutubeDL(object):
             self.report_warning(
                 'Extractor %s returned a compat_list result. '
                 'It needs to be updated.' % ie_result.get('extractor'))
+
             def _fixup(r):
-                self.add_extra_info(r,
+                self.add_extra_info(
+                    r,
                     {
                         'extractor': ie_result['extractor'],
                         'webpage_url': ie_result['webpage_url'],
                         'webpage_url_basename': url_basename(ie_result['webpage_url']),
                         'extractor_key': ie_result['extractor_key'],
-                    })
+                    }
+                )
                 return r
             ie_result['entries'] = [
                 self.process_ie_result(_fixup(r), download, extra_info)
@@ -839,14 +859,14 @@ class YoutubeDL(object):
                         # Two formats have been requested like '137+139'
                         format_1, format_2 = rf.split('+')
                         formats_info = (self.select_format(format_1, formats),
-                            self.select_format(format_2, formats))
+                                        self.select_format(format_2, formats))
                         if all(formats_info):
                             # The first format must contain the video and the
                             # second the audio
                             if formats_info[0].get('vcodec') == 'none':
                                 self.report_error('The first format must '
-                                    'contain the video, try using '
-                                    '"-f %s+%s"' % (format_2, format_1))
+                                                  'contain the video, try using '
+                                                  '"-f %s+%s"' % (format_2, format_1))
                                 return
                             selected_format = {
                                 'requested_formats': formats_info,
@@ -992,7 +1012,7 @@ class YoutubeDL(object):
                     else:
                         self.to_screen('[info] Writing video subtitles to: ' + sub_filename)
                         with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8') as subfile:
-                                subfile.write(sub)
+                            subfile.write(sub)
                 except (OSError, IOError):
                     self.report_error('Cannot write subtitles file ' + sub_filename)
                     return
@@ -1024,10 +1044,10 @@ class YoutubeDL(object):
                         with open(thumb_filename, 'wb') as thumbf:
                             shutil.copyfileobj(uf, thumbf)
                         self.to_screen('[%s] %s: Writing thumbnail to: %s' %
-                            (info_dict['extractor'], info_dict['id'], thumb_filename))
+                                       (info_dict['extractor'], info_dict['id'], thumb_filename))
                     except (compat_urllib_error.URLError, compat_http_client.HTTPException, socket.error) as err:
                         self.report_warning('Unable to download thumbnail "%s": %s' %
-                            (info_dict['thumbnail'], compat_str(err)))
+                                            (info_dict['thumbnail'], compat_str(err)))
 
         if not self.params.get('skip_download', False):
             if self.params.get('nooverwrites', False) and os.path.exists(encodeFilename(filename)):
@@ -1048,8 +1068,8 @@ class YoutubeDL(object):
                         if not merger._executable:
                             postprocessors = []
                             self.report_warning('You have requested multiple '
-                                'formats but ffmpeg or avconv are not installed.'
-                                ' The formats won\'t be merged')
+                                                'formats but ffmpeg or avconv are not installed.'
+                                                ' The formats won\'t be merged')
                         else:
                             postprocessors = [merger]
                         for f in info_dict['requested_formats']:
@@ -1093,7 +1113,7 @@ class YoutubeDL(object):
 
         for url in url_list:
             try:
-                #It also downloads the videos
+                # It also downloads the videos
                 res = self.extract_info(url)
             except UnavailableVideoError:
                 self.report_error('unable to download video')

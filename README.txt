@@ -39,7 +39,7 @@ DESCRIPTION
 
 youtube-dl is a small command-line program to download videos from
 YouTube.com and a few more sites. It requires the Python interpreter,
-version 2.6, 2.7, or 3.3+, and it is not platform specific. It should
+version 2.6, 2.7, or 3.2+, and it is not platform specific. It should
 work on your Unix box, on Windows or on Mac OS X. It is released to the
 public domain, which means you can modify it, redistribute it or use it
 however you like.
@@ -107,7 +107,8 @@ Video Selection:
                                      COUNT views
     --max-views COUNT                Do not download any videos with more than
                                      COUNT views
-    --no-playlist                    download only the currently playing video
+    --no-playlist                    If the URL refers to a video and a
+                                     playlist, download only the video.
     --age-limit YEARS                download only videos suitable for the given
                                      age
     --download-archive FILE          Download only videos not listed in the
@@ -605,14 +606,15 @@ list (assuming your service is called yourextractor):
 
         def _real_extract(self, url):
             video_id = self._match_id(url)
+            webpage = self._download_webpage(url, video_id)
 
             # TODO more code goes here, for example ...
-            webpage = self._download_webpage(url, video_id)
             title = self._html_search_regex(r'<h1>(.*?)</h1>', webpage, 'title')
 
             return {
                 'id': video_id,
                 'title': title,
+                'description': self._og_search_description(webpage),
                 # TODO more properties (see youtube_dl/extractor/common.py)
             }
     ```
