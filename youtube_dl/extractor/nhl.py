@@ -4,9 +4,11 @@ import re
 import json
 
 from .common import InfoExtractor
-from ..utils import (
+from ..compat import (
     compat_urlparse,
     compat_urllib_parse,
+)
+from ..utils import (
     unified_strdate,
 )
 
@@ -31,7 +33,7 @@ class NHLBaseInfoExtractor(InfoExtractor):
                 path_url, video_id, 'Downloading final video url')
             video_url = path_doc.find('path').text
         else:
-           video_url = initial_video_url
+            video_url = initial_video_url
 
         join = compat_urlparse.urljoin
         return {
@@ -122,10 +124,10 @@ class NHLVideocenterIE(NHLBaseInfoExtractor):
         response = self._download_webpage(request_url, playlist_title)
         response = self._fix_json(response)
         if not response.strip():
-            self._downloader.report_warning(u'Got an empty reponse, trying '
+            self._downloader.report_warning('Got an empty reponse, trying '
                                             'adding the "newvideos" parameter')
             response = self._download_webpage(request_url + '&newvideos=true',
-                playlist_title)
+                                              playlist_title)
             response = self._fix_json(response)
         videos = json.loads(response)
 

@@ -45,8 +45,9 @@ from youtube_dl.utils import (
     escape_rfc3986,
     escape_url,
     js_to_json,
-    get_filesystem_encoding,
     intlist_to_bytes,
+    args_to_str,
+    parse_filesize,
 )
 
 
@@ -119,16 +120,16 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(orderedSet([1, 1, 2, 3, 4, 4, 5, 6, 7, 3, 5]), [1, 2, 3, 4, 5, 6, 7])
         self.assertEqual(orderedSet([]), [])
         self.assertEqual(orderedSet([1]), [1])
-        #keep the list ordered
+        # keep the list ordered
         self.assertEqual(orderedSet([135, 1, 1, 1]), [135, 1])
 
     def test_unescape_html(self):
         self.assertEqual(unescapeHTML('%20;'), '%20;')
         self.assertEqual(
             unescapeHTML('&eacute;'), 'é')
-        
+
     def test_daterange(self):
-        _20century = DateRange("19000101","20000101")
+        _20century = DateRange("19000101", "20000101")
         self.assertFalse("17890714" in _20century)
         _ac = DateRange("00010101")
         self.assertTrue("19690721" in _ac)
@@ -170,7 +171,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(find('media:song/url').text, 'http://server.com/download.mp3')
 
     def test_smuggle_url(self):
-        data = {u"ö": u"ö", u"abc": [3]}
+        data = {"ö": "ö", "abc": [3]}
         url = 'https://foo.bar/baz?x=y#a'
         smug_url = smuggle_url(url, data)
         unsmug_url, unsmug_data = unsmuggle_url(smug_url)
@@ -360,6 +361,21 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             intlist_to_bytes([0, 1, 127, 128, 255]),
             b'\x00\x01\x7f\x80\xff')
+
+    def test_args_to_str(self):
+        self.assertEqual(
+            args_to_str(['foo', 'ba/r', '-baz', '2 be', '']),
+            'foo ba/r -baz \'2 be\' \'\''
+        )
+
+    def test_parse_filesize(self):
+        self.assertEqual(parse_filesize(None), None)
+        self.assertEqual(parse_filesize(''), None)
+        self.assertEqual(parse_filesize('91 B'), 91)
+        self.assertEqual(parse_filesize('foobar'), None)
+        self.assertEqual(parse_filesize('2 MiB'), 2097152)
+        self.assertEqual(parse_filesize('5 GB'), 5000000000)
+        self.assertEqual(parse_filesize('1.2Tb'), 1200000000000)
 
 if __name__ == '__main__':
     unittest.main()

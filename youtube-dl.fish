@@ -24,7 +24,7 @@ complete --command youtube-dl --long-option datebefore --description 'download o
 complete --command youtube-dl --long-option dateafter --description 'download only videos uploaded on or after this date (i.e. inclusive)'
 complete --command youtube-dl --long-option min-views --description 'Do not download any videos with less than COUNT views'
 complete --command youtube-dl --long-option max-views --description 'Do not download any videos with more than COUNT views'
-complete --command youtube-dl --long-option no-playlist --description 'download only the currently playing video'
+complete --command youtube-dl --long-option no-playlist --description 'If the URL refers to a video and a playlist, download only the video.'
 complete --command youtube-dl --long-option age-limit --description 'download only videos suitable for the given age'
 complete --command youtube-dl --long-option download-archive --description 'Download only videos not listed in the archive file. Record the IDs of all downloaded videos in it.' --require-parameter
 complete --command youtube-dl --long-option include-ads --description 'Download advertisements as well (experimental)'

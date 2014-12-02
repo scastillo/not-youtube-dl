@@ -76,10 +76,10 @@ def _real_main(argv=None):
     if opts.headers is not None:
         for h in opts.headers:
             if h.find(':', 1) < 0:
-                parser.error('wrong header formatting, it should be key:value, not "%s"'%h)
+                parser.error('wrong header formatting, it should be key:value, not "%s"' % h)
             key, value = h.split(':', 2)
             if opts.verbose:
-                write_string('[debug] Adding header from command line option %s:%s\n'%(key, value))
+                write_string('[debug] Adding header from command line option %s:%s\n' % (key, value))
             std_headers[key] = value
 
     # Dump user agent
@@ -127,7 +127,6 @@ def _real_main(argv=None):
                 desc += ' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
             compat_print(desc)
         sys.exit(0)
-
 
     # Conflicting, missing and erroneous options
     if opts.usenetrc and (opts.username is not None or opts.password is not None):
@@ -190,21 +189,21 @@ def _real_main(argv=None):
 
     # --all-sub automatically sets --write-sub if --write-auto-sub is not given
     # this was the old behaviour if only --all-sub was given.
-    if opts.allsubtitles and (opts.writeautomaticsub == False):
+    if opts.allsubtitles and not opts.writeautomaticsub:
         opts.writesubtitles = True
 
     if sys.version_info < (3,):
         # In Python 2, sys.argv is a bytestring (also note http://bugs.python.org/issue2128 for Windows systems)
         if opts.outtmpl is not None:
             opts.outtmpl = opts.outtmpl.decode(preferredencoding())
-    outtmpl =((opts.outtmpl is not None and opts.outtmpl)
-            or (opts.format == '-1' and opts.usetitle and '%(title)s-%(id)s-%(format)s.%(ext)s')
-            or (opts.format == '-1' and '%(id)s-%(format)s.%(ext)s')
-            or (opts.usetitle and opts.autonumber and '%(autonumber)s-%(title)s-%(id)s.%(ext)s')
-            or (opts.usetitle and '%(title)s-%(id)s.%(ext)s')
-            or (opts.useid and '%(id)s.%(ext)s')
-            or (opts.autonumber and '%(autonumber)s-%(id)s.%(ext)s')
-            or DEFAULT_OUTTMPL)
+    outtmpl = ((opts.outtmpl is not None and opts.outtmpl)
+               or (opts.format == '-1' and opts.usetitle and '%(title)s-%(id)s-%(format)s.%(ext)s')
+               or (opts.format == '-1' and '%(id)s-%(format)s.%(ext)s')
+               or (opts.usetitle and opts.autonumber and '%(autonumber)s-%(title)s-%(id)s.%(ext)s')
+               or (opts.usetitle and '%(title)s-%(id)s.%(ext)s')
+               or (opts.useid and '%(id)s.%(ext)s')
+               or (opts.autonumber and '%(autonumber)s-%(id)s.%(ext)s')
+               or DEFAULT_OUTTMPL)
     if not os.path.splitext(outtmpl)[1] and opts.extractaudio:
         parser.error('Cannot download a video and extract audio into the same'
                      ' file! Use "{0}.%(ext)s" instead of "{0}" as the output'
@@ -317,7 +316,6 @@ def _real_main(argv=None):
                 ydl.add_post_processor(FFmpegAudioFixPP())
             ydl.add_post_processor(AtomicParsleyPP())
 
-
         # Please keep ExecAfterDownload towards the bottom as it allows the user to modify the final file in any way.
         # So if the user is able to remove the file before your postprocessor runs it might cause a few problems.
         if opts.exec_cmd:
@@ -334,10 +332,11 @@ def _real_main(argv=None):
 
         # Maybe do nothing
         if (len(all_urls) < 1) and (opts.load_info_filename is None):
-            if not (opts.update_self or opts.rm_cachedir):
-                parser.error('you must provide at least one URL')
-            else:
+            if opts.update_self or opts.rm_cachedir:
                 sys.exit()
+
+            ydl.warn_if_short_id(sys.argv[1:] if argv is None else argv)
+            parser.error('you must provide at least one URL')
 
         try:
             if opts.load_info_filename is not None:
