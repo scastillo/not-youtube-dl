@@ -5,7 +5,7 @@ import re
 
 from .subtitles import SubtitlesInfoExtractor
 
-from ..utils import (
+from ..compat import (
     compat_str,
 )
 
@@ -13,7 +13,7 @@ from ..utils import (
 class TEDIE(SubtitlesInfoExtractor):
     _VALID_URL = r'''(?x)
         (?P<proto>https?://)
-        (?P<type>www|embed)(?P<urlmain>\.ted\.com/
+        (?P<type>www|embed(?:-ssl)?)(?P<urlmain>\.ted\.com/
         (
             (?P<type_playlist>playlists(?:/\d+)?) # We have a playlist
             |
@@ -98,7 +98,7 @@ class TEDIE(SubtitlesInfoExtractor):
 
     def _real_extract(self, url):
         m = re.match(self._VALID_URL, url, re.VERBOSE)
-        if m.group('type') == 'embed':
+        if m.group('type').startswith('embed'):
             desktop_url = m.group('proto') + 'www' + m.group('urlmain')
             return self.url_result(desktop_url, 'TED')
         name = m.group('name')
@@ -199,8 +199,9 @@ class TEDIE(SubtitlesInfoExtractor):
         webpage = self._download_webpage(url, name)
 
         config_json = self._html_search_regex(
-            r"data-config='([^']+)", webpage, 'config')
-        config = json.loads(config_json)
+            r'"pages\.jwplayer"\s*,\s*({.+?})\s*\)\s*</script>',
+            webpage, 'config')
+        config = json.loads(config_json)['config']
         video_url = config['video']['url']
         thumbnail = config.get('image', {}).get('url')
 

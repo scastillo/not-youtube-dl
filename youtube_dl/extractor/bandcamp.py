@@ -4,9 +4,11 @@ import json
 import re
 
 from .common import InfoExtractor
-from ..utils import (
+from ..compat import (
     compat_str,
     compat_urlparse,
+)
+from ..utils import (
     ExtractorError,
 )
 
@@ -104,7 +106,7 @@ class BandcampIE(InfoExtractor):
 
 class BandcampAlbumIE(InfoExtractor):
     IE_NAME = 'Bandcamp:album'
-    _VALID_URL = r'https?://(?:(?P<subdomain>[^.]+)\.)?bandcamp\.com(?:/album/(?P<title>[^?#]+))'
+    _VALID_URL = r'https?://(?:(?P<subdomain>[^.]+)\.)?bandcamp\.com(?:/album/(?P<title>[^?#]+)|/?(?:$|[?#]))'
 
     _TESTS = [{
         'url': 'http://blazo.bandcamp.com/album/jazz-format-mixtape-vol-1',
@@ -139,6 +141,12 @@ class BandcampAlbumIE(InfoExtractor):
             'title': 'Hierophany of the Open Grave',
         },
         'playlist_mincount': 9,
+    }, {
+        'url': 'http://dotscale.bandcamp.com',
+        'info_dict': {
+            'title': 'Loom',
+        },
+        'playlist_mincount': 7,
     }]
 
     def _real_extract(self, url):
@@ -153,7 +161,8 @@ class BandcampAlbumIE(InfoExtractor):
         entries = [
             self.url_result(compat_urlparse.urljoin(url, t_path), ie=BandcampIE.ie_key())
             for t_path in tracks_paths]
-        title = self._search_regex(r'album_title : "(.*?)"', webpage, 'title')
+        title = self._search_regex(
+            r'album_title\s*:\s*"(.*?)"', webpage, 'title', fatal=False)
         return {
             '_type': 'playlist',
             'id': playlist_id,

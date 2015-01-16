@@ -23,6 +23,7 @@ from ..utils import (
     unescapeHTML,
     unified_strdate,
     unsmuggle_url,
+    UnsupportedError,
     url_basename,
 )
 from .brightcove import BrightcoveIE
@@ -130,12 +131,13 @@ class GenericIE(InfoExtractor):
         # ooyala video
         {
             'url': 'http://www.rollingstone.com/music/videos/norwegian-dj-cashmere-cat-goes-spartan-on-with-me-premiere-20131219',
-            'md5': '5644c6ca5d5782c1d0d350dad9bd840c',
+            'md5': '166dd577b433b4d4ebfee10b0824d8ff',
             'info_dict': {
                 'id': 'BwY2RxaTrTkslxOfcan0UCf0YqyvWysJ',
                 'ext': 'mp4',
                 'title': '2cc213299525360.mov',  # that's what we get
             },
+            'add_ie': ['Ooyala'],
         },
         # google redirect
         {
@@ -145,7 +147,7 @@ class GenericIE(InfoExtractor):
                 'ext': 'mp4',
                 'upload_date': '20130224',
                 'uploader_id': 'TheVerge',
-                'description': 'Chris Ziegler takes a look at the Alcatel OneTouch Fire and the ZTE Open; two of the first Firefox OS handsets to be officially announced.',
+                'description': 're:^Chris Ziegler takes a look at the\.*',
                 'uploader': 'The Verge',
                 'title': 'First Firefox OS phones side-by-side',
             },
@@ -179,6 +181,14 @@ class GenericIE(InfoExtractor):
                 'title': 'Between Two Ferns with Zach Galifianakis: President Barack Obama',
                 'description': 'Episode 18: President Barack Obama sits down with Zach Galifianakis for his most memorable interview yet.',
             },
+        },
+        # BBC iPlayer embeds
+        {
+            'url': 'http://www.bbc.co.uk/blogs/adamcurtis/posts/BUGGER',
+            'info_dict': {
+                'title': 'BBC - Blogs -  Adam Curtis - BUGGER',
+            },
+            'playlist_mincount': 18,
         },
         # RUTV embed
         {
@@ -467,8 +477,17 @@ class GenericIE(InfoExtractor):
             'expected_warnings': [
                 'URL could be a direct video link, returning it as such.'
             ]
-        }
-
+        },
+        # Cinchcast embed
+        {
+            'url': 'http://undergroundwellness.com/podcasts/306-5-steps-to-permanent-gut-healing/',
+            'info_dict': {
+                'id': '7141703',
+                'ext': 'mp3',
+                'upload_date': '20141126',
+                'title': 'Jack Tips: 5 Steps to Permanent Gut Healing',
+            }
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -689,9 +708,9 @@ class GenericIE(InfoExtractor):
             r'^(?:https?://)?([^/]*)/.*', url, 'video uploader')
 
         # Helper method
-        def _playlist_from_matches(matches, getter, ie=None):
+        def _playlist_from_matches(matches, getter=None, ie=None):
             urlrs = orderedSet(
-                self.url_result(self._proto_relative_url(getter(m)), ie)
+                self.url_result(self._proto_relative_url(getter(m) if getter else m), ie)
                 for m in matches)
             return self.playlist_result(
                 urlrs, playlist_id=video_id, playlist_title=video_title)
@@ -895,6 +914,11 @@ class GenericIE(InfoExtractor):
             return _playlist_from_matches(
                 matches, getter=unescapeHTML, ie='FunnyOrDie')
 
+        # Look for BBC iPlayer embed
+        matches = re.findall(r'setPlaylist\("(https?://www\.bbc\.co\.uk/iplayer/[^/]+/[\da-z]{8})"\)', webpage)
+        if matches:
+            return _playlist_from_matches(matches, ie='BBCCoUk')
+
         # Look for embedded RUTV player
         rutv_url = RUTVIE._extract_url(webpage)
         if rutv_url:
@@ -902,7 +926,7 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded TED player
         mobj = re.search(
-            r'<iframe[^>]+?src=(["\'])(?P<url>http://embed\.ted\.com/.+?)\1', webpage)
+            r'<iframe[^>]+?src=(["\'])(?P<url>https?://embed(?:-ssl)?\.ted\.com/.+?)\1', webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'TED')
 
@@ -961,6 +985,13 @@ class GenericIE(InfoExtractor):
             webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'SBS')
+
+        # Look for embedded Cinchcast player
+        mobj = re.search(
+            r'<iframe[^>]+?src=(["\'])(?P<url>https?://player\.cinchcast\.com/.+?)\1',
+            webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Cinchcast')
 
         mobj = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>https?://m(?:lb)?\.mlb\.com/shared/video/embed/embed\.html\?.+?)\1',
@@ -1041,7 +1072,7 @@ class GenericIE(InfoExtractor):
                     'url': new_url,
                 }
         if not found:
-            raise ExtractorError('Unsupported URL: %s' % url)
+            raise UnsupportedError(url)
 
         entries = []
         for video_url in found:

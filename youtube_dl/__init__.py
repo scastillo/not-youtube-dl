@@ -38,18 +38,8 @@ from .update import update_self
 from .downloader import (
     FileDownloader,
 )
-from .extractor import gen_extractors
+from .extractor import gen_extractors, list_extractors
 from .YoutubeDL import YoutubeDL
-from .postprocessor import (
-    AtomicParsleyPP,
-    FFmpegAudioFixPP,
-    FFmpegMetadataPP,
-    FFmpegVideoConvertor,
-    FFmpegExtractAudioPP,
-    FFmpegEmbedSubtitlePP,
-    XAttrMetadataPP,
-    ExecAfterDownloadPP,
-)
 
 
 def _real_main(argv=None):
@@ -105,24 +95,22 @@ def _real_main(argv=None):
     _enc = preferredencoding()
     all_urls = [url.decode(_enc, 'ignore') if isinstance(url, bytes) else url for url in all_urls]
 
-    extractors = gen_extractors()
-
     if opts.list_extractors:
-        for ie in sorted(extractors, key=lambda ie: ie.IE_NAME.lower()):
+        for ie in list_extractors(opts.age_limit):
             compat_print(ie.IE_NAME + (' (CURRENTLY BROKEN)' if not ie._WORKING else ''))
             matchedUrls = [url for url in all_urls if ie.suitable(url)]
             for mu in matchedUrls:
                 compat_print('  ' + mu)
         sys.exit(0)
     if opts.list_extractor_descriptions:
-        for ie in sorted(extractors, key=lambda ie: ie.IE_NAME.lower()):
+        for ie in list_extractors(opts.age_limit):
             if not ie._WORKING:
                 continue
             desc = getattr(ie, 'IE_DESC', ie.IE_NAME)
             if desc is False:
                 continue
             if hasattr(ie, 'SEARCH_KEY'):
-                _SEARCHES = ('cute kittens', 'slithering pythons', 'falling cat', 'angry poodle', 'purple fish', 'running tortoise', 'sleeping bunny')
+                _SEARCHES = ('cute kittens', 'slithering pythons', 'falling cat', 'angry poodle', 'purple fish', 'running tortoise', 'sleeping bunny', 'burping cow')
                 _COUNTS = ('', '5', '10', 'all')
                 desc += ' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
             compat_print(desc)
@@ -178,6 +166,7 @@ def _real_main(argv=None):
     if opts.recodevideo is not None:
         if opts.recodevideo not in ['mp4', 'flv', 'webm', 'ogg', 'mkv']:
             parser.error('invalid video recode format specified')
+
     if opts.date is not None:
         date = DateRange.day(opts.date)
     else:
@@ -209,8 +198,46 @@ def _real_main(argv=None):
                      ' file! Use "{0}.%(ext)s" instead of "{0}" as the output'
                      ' template'.format(outtmpl))
 
-    any_printing = opts.geturl or opts.gettitle or opts.getid or opts.getthumbnail or opts.getdescription or opts.getfilename or opts.getformat or opts.getduration or opts.dumpjson or opts.dump_single_json
+    any_getting = opts.geturl or opts.gettitle or opts.getid or opts.getthumbnail or opts.getdescription or opts.getfilename or opts.getformat or opts.getduration or opts.dumpjson or opts.dump_single_json
+    any_printing = opts.print_json
     download_archive_fn = compat_expanduser(opts.download_archive) if opts.download_archive is not None else opts.download_archive
+
+    # PostProcessors
+    postprocessors = []
+    # Add the metadata pp first, the other pps will copy it
+    if opts.addmetadata:
+        postprocessors.append({'key': 'FFmpegMetadata'})
+    if opts.extractaudio:
+        postprocessors.append({
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': opts.audioformat,
+            'preferredquality': opts.audioquality,
+            'nopostoverwrites': opts.nopostoverwrites,
+        })
+    if opts.recodevideo:
+        postprocessors.append({
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': opts.recodevideo,
+        })
+    if opts.embedsubtitles:
+        postprocessors.append({
+            'key': 'FFmpegEmbedSubtitle',
+            'subtitlesformat': opts.subtitlesformat,
+        })
+    if opts.xattrs:
+        postprocessors.append({'key': 'XAttrMetadata'})
+    if opts.embedthumbnail:
+        if not opts.addmetadata:
+            postprocessors.append({'key': 'FFmpegAudioFix'})
+        postprocessors.append({'key': 'AtomicParsley'})
+    # Please keep ExecAfterDownload towards the bottom as it allows the user to modify the final file in any way.
+    # So if the user is able to remove the file before your postprocessor runs it might cause a few problems.
+    if opts.exec_cmd:
+        postprocessors.append({
+            'key': 'ExecAfterDownload',
+            'verboseOutput': opts.verbose,
+            'exec_cmd': opts.exec_cmd,
+        })
 
     ydl_opts = {
         'usenetrc': opts.usenetrc,
@@ -218,7 +245,7 @@ def _real_main(argv=None):
         'password': opts.password,
         'twofactor': opts.twofactor,
         'videopassword': opts.videopassword,
-        'quiet': (opts.quiet or any_printing),
+        'quiet': (opts.quiet or any_getting or any_printing),
         'no_warnings': opts.no_warnings,
         'forceurl': opts.geturl,
         'forcetitle': opts.gettitle,
@@ -228,9 +255,9 @@ def _real_main(argv=None):
         'forceduration': opts.getduration,
         'forcefilename': opts.getfilename,
         'forceformat': opts.getformat,
-        'forcejson': opts.dumpjson,
+        'forcejson': opts.dumpjson or opts.print_json,
         'dump_single_json': opts.dump_single_json,
-        'simulate': opts.simulate or any_printing,
+        'simulate': opts.simulate or any_getting,
         'skip_download': opts.skip_download,
         'format': opts.format,
         'format_limit': opts.format_limit,
@@ -249,6 +276,7 @@ def _real_main(argv=None):
         'progress_with_newline': opts.progress_with_newline,
         'playliststart': opts.playliststart,
         'playlistend': opts.playlistend,
+        'playlistreverse': opts.playlist_reverse,
         'noplaylist': opts.noplaylist,
         'logtostderr': opts.outtmpl == '-',
         'consoletitle': opts.consoletitle,
@@ -296,32 +324,14 @@ def _real_main(argv=None):
         'encoding': opts.encoding,
         'exec_cmd': opts.exec_cmd,
         'extract_flat': opts.extract_flat,
+        'merge_output_format': opts.merge_output_format,
+        'postprocessors': postprocessors,
+        'fixup': opts.fixup,
+        'source_address': opts.source_address,
+        'call_home': opts.call_home,
     }
 
     with YoutubeDL(ydl_opts) as ydl:
-        # PostProcessors
-        # Add the metadata pp first, the other pps will copy it
-        if opts.addmetadata:
-            ydl.add_post_processor(FFmpegMetadataPP())
-        if opts.extractaudio:
-            ydl.add_post_processor(FFmpegExtractAudioPP(preferredcodec=opts.audioformat, preferredquality=opts.audioquality, nopostoverwrites=opts.nopostoverwrites))
-        if opts.recodevideo:
-            ydl.add_post_processor(FFmpegVideoConvertor(preferedformat=opts.recodevideo))
-        if opts.embedsubtitles:
-            ydl.add_post_processor(FFmpegEmbedSubtitlePP(subtitlesformat=opts.subtitlesformat))
-        if opts.xattrs:
-            ydl.add_post_processor(XAttrMetadataPP())
-        if opts.embedthumbnail:
-            if not opts.addmetadata:
-                ydl.add_post_processor(FFmpegAudioFixPP())
-            ydl.add_post_processor(AtomicParsleyPP())
-
-        # Please keep ExecAfterDownload towards the bottom as it allows the user to modify the final file in any way.
-        # So if the user is able to remove the file before your postprocessor runs it might cause a few problems.
-        if opts.exec_cmd:
-            ydl.add_post_processor(ExecAfterDownloadPP(
-                verboseOutput=opts.verbose, exec_cmd=opts.exec_cmd))
-
         # Update version
         if opts.update_self:
             update_self(ydl.to_screen, opts.verbose)
@@ -359,3 +369,5 @@ def main(argv=None):
         sys.exit('ERROR: fixed output name but more than one file to download')
     except KeyboardInterrupt:
         sys.exit('\nERROR: Interrupted by user')
+
+__all__ = ['main', 'YoutubeDL', 'gen_extractors', 'list_extractors']

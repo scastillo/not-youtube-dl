@@ -4,6 +4,7 @@ import getpass
 import optparse
 import os
 import re
+import socket
 import subprocess
 import sys
 
@@ -247,7 +248,7 @@ else:
                 userhome = compat_getenv('HOME')
             elif 'USERPROFILE' in os.environ:
                 userhome = compat_getenv('USERPROFILE')
-            elif not 'HOMEPATH' in os.environ:
+            elif 'HOMEPATH' not in os.environ:
                 return path
             else:
                 try:
@@ -297,12 +298,40 @@ else:
 
 # Old 2.6 and 2.7 releases require kwargs to be bytes
 try:
-    (lambda x: x)(**{'x': 0})
+    def _testfunc(x):
+        pass
+    _testfunc(**{'x': 0})
 except TypeError:
     def compat_kwargs(kwargs):
         return dict((bytes(k), v) for k, v in kwargs.items())
 else:
     compat_kwargs = lambda kwargs: kwargs
+
+
+if sys.version_info < (2, 7):
+    def compat_socket_create_connection(address, timeout, source_address=None):
+        host, port = address
+        err = None
+        for res in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
+                sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                return sock
+            except socket.error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+        if err is not None:
+            raise err
+        else:
+            raise socket.error("getaddrinfo returns an empty list")
+else:
+    compat_socket_create_connection = socket.create_connection
 
 
 # Fix https://github.com/rg3/youtube-dl/issues/4223
@@ -340,6 +369,7 @@ __all__ = [
     'compat_ord',
     'compat_parse_qs',
     'compat_print',
+    'compat_socket_create_connection',
     'compat_str',
     'compat_subprocess_get_DEVNULL',
     'compat_urllib_error',

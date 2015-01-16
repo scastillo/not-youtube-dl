@@ -11,14 +11,14 @@ from ..utils import (
 
 
 class CNNIE(InfoExtractor):
-    _VALID_URL = r'''(?x)https?://((edition|www)\.)?cnn\.com/video/(data/.+?|\?)/
-        (?P<path>.+?/(?P<title>[^/]+?)(?:\.cnn(-ap)?|(?=&)))'''
+    _VALID_URL = r'''(?x)https?://(?:(?:edition|www)\.)?cnn\.com/video/(?:data/.+?|\?)/
+        (?P<path>.+?/(?P<title>[^/]+?)(?:\.(?:cnn|hln)(?:-ap)?|(?=&)))'''
 
     _TESTS = [{
         'url': 'http://edition.cnn.com/video/?/video/sports/2013/06/09/nadal-1-on-1.cnn',
         'md5': '3e6121ea48df7e2259fe73a0628605c4',
         'info_dict': {
-            'id': 'sports_2013_06_09_nadal-1-on-1.cnn',
+            'id': 'sports/2013/06/09/nadal-1-on-1.cnn',
             'ext': 'mp4',
             'title': 'Nadal wins 8th French Open title',
             'description': 'World Sport\'s Amanda Davies chats with 2013 French Open champion Rafael Nadal.',
@@ -34,6 +34,16 @@ class CNNIE(InfoExtractor):
             "title": "Student's epic speech stuns new freshmen",
             "description": "A Georgia Tech student welcomes the incoming freshmen with an epic speech backed by music from \"2001: A Space Odyssey.\"",
             "upload_date": "20130821",
+        }
+    }, {
+        'url': 'http://www.cnn.com/video/data/2.0/video/living/2014/12/22/growing-america-nashville-salemtown-board-episode-1.hln.html',
+        'md5': 'f14d02ebd264df951feb2400e2c25a1b',
+        'info_dict': {
+            'id': 'living/2014/12/22/growing-america-nashville-salemtown-board-episode-1.hln',
+            'ext': 'mp4',
+            'title': 'Nashville Ep. 1: Hand crafted skateboards',
+            'description': 'md5:e7223a503315c9f150acac52e76de086',
+            'upload_date': '20141222',
         }
     }]
 
@@ -125,5 +135,30 @@ class CNNBlogsIE(InfoExtractor):
         return {
             '_type': 'url',
             'url': cnn_url,
+            'ie_key': CNNIE.ie_key(),
+        }
+
+
+class CNNArticleIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:(?:edition|www)\.)?cnn\.com/(?!video/)'
+    _TEST = {
+        'url': 'http://www.cnn.com/2014/12/21/politics/obama-north-koreas-hack-not-war-but-cyber-vandalism/',
+        'md5': '275b326f85d80dff7592a9820f5dc887',
+        'info_dict': {
+            'id': 'bestoftv/2014/12/21/sotu-crowley-president-obama-north-korea-not-going-to-be-intimidated.cnn',
+            'ext': 'mp4',
+            'title': 'Obama: We\'re not going to be intimidated',
+            'description': 'md5:e735586f3dc936075fa654a4d91b21f9',
+            'upload_date': '20141220',
+        },
+        'add_ie': ['CNN'],
+    }
+
+    def _real_extract(self, url):
+        webpage = self._download_webpage(url, url_basename(url))
+        cnn_url = self._html_search_regex(r"video:\s*'([^']+)'", webpage, 'cnn url')
+        return {
+            '_type': 'url',
+            'url': 'http://cnn.com/video/?/video/' + cnn_url,
             'ie_key': CNNIE.ie_key(),
         }
