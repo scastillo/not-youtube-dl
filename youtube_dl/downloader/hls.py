@@ -4,11 +4,13 @@ import os
 import re
 import subprocess
 
+from ..postprocessor.ffmpeg import FFmpegPostProcessor
 from .common import FileDownloader
-from ..utils import (
+from ..compat import (
     compat_urlparse,
     compat_urllib_request,
-    check_executable,
+)
+from ..utils import (
     encodeFilename,
 )
 
@@ -24,12 +26,12 @@ class HlsFD(FileDownloader):
             '-bsf:a', 'aac_adtstoasc',
             encodeFilename(tmpfilename, for_subprocess=True)]
 
-        for program in ['avconv', 'ffmpeg']:
-            if check_executable(program, ['-version']):
-                break
-        else:
+        ffpp = FFmpegPostProcessor(downloader=self)
+        program = ffpp._executable
+        if program is None:
             self.report_error('m3u8 download detected but ffmpeg or avconv could not be found. Please install one.')
             return False
+        ffpp.check_version()
         cmd = [program] + args
 
         retval = subprocess.call(cmd)

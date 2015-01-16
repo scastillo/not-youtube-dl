@@ -5,11 +5,12 @@ import re
 import itertools
 
 from .common import InfoExtractor
-from ..utils import (
+from ..compat import (
     compat_str,
     compat_urlparse,
     compat_urllib_parse,
-
+)
+from ..utils import (
     ExtractorError,
     int_or_none,
     unified_strdate,
@@ -32,7 +33,7 @@ class SoundcloudIE(InfoExtractor):
                             (?P<title>[\w\d-]+)/?
                             (?P<token>[^?]+?)?(?:[?].*)?$)
                        |(?:api\.soundcloud\.com/tracks/(?P<track_id>\d+)
-                          (?:/?\?secret_token=(?P<secret_token>[^&]+?))?$)
+                          (?:/?\?secret_token=(?P<secret_token>[^&]+))?)
                        |(?P<player>(?:w|player|p.)\.soundcloud\.com/player/?.*?url=.*)
                     )
                     '''

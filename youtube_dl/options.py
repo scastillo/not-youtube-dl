@@ -109,7 +109,7 @@ def parseOpts(overrideArguments=None):
     kw = {
         'version': __version__,
         'formatter': fmt,
-        'usage': '%prog [options] url [url...]',
+        'usage': '%prog [OPTIONS] URL [URL...]',
         'conflict_handler': 'resolve',
     }
 
@@ -149,26 +149,46 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='list_extractor_descriptions', default=False,
         help='Output descriptions of all supported extractors')
     general.add_option(
-        '--proxy', dest='proxy',
-        default=None, metavar='URL',
-        help='Use the specified HTTP/HTTPS proxy. Pass in an empty string (--proxy "") for direct connection')
-    general.add_option(
-        '--socket-timeout',
-        dest='socket_timeout', type=float, default=None,
-        help='Time to wait before giving up, in seconds')
-    general.add_option(
         '--default-search',
         dest='default_search', metavar='PREFIX',
         help='Use this prefix for unqualified URLs. For example "gvsearch2:" downloads two videos from google videos for  youtube-dl "large apple". Use the value "auto" to let youtube-dl guess ("auto_warning" to emit a warning when guessing). "error" just throws an error. The default value "fixup_error" repairs broken URLs, but emits an error if this is not possible instead of searching.')
     general.add_option(
         '--ignore-config',
         action='store_true',
-        help='Do not read configuration files. When given in the global configuration file /etc/youtube-dl.conf: do not read the user configuration in ~/.config/youtube-dl.conf (%APPDATA%/youtube-dl/config.txt on Windows)')
+        help='Do not read configuration files. '
+        'When given in the global configuration file /etc/youtube-dl.conf: '
+        'Do not read the user configuration in ~/.config/youtube-dl/config '
+        '(%APPDATA%/youtube-dl/config.txt on Windows)')
     general.add_option(
         '--flat-playlist',
         action='store_const', dest='extract_flat', const='in_playlist',
         default=False,
         help='Do not extract the videos of a playlist, only list them.')
+
+    network = optparse.OptionGroup(parser, 'Network Options')
+    network.add_option(
+        '--proxy', dest='proxy',
+        default=None, metavar='URL',
+        help='Use the specified HTTP/HTTPS proxy. Pass in an empty string (--proxy "") for direct connection')
+    network.add_option(
+        '--socket-timeout',
+        dest='socket_timeout', type=float, default=None, metavar='SECONDS',
+        help='Time to wait before giving up, in seconds')
+    network.add_option(
+        '--source-address',
+        metavar='IP', dest='source_address', default=None,
+        help='Client-side IP address to bind to (experimental)',
+    )
+    network.add_option(
+        '-4', '--force-ipv4',
+        action='store_const', const='0.0.0.0', dest='source_address',
+        help='Make all connections via IPv4 (experimental)',
+    )
+    network.add_option(
+        '-6', '--force-ipv6',
+        action='store_const', const='::', dest='source_address',
+        help='Make all connections via IPv6 (experimental)',
+    )
 
     selection = optparse.OptionGroup(parser, 'Video Selection')
     selection.add_option(
@@ -264,10 +284,12 @@ def parseOpts(overrideArguments=None):
         action='store', dest='format', metavar='FORMAT', default=None,
         help=(
             'video format code, specify the order of preference using'
-            ' slashes: -f 22/17/18 .  -f mp4 , -f m4a and  -f flv  are also'
-            ' supported. You can also use the special names "best",'
-            ' "bestvideo", "bestaudio", "worst", "worstvideo" and'
-            ' "worstaudio". By default, youtube-dl will pick the best quality.'
+            ' slashes, as in -f 22/17/18 . '
+            ' Instead of format codes, you can select by extension for the '
+            'extensions aac, m4a, mp3, mp4, ogg, wav, webm. '
+            'You can also use the special names "best",'
+            ' "bestvideo", "bestaudio", "worst". '
+            ' By default, youtube-dl will pick the best quality.'
             ' Use commas to download multiple audio formats, such as'
             ' -f  136/137/mp4/bestvideo,140/m4a/bestaudio.'
             ' You can merge the video and audio of two formats into a single'
@@ -297,6 +319,12 @@ def parseOpts(overrideArguments=None):
         '--youtube-skip-dash-manifest',
         action='store_false', dest='youtube_include_dash_manifest',
         help='Do not download the DASH manifest on YouTube videos')
+    video_format.add_option(
+        '--merge-output-format',
+        action='store', dest='merge_output_format', metavar='FORMAT', default=None,
+        help=(
+            'If a merge is required (e.g. bestvideo+bestaudio), output to given container format. One of mkv, mp4, ogg, webm, flv.'
+            'Ignored if no merge is required'))
 
     subtitles = optparse.OptionGroup(parser, 'Subtitle Options')
     subtitles.add_option(
@@ -346,6 +374,10 @@ def parseOpts(overrideArguments=None):
         '--test',
         action='store_true', dest='test', default=False,
         help=optparse.SUPPRESS_HELP)
+    downloader.add_option(
+        '--playlist-reverse',
+        action='store_true',
+        help='Download playlist videos in reverse order')
 
     workarounds = optparse.OptionGroup(parser, 'Workarounds')
     workarounds.add_option(
@@ -437,6 +469,11 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='dump_single_json', default=False,
         help='simulate, quiet but print JSON information for each command-line argument. If the URL refers to a playlist, dump the whole playlist information in a single line.')
     verbosity.add_option(
+        '--print-json',
+        action='store_true', dest='print_json', default=False,
+        help='Be quiet and print the video information as JSON (video is still being downloaded).',
+    )
+    verbosity.add_option(
         '--newline',
         action='store_true', dest='progress_with_newline', default=False,
         help='output progress bar as new lines')
@@ -468,6 +505,14 @@ def parseOpts(overrideArguments=None):
         '--print-traffic',
         dest='debug_printtraffic', action='store_true', default=False,
         help='Display sent and read HTTP traffic')
+    verbosity.add_option(
+        '-C', '--call-home',
+        dest='call_home', action='store_true', default=False,
+        help='Contact the youtube-dl server for debugging.')
+    verbosity.add_option(
+        '--no-call-home',
+        dest='call_home', action='store_false', default=False,
+        help='Do NOT contact the youtube-dl server for debugging.')
 
     filesystem = optparse.OptionGroup(parser, 'Filesystem Options')
     filesystem.add_option(
@@ -477,10 +522,6 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option(
         '--id', default=False,
         action='store_true', dest='useid', help='use only video ID in file name')
-    filesystem.add_option(
-        '-A', '--auto-number',
-        action='store_true', dest='autonumber', default=False,
-        help='number downloaded files starting from 00000')
     filesystem.add_option(
         '-o', '--output',
         dest='outtmpl', metavar='TEMPLATE',
@@ -508,6 +549,10 @@ def parseOpts(overrideArguments=None):
         '--restrict-filenames',
         action='store_true', dest='restrictfilenames', default=False,
         help='Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames')
+    filesystem.add_option(
+        '-A', '--auto-number',
+        action='store_true', dest='autonumber', default=False,
+        help='[deprecated; use  -o "%(autonumber)s-%(title)s.%(ext)s" ] number downloaded files starting from 00000')
     filesystem.add_option(
         '-t', '--title',
         action='store_true', dest='usetitle', default=False,
@@ -612,6 +657,13 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='xattrs', default=False,
         help='write metadata to the video file\'s xattrs (using dublin core and xdg standards)')
     postproc.add_option(
+        '--fixup',
+        metavar='POLICY', dest='fixup', default='detect_or_warn',
+        help='(experimental) Automatically correct known faults of the file. '
+             'One of never (do nothing), warn (only emit a warning), '
+             'detect_or_warn(check whether we can do anything about it, warn '
+             'otherwise')
+    postproc.add_option(
         '--prefer-avconv',
         action='store_false', dest='prefer_ffmpeg',
         help='Prefer avconv over ffmpeg for running the postprocessors (default)')
@@ -625,6 +677,7 @@ def parseOpts(overrideArguments=None):
         help='Execute a command on the file after downloading, similar to find\'s -exec syntax. Example: --exec \'adb push {} /sdcard/Music/ && rm {}\'')
 
     parser.add_option_group(general)
+    parser.add_option_group(network)
     parser.add_option_group(selection)
     parser.add_option_group(downloader)
     parser.add_option_group(filesystem)

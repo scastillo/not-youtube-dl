@@ -16,38 +16,41 @@ import json
 import xml.etree.ElementTree
 
 from youtube_dl.utils import (
+    age_restricted,
+    args_to_str,
     clean_html,
     DateRange,
+    detect_exe_version,
     encodeFilename,
+    escape_rfc3986,
+    escape_url,
     find_xpath_attr,
     fix_xml_ampersands,
-    orderedSet,
-    OnDemandPagedList,
     InAdvancePagedList,
+    intlist_to_bytes,
+    js_to_json,
+    limit_length,
+    OnDemandPagedList,
+    orderedSet,
     parse_duration,
+    parse_filesize,
+    parse_iso8601,
     read_batch_urls,
     sanitize_filename,
     shell_quote,
     smuggle_url,
     str_to_int,
+    strip_jsonp,
     struct_unpack,
     timeconvert,
     unescapeHTML,
     unified_strdate,
     unsmuggle_url,
+    uppercase_escape,
     url_basename,
     urlencode_postdata,
+    version_tuple,
     xpath_with_ns,
-    parse_iso8601,
-    strip_jsonp,
-    uppercase_escape,
-    limit_length,
-    escape_rfc3986,
-    escape_url,
-    js_to_json,
-    intlist_to_bytes,
-    args_to_str,
-    parse_filesize,
 )
 
 
@@ -75,6 +78,10 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(sanitize_filename(aumlaut), aumlaut)
         tests = '\u043a\u0438\u0440\u0438\u043b\u043b\u0438\u0446\u0430'
         self.assertEqual(sanitize_filename(tests), tests)
+
+        self.assertEqual(
+            sanitize_filename('New World record at 0:12:34'),
+            'New World record at 0_12_34')
 
         forbidden = '"\0\\/'
         for fc in forbidden:
@@ -141,8 +148,12 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(unified_strdate('8/7/2009'), '20090708')
         self.assertEqual(unified_strdate('Dec 14, 2012'), '20121214')
         self.assertEqual(unified_strdate('2012/10/11 01:56:38 +0000'), '20121011')
+        self.assertEqual(unified_strdate('1968 12 10'), '19681210')
         self.assertEqual(unified_strdate('1968-12-10'), '19681210')
         self.assertEqual(unified_strdate('28/01/2014 21:00:00 +0100'), '20140128')
+        self.assertEqual(
+            unified_strdate('11/26/2014 11:30:00 AM PST', day_first=False),
+            '20141126')
 
     def test_find_xpath_attr(self):
         testxml = '''<root>
@@ -202,6 +213,8 @@ class TestUtil(unittest.TestCase):
 
     def test_parse_duration(self):
         self.assertEqual(parse_duration(None), None)
+        self.assertEqual(parse_duration(False), None)
+        self.assertEqual(parse_duration('invalid'), None)
         self.assertEqual(parse_duration('1'), 1)
         self.assertEqual(parse_duration('1337:12'), 80232)
         self.assertEqual(parse_duration('9:12:43'), 33163)
@@ -220,6 +233,9 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('0s'), 0)
         self.assertEqual(parse_duration('01:02:03.05'), 3723.05)
         self.assertEqual(parse_duration('T30M38S'), 1838)
+        self.assertEqual(parse_duration('5 s'), 5)
+        self.assertEqual(parse_duration('3 min'), 180)
+        self.assertEqual(parse_duration('2.5 hours'), 9000)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -376,6 +392,30 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_filesize('2 MiB'), 2097152)
         self.assertEqual(parse_filesize('5 GB'), 5000000000)
         self.assertEqual(parse_filesize('1.2Tb'), 1200000000000)
+        self.assertEqual(parse_filesize('1,24 KB'), 1240)
+
+    def test_version_tuple(self):
+        self.assertEqual(version_tuple('1'), (1,))
+        self.assertEqual(version_tuple('10.23.344'), (10, 23, 344))
+        self.assertEqual(version_tuple('10.1-6'), (10, 1, 6))  # avconv style
+
+    def test_detect_exe_version(self):
+        self.assertEqual(detect_exe_version('''ffmpeg version 1.2.1
+built on May 27 2013 08:37:26 with gcc 4.7 (Debian 4.7.3-4)
+configuration: --prefix=/usr --extra-'''), '1.2.1')
+        self.assertEqual(detect_exe_version('''ffmpeg version N-63176-g1fb4685
+built on May 15 2014 22:09:06 with gcc 4.8.2 (GCC)'''), 'N-63176-g1fb4685')
+        self.assertEqual(detect_exe_version('''X server found. dri2 connection failed!
+Trying to open render node...
+Success at /dev/dri/renderD128.
+ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
+
+    def test_age_restricted(self):
+        self.assertFalse(age_restricted(None, 10))  # unrestricted content
+        self.assertFalse(age_restricted(1, None))  # unrestricted policy
+        self.assertFalse(age_restricted(8, 10))
+        self.assertTrue(age_restricted(18, 14))
+        self.assertFalse(age_restricted(18, 18))
 
 if __name__ == '__main__':
     unittest.main()

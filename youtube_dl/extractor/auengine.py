@@ -3,10 +3,11 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
+from ..compat import compat_urllib_parse
 from ..utils import (
-    compat_urllib_parse,
     determine_ext,
     ExtractorError,
+    remove_end,
 )
 
 
@@ -27,23 +28,18 @@ class AUEngineIE(InfoExtractor):
         video_id = self._match_id(url)
 
         webpage = self._download_webpage(url, video_id)
-        title = self._html_search_regex(r'<title>(?P<title>.+?)</title>', webpage, 'title')
-        title = title.strip()
-        links = re.findall(r'\s(?:file|url):\s*["\']([^\'"]+)["\']', webpage)
-        links = map(compat_urllib_parse.unquote, links)
+        title = self._html_search_regex(
+            r'<title>\s*(?P<title>.+?)\s*</title>', webpage, 'title')
+        video_urls = re.findall(r'http://\w+.auengine.com/vod/.*[^\W]', webpage)
+        video_url = compat_urllib_parse.unquote(video_urls[0])
+        thumbnails = re.findall(r'http://\w+.auengine.com/thumb/.*[^\W]', webpage)
+        thumbnail = compat_urllib_parse.unquote(thumbnails[0])
 
-        thumbnail = None
-        video_url = None
-        for link in links:
-            if link.endswith('.png'):
-                thumbnail = link
-            elif '/videos/' in link:
-                video_url = link
         if not video_url:
             raise ExtractorError('Could not find video URL')
+
         ext = '.' + determine_ext(video_url)
-        if ext == title[-len(ext):]:
-            title = title[:-len(ext)]
+        title = remove_end(title, ext)
 
         return {
             'id': video_id,
