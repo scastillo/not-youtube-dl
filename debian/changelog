@@ -1,3 +1,11 @@
+youtube-dl (2015.01.16-1~1.gbpa07091) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @a070911bf98c751e4425008f1335cc57c86d30fc **
+
+  * Imported Upstream version 2015.01.16
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Jan 2015 15:58:24 -0200
+
 youtube-dl (2014.12.01-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.11.21
