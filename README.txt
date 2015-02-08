@@ -107,6 +107,14 @@ Video Selection:
 
     --playlist-start NUMBER          playlist video to start at (default is 1)
     --playlist-end NUMBER            playlist video to end at (default is last)
+    --playlist-items ITEM_SPEC       playlist video items to download. Specify
+                                     indices of the videos in the playlist
+                                     seperated by commas like: "--playlist-items
+                                     1,2,5,8" if you want to download videos
+                                     indexed 1, 2, 5, 8 in the playlist. You can
+                                     specify range: "--playlist-items
+                                     1-3,7,10-13", it will download the videos
+                                     at index 1, 2, 3, 7, 10, 11, 12 and 13.
     --match-title REGEX              download only matching titles (regex or
                                      caseless sub-string)
     --reject-title REGEX             skip download for matching titles (regex or
@@ -140,7 +148,8 @@ Download Options:
 
     -r, --rate-limit LIMIT           maximum download rate in bytes per second
                                      (e.g. 50K or 4.2M)
-    -R, --retries RETRIES            number of retries (default is 10)
+    -R, --retries RETRIES            number of retries (default is 10), or
+                                     "infinite".
     --buffer-size SIZE               size of download buffer (e.g. 1024 or 16K)
                                      (default is 1024)
     --no-resize-buffer               do not automatically adjust the buffer
@@ -148,6 +157,11 @@ Download Options:
                                      automatically resized from an initial value
                                      of SIZE.
     --playlist-reverse               Download playlist videos in reverse order
+    --xattr-set-filesize             (experimental) set file xattribute
+                                     ytdl.filesize with expected filesize
+    --external-downloader COMMAND    (experimental) Use the specified external
+                                     downloader. Currently supports
+                                     aria2c,curl,wget
 
 Filesystem Options:
 -------------------
@@ -209,7 +223,6 @@ Filesystem Options:
     --write-info-json                write video metadata to a .info.json file
     --write-annotations              write video annotations to a .annotation
                                      file
-    --write-thumbnail                write thumbnail image to disk
     --load-info FILE                 json file containing the video information
                                      (created with the "--write-json" option)
     --cookies FILE                   file to read cookies from and dump cookie
@@ -223,6 +236,14 @@ Filesystem Options:
                                      cached, but that may change.
     --no-cache-dir                   Disable filesystem caching
     --rm-cache-dir                   Delete all filesystem cache files
+
+Thumbnail images:
+-----------------
+
+    --write-thumbnail                write thumbnail image to disk
+    --write-all-thumbnails           write all thumbnail image formats to disk
+    --list-thumbnails                Simulate and list all available thumbnail
+                                     formats
 
 Verbosity / Simulation Options:
 -------------------------------
@@ -281,6 +302,8 @@ Workarounds:
     --bidi-workaround                Work around terminals that lack
                                      bidirectional text support. Requires bidiv
                                      or fribidi executable in PATH
+    --sleep-interval SECONDS         Number of seconds to sleep before each
+                                     download.
 
 Video Format Options:
 ---------------------
@@ -291,10 +314,22 @@ Video Format Options:
                                      by extension for the extensions aac, m4a,
                                      mp3, mp4, ogg, wav, webm. You can also use
                                      the special names "best", "bestvideo",
-                                     "bestaudio", "worst".  By default, youtube-
-                                     dl will pick the best quality. Use commas
-                                     to download multiple audio formats, such as
-                                     -f
+                                     "bestaudio", "worst".  You can filter the
+                                     video results by putting a condition in
+                                     brackets, as in -f "best[height=720]" (or
+                                     -f "[filesize>10M]").  This works for
+                                     filesize, height, width, tbr, abr, vbr, and
+                                     fps and the comparisons <, <=, >, >=, =, !=
+                                     . Formats for which the value is not known
+                                     are excluded unless you put a question mark
+                                     (?) after the operator. You can combine
+                                     format filters, so  -f "[height <=?
+                                     720][tbr>500]" selects up to 720p videos
+                                     (or videos where the height is not known)
+                                     with a bitrate of at least 500 KBit/s. By
+                                     default, youtube-dl will pick the best
+                                     quality. Use commas to download multiple
+                                     audio formats, such as -f
                                      136/137/mp4/bestvideo,140/m4a/bestaudio.
                                      You can merge the video and audio of two
                                      formats into a single file using -f <video-
@@ -332,7 +367,8 @@ Authentication Options:
 -----------------------
 
     -u, --username USERNAME          login with this account ID
-    -p, --password PASSWORD          account password
+    -p, --password PASSWORD          account password. If this option is left
+                                     out, youtube-dl will ask interactively.
     -2, --twofactor TWOFACTOR        two-factor auth code
     -n, --netrc                      use .netrc authentication data
     --video-password PASSWORD        video password (vimeo, smotri)
@@ -364,11 +400,11 @@ Post-processing Options:
     --add-metadata                   write metadata to the video file
     --xattrs                         write metadata to the video file's xattrs
                                      (using dublin core and xdg standards)
-    --fixup POLICY                   (experimental) Automatically correct known
-                                     faults of the file. One of never (do
-                                     nothing), warn (only emit a warning),
-                                     detect_or_warn(check whether we can do
-                                     anything about it, warn otherwise
+    --fixup POLICY                   Automatically correct known faults of the
+                                     file. One of never (do nothing), warn (only
+                                     emit a warning), detect_or_warn(the
+                                     default; fix file if we can, warn
+                                     otherwise)
     --prefer-avconv                  Prefer avconv over ffmpeg for running the
                                      postprocessors (default)
     --prefer-ffmpeg                  Prefer ffmpeg over avconv for running the
@@ -609,6 +645,40 @@ both youtube-dl and ffmpeg (and youtube-dl will be able to find ffmpeg)
 by simply typing youtube-dl or ffmpeg, no matter what directory you're
 in.
 
+How do I put downloads into a specific folder?
+
+Use the -o to specify an output template, for example
+-o "/home/user/videos/%(title)s-%(id)s.%(ext)s". If you want this for
+all of your downloads, put the option into your configuration file.
+
+How do I download a video starting with a - ?
+
+Either prepend http://www.youtube.com/watch?v= or separate the ID from
+the options with --:
+
+    youtube-dl -- -wNyEUrxzFU
+    youtube-dl "http://www.youtube.com/watch?v=-wNyEUrxzFU"
+
+Can you add support for this anime video site, or site which shows current movies for free?
+
+As a matter of policy (as well as legality), youtube-dl does not include
+support for services that specialize in infringing copyright. As a rule
+of thumb, if you cannot easily find a video that the service is quite
+obviously allowed to distribute (i.e. that has been uploaded by the
+creator, the creator's distributor, or is published under a free
+license), the service is probably unfit for inclusion to youtube-dl.
+
+A note on the service that they don't host the infringing content, but
+just link to those who do, is evidence that the service should not be
+included into youtube-dl. The same goes for any DMCA note when the whole
+front page of the service is filled with videos they are not allowed to
+distribute. A "fair use" note is equally unconvincing if the service
+shows copyright-protected videos in full without authorization.
+
+Support requests for services that do purchase the rights to distribute
+their content are perfectly fine though. If in doubt, you can simply
+include a source that mentions the legitimate purchase of content.
+
 How can I detect whether a given URL is supported by youtube-dl?
 
 For one, have a look at the list of supported sites. Note that it can
@@ -723,8 +793,7 @@ list (assuming your service is called yourextractor):
 7.  Have a look at youtube_dl/common/extractor/common.py for possible
     helper methods and a detailed description of what your extractor
     should return. Add tests and code for as many as you want.
-8.  If you can, check the code with pyflakes (a good idea) and pep8
-    (optional, ignore E501).
+8.  If you can, check the code with flake8.
 9.  When the tests pass, add the new files and commit them and push the
     result, like this:
 
@@ -912,10 +981,10 @@ video service.
 
 Is anyone going to need the feature?
 
-Only post features that you (or an incapicated friend you can personally
-talk to) require. Do not post features because they seem like a good
-idea. If they are really useful, they will be requested by someone who
-requires them.
+Only post features that you (or an incapacitated friend you can
+personally talk to) require. Do not post features because they seem like
+a good idea. If they are really useful, they will be requested by
+someone who requires them.
 
 Is your question about youtube-dl?
 
