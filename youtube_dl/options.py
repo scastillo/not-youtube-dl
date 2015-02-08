@@ -5,6 +5,7 @@ import optparse
 import shlex
 import sys
 
+from .downloader.external import list_external_downloaders
 from .compat import (
     compat_expanduser,
     compat_getenv,
@@ -200,6 +201,10 @@ def parseOpts(overrideArguments=None):
         dest='playlistend', metavar='NUMBER', default=None, type=int,
         help='playlist video to end at (default is last)')
     selection.add_option(
+        '--playlist-items',
+        dest='playlist_items', metavar='ITEM_SPEC', default=None,
+        help='playlist video items to download. Specify indices of the videos in the playlist seperated by commas like: "--playlist-items 1,2,5,8" if you want to download videos indexed 1, 2, 5, 8 in the playlist. You can specify range: "--playlist-items 1-3,7,10-13", it will download the videos at index 1, 2, 3, 7, 10, 11, 12 and 13.')
+    selection.add_option(
         '--match-title',
         dest='matchtitle', metavar='REGEX',
         help='download only matching titles (regex or caseless sub-string)')
@@ -264,7 +269,7 @@ def parseOpts(overrideArguments=None):
     authentication.add_option(
         '-p', '--password',
         dest='password', metavar='PASSWORD',
-        help='account password')
+        help='account password. If this option is left out, youtube-dl will ask interactively.')
     authentication.add_option(
         '-2', '--twofactor',
         dest='twofactor', metavar='TWOFACTOR',
@@ -289,6 +294,17 @@ def parseOpts(overrideArguments=None):
             'extensions aac, m4a, mp3, mp4, ogg, wav, webm. '
             'You can also use the special names "best",'
             ' "bestvideo", "bestaudio", "worst". '
+            ' You can filter the video results by putting a condition in'
+            ' brackets, as in -f "best[height=720]"'
+            ' (or -f "[filesize>10M]"). '
+            ' This works for filesize, height, width, tbr, abr, vbr, and fps'
+            ' and the comparisons <, <=, >, >=, =, != .'
+            ' Formats for which the value is not known are excluded unless you'
+            ' put a question mark (?) after the operator.'
+            ' You can combine format filters, so  '
+            '-f "[height <=? 720][tbr>500]" '
+            'selects up to 720p videos (or videos where the height is not '
+            'known) with a bitrate of at least 500 KBit/s.'
             ' By default, youtube-dl will pick the best quality.'
             ' Use commas to download multiple audio formats, such as'
             ' -f  136/137/mp4/bestvideo,140/m4a/bestaudio.'
@@ -361,7 +377,7 @@ def parseOpts(overrideArguments=None):
     downloader.add_option(
         '-R', '--retries',
         dest='retries', metavar='RETRIES', default=10,
-        help='number of retries (default is %default)')
+        help='number of retries (default is %default), or "infinite".')
     downloader.add_option(
         '--buffer-size',
         dest='buffersize', metavar='SIZE', default='1024',
@@ -378,6 +394,15 @@ def parseOpts(overrideArguments=None):
         '--playlist-reverse',
         action='store_true',
         help='Download playlist videos in reverse order')
+    downloader.add_option(
+        '--xattr-set-filesize',
+        dest='xattr_set_filesize', action='store_true',
+        help='(experimental) set file xattribute ytdl.filesize with expected filesize')
+    downloader.add_option(
+        '--external-downloader',
+        dest='external_downloader', metavar='COMMAND',
+        help='(experimental) Use the specified external downloader. '
+             'Currently supports %s' % ','.join(list_external_downloaders()))
 
     workarounds = optparse.OptionGroup(parser, 'Workarounds')
     workarounds.add_option(
@@ -410,6 +435,10 @@ def parseOpts(overrideArguments=None):
         '--bidi-workaround',
         dest='bidi_workaround', action='store_true',
         help='Work around terminals that lack bidirectional text support. Requires bidiv or fribidi executable in PATH')
+    workarounds.add_option(
+        '--sleep-interval', metavar='SECONDS',
+        dest='sleep_interval', type=float,
+        help='Number of seconds to sleep before each download.')
 
     verbosity = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
     verbosity.add_option(
@@ -594,10 +623,6 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='writeannotations', default=False,
         help='write video annotations to a .annotation file')
     filesystem.add_option(
-        '--write-thumbnail',
-        action='store_true', dest='writethumbnail', default=False,
-        help='write thumbnail image to disk')
-    filesystem.add_option(
         '--load-info',
         dest='load_info_filename', metavar='FILE',
         help='json file containing the video information (created with the "--write-json" option)')
@@ -615,6 +640,20 @@ def parseOpts(overrideArguments=None):
         '--rm-cache-dir',
         action='store_true', dest='rm_cachedir',
         help='Delete all filesystem cache files')
+
+    thumbnail = optparse.OptionGroup(parser, 'Thumbnail images')
+    thumbnail.add_option(
+        '--write-thumbnail',
+        action='store_true', dest='writethumbnail', default=False,
+        help='write thumbnail image to disk')
+    thumbnail.add_option(
+        '--write-all-thumbnails',
+        action='store_true', dest='write_all_thumbnails', default=False,
+        help='write all thumbnail image formats to disk')
+    thumbnail.add_option(
+        '--list-thumbnails',
+        action='store_true', dest='list_thumbnails', default=False,
+        help='Simulate and list all available thumbnail formats')
 
     postproc = optparse.OptionGroup(parser, 'Post-processing Options')
     postproc.add_option(
@@ -659,10 +698,9 @@ def parseOpts(overrideArguments=None):
     postproc.add_option(
         '--fixup',
         metavar='POLICY', dest='fixup', default='detect_or_warn',
-        help='(experimental) Automatically correct known faults of the file. '
+        help='Automatically correct known faults of the file. '
              'One of never (do nothing), warn (only emit a warning), '
-             'detect_or_warn(check whether we can do anything about it, warn '
-             'otherwise')
+             'detect_or_warn(the default; fix file if we can, warn otherwise)')
     postproc.add_option(
         '--prefer-avconv',
         action='store_false', dest='prefer_ffmpeg',
@@ -681,6 +719,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(selection)
     parser.add_option_group(downloader)
     parser.add_option_group(filesystem)
+    parser.add_option_group(thumbnail)
     parser.add_option_group(verbosity)
     parser.add_option_group(workarounds)
     parser.add_option_group(video_format)

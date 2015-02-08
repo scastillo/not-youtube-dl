@@ -143,10 +143,13 @@ def _real_main(argv=None):
             parser.error('invalid max_filesize specified')
         opts.max_filesize = numeric_limit
     if opts.retries is not None:
-        try:
-            opts.retries = int(opts.retries)
-        except (TypeError, ValueError):
-            parser.error('invalid retry count specified')
+        if opts.retries in ('inf', 'infinite'):
+            opts_retries = float('inf')
+        else:
+            try:
+                opts_retries = int(opts.retries)
+            except (TypeError, ValueError):
+                parser.error('invalid retry count specified')
     if opts.buffersize is not None:
         numeric_buffersize = FileDownloader.parse_bytes(opts.buffersize)
         if numeric_buffersize is None:
@@ -238,6 +241,12 @@ def _real_main(argv=None):
             'verboseOutput': opts.verbose,
             'exec_cmd': opts.exec_cmd,
         })
+    if opts.xattr_set_filesize:
+        try:
+            import xattr
+            xattr  # Confuse flake8
+        except ImportError:
+            parser.error('setting filesize xattr requested but python-xattr is not available')
 
     ydl_opts = {
         'usenetrc': opts.usenetrc,
@@ -268,7 +277,7 @@ def _real_main(argv=None):
         'ignoreerrors': opts.ignoreerrors,
         'ratelimit': opts.ratelimit,
         'nooverwrites': opts.nooverwrites,
-        'retries': opts.retries,
+        'retries': opts_retries,
         'buffersize': opts.buffersize,
         'noresizebuffer': opts.noresizebuffer,
         'continuedl': opts.continue_dl,
@@ -286,6 +295,7 @@ def _real_main(argv=None):
         'writeannotations': opts.writeannotations,
         'writeinfojson': opts.writeinfojson,
         'writethumbnail': opts.writethumbnail,
+        'write_all_thumbnails': opts.write_all_thumbnails,
         'writesubtitles': opts.writesubtitles,
         'writeautomaticsub': opts.writeautomaticsub,
         'allsubtitles': opts.allsubtitles,
@@ -329,6 +339,11 @@ def _real_main(argv=None):
         'fixup': opts.fixup,
         'source_address': opts.source_address,
         'call_home': opts.call_home,
+        'sleep_interval': opts.sleep_interval,
+        'external_downloader': opts.external_downloader,
+        'list_thumbnails': opts.list_thumbnails,
+        'playlist_items': opts.playlist_items,
+        'xattr_set_filesize': opts.xattr_set_filesize,
     }
 
     with YoutubeDL(ydl_opts) as ydl:
@@ -346,7 +361,9 @@ def _real_main(argv=None):
                 sys.exit()
 
             ydl.warn_if_short_id(sys.argv[1:] if argv is None else argv)
-            parser.error('you must provide at least one URL')
+            parser.error(
+                'You must provide at least one URL.\n'
+                'Type youtube-dl --help to see a list of all options.')
 
         try:
             if opts.load_info_filename is not None:

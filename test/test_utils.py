@@ -28,6 +28,7 @@ from youtube_dl.utils import (
     fix_xml_ampersands,
     InAdvancePagedList,
     intlist_to_bytes,
+    is_html,
     js_to_json,
     limit_length,
     OnDemandPagedList,
@@ -51,6 +52,7 @@ from youtube_dl.utils import (
     urlencode_postdata,
     version_tuple,
     xpath_with_ns,
+    render_table,
 )
 
 
@@ -154,6 +156,9 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             unified_strdate('11/26/2014 11:30:00 AM PST', day_first=False),
             '20141126')
+        self.assertEqual(
+            unified_strdate('2/2/2015 6:47:40 PM', day_first=False),
+            '20150202')
 
     def test_find_xpath_attr(self):
         testxml = '''<root>
@@ -236,6 +241,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('5 s'), 5)
         self.assertEqual(parse_duration('3 min'), 180)
         self.assertEqual(parse_duration('2.5 hours'), 9000)
+        self.assertEqual(parse_duration('02:03:04'), 7384)
+        self.assertEqual(parse_duration('01:02:03:04'), 93784)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -369,6 +376,16 @@ class TestUtil(unittest.TestCase):
         on = js_to_json('{"abc": true}')
         self.assertEqual(json.loads(on), {'abc': True})
 
+        # Ignore JavaScript code as well
+        on = js_to_json('''{
+            "x": 1,
+            y: "a",
+            z: some.code
+        }''')
+        d = json.loads(on)
+        self.assertEqual(d['x'], 1)
+        self.assertEqual(d['y'], 'a')
+
     def test_clean_html(self):
         self.assertEqual(clean_html('a:\nb'), 'a: b')
         self.assertEqual(clean_html('a:\n   "b"'), 'a:    "b"')
@@ -416,6 +433,32 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
         self.assertFalse(age_restricted(8, 10))
         self.assertTrue(age_restricted(18, 14))
         self.assertFalse(age_restricted(18, 18))
+
+    def test_is_html(self):
+        self.assertFalse(is_html(b'\x49\x44\x43<html'))
+        self.assertTrue(is_html(b'<!DOCTYPE foo>\xaaa'))
+        self.assertTrue(is_html(  # UTF-8 with BOM
+            b'\xef\xbb\xbf<!DOCTYPE foo>\xaaa'))
+        self.assertTrue(is_html(  # UTF-16-LE
+            b'\xff\xfe<\x00h\x00t\x00m\x00l\x00>\x00\xe4\x00'
+        ))
+        self.assertTrue(is_html(  # UTF-16-BE
+            b'\xfe\xff\x00<\x00h\x00t\x00m\x00l\x00>\x00\xe4'
+        ))
+        self.assertTrue(is_html(  # UTF-32-BE
+            b'\x00\x00\xFE\xFF\x00\x00\x00<\x00\x00\x00h\x00\x00\x00t\x00\x00\x00m\x00\x00\x00l\x00\x00\x00>\x00\x00\x00\xe4'))
+        self.assertTrue(is_html(  # UTF-32-LE
+            b'\xFF\xFE\x00\x00<\x00\x00\x00h\x00\x00\x00t\x00\x00\x00m\x00\x00\x00l\x00\x00\x00>\x00\x00\x00\xe4\x00\x00\x00'))
+
+    def test_render_table(self):
+        self.assertEqual(
+            render_table(
+                ['a', 'bcd'],
+                [[123, 4], [9999, 51]]),
+            'a    bcd\n'
+            '123  4\n'
+            '9999 51')
+
 
 if __name__ == '__main__':
     unittest.main()

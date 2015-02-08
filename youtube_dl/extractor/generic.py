@@ -17,6 +17,7 @@ from ..utils import (
     ExtractorError,
     float_or_none,
     HEADRequest,
+    is_html,
     orderedSet,
     parse_xml,
     smuggle_url,
@@ -136,6 +137,19 @@ class GenericIE(InfoExtractor):
                 'id': 'BwY2RxaTrTkslxOfcan0UCf0YqyvWysJ',
                 'ext': 'mp4',
                 'title': '2cc213299525360.mov',  # that's what we get
+            },
+            'add_ie': ['Ooyala'],
+        },
+        # multiple ooyala embeds on SBN network websites
+        {
+            'url': 'http://www.sbnation.com/college-football-recruiting/2015/2/3/7970291/national-signing-day-rationalizations-itll-be-ok-itll-be-ok',
+            'info_dict': {
+                'id': 'national-signing-day-rationalizations-itll-be-ok-itll-be-ok',
+                'title': '25 lies you will tell yourself on National Signing Day - SBNation.com',
+            },
+            'playlist_mincount': 3,
+            'params': {
+                'skip_download': True,
             },
             'add_ie': ['Ooyala'],
         },
@@ -361,7 +375,7 @@ class GenericIE(InfoExtractor):
             'info_dict': {
                 'id': 'http://phihag.de/2014/youtube-dl/rss2.xml',
                 'title': 'Zero Punctuation',
-                'description': 're:'
+                'description': 're:.*groundbreaking video review series.*'
             },
             'playlist_mincount': 11,
         },
@@ -488,6 +502,29 @@ class GenericIE(InfoExtractor):
                 'title': 'Jack Tips: 5 Steps to Permanent Gut Healing',
             }
         },
+        # Cinerama player
+        {
+            'url': 'http://www.abc.net.au/7.30/content/2015/s4164797.htm',
+            'info_dict': {
+                'id': '730m_DandD_1901_512k',
+                'ext': 'mp4',
+                'uploader': 'www.abc.net.au',
+                'title': 'Game of Thrones with dice - Dungeons and Dragons fantasy role-playing game gets new life - 19/01/2015',
+            }
+        },
+        # embedded viddler video
+        {
+            'url': 'http://deadspin.com/i-cant-stop-watching-john-wall-chop-the-nuggets-with-th-1681801597',
+            'info_dict': {
+                'id': '4d03aad9',
+                'ext': 'mp4',
+                'uploader': 'deadspin',
+                'title': 'WALL-TO-GORTAT',
+                'timestamp': 1422285291,
+                'upload_date': '20150126',
+            },
+            'add_ie': ['Viddler'],
+        }
     ]
 
     def report_following_redirect(self, new_url):
@@ -647,7 +684,7 @@ class GenericIE(InfoExtractor):
         # Maybe it's a direct link to a video?
         # Be careful not to download the whole thing!
         first_bytes = full_response.read(512)
-        if not re.match(r'^\s*<', first_bytes.decode('utf-8', 'replace')):
+        if not is_html(first_bytes):
             self._downloader.report_warning(
                 'URL could be a direct video link, returning it as such.')
             upload_date = unified_strdate(
@@ -849,11 +886,27 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group('url'))
 
+        # Look for embedded Viddler player
+        mobj = re.search(
+            r'<(?:iframe[^>]+?src|param[^>]+?value)=(["\'])(?P<url>(?:https?:)?//(?:www\.)?viddler\.com/(?:embed|player)/.+?)\1',
+            webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+
         # Look for Ooyala videos
-        mobj = (re.search(r'player.ooyala.com/[^"?]+\?[^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
-                re.search(r'OO.Player.create\([\'"].*?[\'"],\s*[\'"](?P<ec>.{32})[\'"]', webpage))
+        mobj = (re.search(r'player\.ooyala\.com/[^"?]+\?[^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
+                re.search(r'OO\.Player\.create\([\'"].*?[\'"],\s*[\'"](?P<ec>.{32})[\'"]', webpage) or
+                re.search(r'SBN\.VideoLinkset\.ooyala\([\'"](?P<ec>.{32})[\'"]\)', webpage))
         if mobj is not None:
             return OoyalaIE._build_url_result(mobj.group('ec'))
+
+        # Look for multiple Ooyala embeds on SBN network websites
+        mobj = re.search(r'SBN\.VideoLinkset\.entryGroup\((\[.*?\])', webpage)
+        if mobj is not None:
+            embeds = self._parse_json(mobj.group(1), video_id, fatal=False)
+            if embeds:
+                return _playlist_from_matches(
+                    embeds, getter=lambda v: OoyalaIE._url_for_embed_code(v['provider_video_id']), ie='Ooyala')
 
         # Look for Aparat videos
         mobj = re.search(r'<iframe .*?src="(http://www\.aparat\.com/video/[^"]+)"', webpage)
@@ -1042,9 +1095,13 @@ class GenericIE(InfoExtractor):
             found = filter_video(re.findall(r'''(?xs)
                 flowplayer\("[^"]+",\s*
                     \{[^}]+?\}\s*,
-                    \s*{[^}]+? ["']?clip["']?\s*:\s*\{\s*
+                    \s*\{[^}]+? ["']?clip["']?\s*:\s*\{\s*
                         ["']?url["']?\s*:\s*["']([^"']+)["']
             ''', webpage))
+        if not found:
+            # Cinerama player
+            found = re.findall(
+                r"cinerama\.embedPlayer\(\s*\'[^']+\',\s*'([^']+)'", webpage)
         if not found:
             # Try to find twitter cards info
             found = filter_video(re.findall(
