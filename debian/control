@@ -20,6 +20,7 @@ Depends:
  ${misc:Depends},
  ${python:Depends}
 Recommends:
+ aria2 | wget | curl,
  libav-tools | ffmpeg,
  libav-tools | ffmpeg (>= 4:0.6) | ffprobe,
  mplayer2 | mplayer,
