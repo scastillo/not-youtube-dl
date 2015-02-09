@@ -3,9 +3,10 @@ youtube-dl (2015.02.06-1~2.gbpeeb287) UNRELEASED; urgency=medium
   ** SNAPSHOT build @eeb287ed58128659e5de200bba1e0762fb972560 **
 
   * Imported Upstream version 2015.02.06
-  * Initiate a new release.
-  * debian/control: Update list of supported sites.
-  * debian/control: Add recommends on aria2 | wget | curl to use external downloaders.
+  * debian/control:
+    + Update list of supported sites.
+    + Add recommends on "aria2 | wget | curl" to use the new external
+      downloaders feature.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Sun, 08 Feb 2015 03:45:08 -0200
 
