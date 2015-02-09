@@ -1,6 +1,4 @@
-youtube-dl (2015.02.06-1~2.gbpeeb287) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @eeb287ed58128659e5de200bba1e0762fb972560 **
+youtube-dl (2015.02.06-1) unstable; urgency=medium
 
   * Imported Upstream version 2015.02.06
   * debian/control:
@@ -8,7 +6,7 @@ youtube-dl (2015.02.06-1~2.gbpeeb287) UNRELEASED; urgency=medium
     + Add recommends on "aria2 | wget | curl" to use the new external
       downloaders feature.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 08 Feb 2015 03:45:08 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 09 Feb 2015 01:37:50 -0200
 
 youtube-dl (2015.01.16-1) unstable; urgency=medium
 
