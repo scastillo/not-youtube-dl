@@ -53,6 +53,7 @@ from youtube_dl.utils import (
     version_tuple,
     xpath_with_ns,
     render_table,
+    match_str,
 )
 
 
@@ -84,6 +85,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             sanitize_filename('New World record at 0:12:34'),
             'New World record at 0_12_34')
+        self.assertEqual(sanitize_filename('--gasdgf'), '_-gasdgf')
+        self.assertEqual(sanitize_filename('--gasdgf', is_id=True), '--gasdgf')
 
         forbidden = '"\0\\/'
         for fc in forbidden:
@@ -243,6 +246,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('2.5 hours'), 9000)
         self.assertEqual(parse_duration('02:03:04'), 7384)
         self.assertEqual(parse_duration('01:02:03:04'), 93784)
+        self.assertEqual(parse_duration('1 hour 3 minutes'), 3780)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -369,6 +373,10 @@ class TestUtil(unittest.TestCase):
             "playlist":[{"controls":{"all":null}}]
         }''')
 
+        inp = '"SAND Number: SAND 2013-7800P\\nPresenter: Tom Russo\\nHabanero Software Training - Xyce Software\\nXyce, Sandia\\u0027s"'
+        json_code = js_to_json(inp)
+        self.assertEqual(json.loads(json_code), json.loads(inp))
+
     def test_js_to_json_edgecases(self):
         on = js_to_json("{abc_def:'1\\'\\\\2\\\\\\'3\"4'}")
         self.assertEqual(json.loads(on), {"abc_def": "1'\\2\\'3\"4"})
@@ -458,6 +466,37 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
             'a    bcd\n'
             '123  4\n'
             '9999 51')
+
+    def test_match_str(self):
+        self.assertRaises(ValueError, match_str, 'xy>foobar', {})
+        self.assertFalse(match_str('xy', {'x': 1200}))
+        self.assertTrue(match_str('!xy', {'x': 1200}))
+        self.assertTrue(match_str('x', {'x': 1200}))
+        self.assertFalse(match_str('!x', {'x': 1200}))
+        self.assertTrue(match_str('x', {'x': 0}))
+        self.assertFalse(match_str('x>0', {'x': 0}))
+        self.assertFalse(match_str('x>0', {}))
+        self.assertTrue(match_str('x>?0', {}))
+        self.assertTrue(match_str('x>1K', {'x': 1200}))
+        self.assertFalse(match_str('x>2K', {'x': 1200}))
+        self.assertTrue(match_str('x>=1200 & x < 1300', {'x': 1200}))
+        self.assertFalse(match_str('x>=1100 & x < 1200', {'x': 1200}))
+        self.assertFalse(match_str('y=a212', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y=foobar42', {'y': 'foobar42'}))
+        self.assertFalse(match_str('y!=foobar42', {'y': 'foobar42'}))
+        self.assertTrue(match_str('y!=foobar2', {'y': 'foobar42'}))
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 90, 'description': 'foo'}))
+        self.assertTrue(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'description': 'foo'}))
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'dislike_count': 60, 'description': 'foo'}))
+        self.assertFalse(match_str(
+            'like_count > 100 & dislike_count <? 50 & description',
+            {'like_count': 190, 'dislike_count': 10}))
 
 
 if __name__ == '__main__':

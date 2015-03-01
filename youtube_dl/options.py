@@ -165,6 +165,11 @@ def parseOpts(overrideArguments=None):
         action='store_const', dest='extract_flat', const='in_playlist',
         default=False,
         help='Do not extract the videos of a playlist, only list them.')
+    general.add_option(
+        '--no-color', '--no-colors',
+        action='store_true', dest='no_color',
+        default=False,
+        help='Do not emit color codes in output.')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(
@@ -245,9 +250,32 @@ def parseOpts(overrideArguments=None):
         metavar='COUNT', dest='max_views', default=None, type=int,
         help='Do not download any videos with more than COUNT views')
     selection.add_option(
+        '--match-filter',
+        metavar='FILTER', dest='match_filter', default=None,
+        help=(
+            '(Experimental) Generic video filter. '
+            'Specify any key (see help for -o for a list of available keys) to'
+            ' match if the key is present, '
+            '!key to check if the key is not present,'
+            'key > NUMBER (like "comment_count > 12", also works with '
+            '>=, <, <=, !=, =) to compare against a number, and '
+            '& to require multiple matches. '
+            'Values which are not known are excluded unless you'
+            ' put a question mark (?) after the operator.'
+            'For example, to only match videos that have been liked more than '
+            '100 times and disliked less than 50 times (or the dislike '
+            'functionality is not available at the given service), but who '
+            'also have a description, use  --match-filter '
+            '"like_count > 100 & dislike_count <? 50 & description" .'
+        ))
+    selection.add_option(
         '--no-playlist',
         action='store_true', dest='noplaylist', default=False,
         help='If the URL refers to a video and a playlist, download only the video.')
+    selection.add_option(
+        '--yes-playlist',
+        action='store_false', dest='noplaylist', default=False,
+        help='If the URL refers to a video and a playlist, download the playlist.')
     selection.add_option(
         '--age-limit',
         metavar='YEARS', dest='age_limit', default=None, type=int,
@@ -297,8 +325,10 @@ def parseOpts(overrideArguments=None):
             ' You can filter the video results by putting a condition in'
             ' brackets, as in -f "best[height=720]"'
             ' (or -f "[filesize>10M]"). '
-            ' This works for filesize, height, width, tbr, abr, vbr, and fps'
-            ' and the comparisons <, <=, >, >=, =, != .'
+            ' This works for filesize, height, width, tbr, abr, vbr, asr, and fps'
+            ' and the comparisons <, <=, >, >=, =, !='
+            ' and for ext, acodec, vcodec, container, and protocol'
+            ' and the comparisons =, != .'
             ' Formats for which the value is not known are excluded unless you'
             ' put a question mark (?) after the operator.'
             ' You can combine format filters, so  '
@@ -361,8 +391,8 @@ def parseOpts(overrideArguments=None):
         help='lists all available subtitles for the video')
     subtitles.add_option(
         '--sub-format',
-        action='store', dest='subtitlesformat', metavar='FORMAT', default='srt',
-        help='subtitle format (default=srt) ([sbv/vtt] youtube only)')
+        action='store', dest='subtitlesformat', metavar='FORMAT', default='best',
+        help='subtitle format, accepts formats preference, for example: "ass/srt/best"')
     subtitles.add_option(
         '--sub-lang', '--sub-langs', '--srt-lang',
         action='callback', dest='subtitleslangs', metavar='LANGS', type='str',
@@ -398,6 +428,10 @@ def parseOpts(overrideArguments=None):
         '--xattr-set-filesize',
         dest='xattr_set_filesize', action='store_true',
         help='(experimental) set file xattribute ytdl.filesize with expected filesize')
+    downloader.add_option(
+        '--hls-prefer-native',
+        dest='hls_prefer_native', action='store_true',
+        help='(experimental) Use the native HLS downloader instead of ffmpeg.')
     downloader.add_option(
         '--external-downloader',
         dest='external_downloader', metavar='COMMAND',
@@ -531,7 +565,7 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='youtube_print_sig_code', default=False,
         help=optparse.SUPPRESS_HELP)
     verbosity.add_option(
-        '--print-traffic',
+        '--print-traffic', '--dump-headers',
         dest='debug_printtraffic', action='store_true', default=False,
         help='Display sent and read HTTP traffic')
     verbosity.add_option(
@@ -710,9 +744,17 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='prefer_ffmpeg',
         help='Prefer ffmpeg over avconv for running the postprocessors')
     postproc.add_option(
+        '--ffmpeg-location', '--avconv-location', metavar='PATH',
+        dest='ffmpeg_location',
+        help='Location of the ffmpeg/avconv binary; either the path to the binary or its containing directory.')
+    postproc.add_option(
         '--exec',
         metavar='CMD', dest='exec_cmd',
         help='Execute a command on the file after downloading, similar to find\'s -exec syntax. Example: --exec \'adb push {} /sdcard/Music/ && rm {}\'')
+    postproc.add_option(
+        '--convert-subtitles', '--convert-subs',
+        metavar='FORMAT', dest='convertsubtitles', default=None,
+        help='Convert the subtitles to other format (currently supported: srt|ass|vtt)')
 
     parser.add_option_group(general)
     parser.add_option_group(network)
@@ -732,22 +774,22 @@ def parseOpts(overrideArguments=None):
         if opts.verbose:
             write_string('[debug] Override config: ' + repr(overrideArguments) + '\n')
     else:
-        commandLineConf = sys.argv[1:]
-        if '--ignore-config' in commandLineConf:
-            systemConf = []
-            userConf = []
+        command_line_conf = sys.argv[1:]
+        if '--ignore-config' in command_line_conf:
+            system_conf = []
+            user_conf = []
         else:
-            systemConf = _readOptions('/etc/youtube-dl.conf')
-            if '--ignore-config' in systemConf:
-                userConf = []
+            system_conf = _readOptions('/etc/youtube-dl.conf')
+            if '--ignore-config' in system_conf:
+                user_conf = []
             else:
-                userConf = _readUserConf()
-        argv = systemConf + userConf + commandLineConf
+                user_conf = _readUserConf()
+        argv = system_conf + user_conf + command_line_conf
 
         opts, args = parser.parse_args(argv)
         if opts.verbose:
-            write_string('[debug] System config: ' + repr(_hide_login_info(systemConf)) + '\n')
-            write_string('[debug] User config: ' + repr(_hide_login_info(userConf)) + '\n')
-            write_string('[debug] Command-line args: ' + repr(_hide_login_info(commandLineConf)) + '\n')
+            write_string('[debug] System config: ' + repr(_hide_login_info(system_conf)) + '\n')
+            write_string('[debug] User config: ' + repr(_hide_login_info(user_conf)) + '\n')
+            write_string('[debug] Command-line args: ' + repr(_hide_login_info(command_line_conf)) + '\n')
 
     return parser, opts, args

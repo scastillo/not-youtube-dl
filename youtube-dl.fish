@@ -10,6 +10,7 @@ complete --command youtube-dl --long-option extractor-descriptions --description
 complete --command youtube-dl --long-option default-search --description 'Use this prefix for unqualified URLs. For example "gvsearch2:" downloads two videos from google videos for  youtube-dl "large apple". Use the value "auto" to let youtube-dl guess ("auto_warning" to emit a warning when guessing). "error" just throws an error. The default value "fixup_error" repairs broken URLs, but emits an error if this is not possible instead of searching.'
 complete --command youtube-dl --long-option ignore-config --description 'Do not read configuration files. When given in the global configuration file /etc/youtube-dl.conf: Do not read the user configuration in ~/.config/youtube-dl/config (%APPDATA%/youtube-dl/config.txt on Windows)'
 complete --command youtube-dl --long-option flat-playlist --description 'Do not extract the videos of a playlist, only list them.'
+complete --command youtube-dl --long-option no-color --description 'Do not emit color codes in output.'
 complete --command youtube-dl --long-option proxy --description 'Use the specified HTTP/HTTPS proxy. Pass in an empty string (--proxy "") for direct connection'
 complete --command youtube-dl --long-option socket-timeout --description 'Time to wait before giving up, in seconds'
 complete --command youtube-dl --long-option source-address --description 'Client-side IP address to bind to (experimental)'
@@ -28,7 +29,9 @@ complete --command youtube-dl --long-option datebefore --description 'download o
 complete --command youtube-dl --long-option dateafter --description 'download only videos uploaded on or after this date (i.e. inclusive)'
 complete --command youtube-dl --long-option min-views --description 'Do not download any videos with less than COUNT views'
 complete --command youtube-dl --long-option max-views --description 'Do not download any videos with more than COUNT views'
+complete --command youtube-dl --long-option match-filter --description '(Experimental) Generic video filter. Specify any key (see help for -o for a list of available keys) to match if the key is present, !key to check if the key is not present,key > NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to compare against a number, and & to require multiple matches. Values which are not known are excluded unless you put a question mark (?) after the operator.For example, to only match videos that have been liked more than 100 times and disliked less than 50 times (or the dislike functionality is not available at the given service), but who also have a description, use  --match-filter "like_count > 100 & dislike_count <? 50 & description" .'
 complete --command youtube-dl --long-option no-playlist --description 'If the URL refers to a video and a playlist, download only the video.'
+complete --command youtube-dl --long-option yes-playlist --description 'If the URL refers to a video and a playlist, download the playlist.'
 complete --command youtube-dl --long-option age-limit --description 'download only videos suitable for the given age'
 complete --command youtube-dl --long-option download-archive --description 'Download only videos not listed in the archive file. Record the IDs of all downloaded videos in it.' --require-parameter
 complete --command youtube-dl --long-option include-ads --description 'Download advertisements as well (experimental)'
@@ -39,6 +42,7 @@ complete --command youtube-dl --long-option no-resize-buffer --description 'do n
 complete --command youtube-dl --long-option test
 complete --command youtube-dl --long-option playlist-reverse --description 'Download playlist videos in reverse order'
 complete --command youtube-dl --long-option xattr-set-filesize --description '(experimental) set file xattribute ytdl.filesize with expected filesize'
+complete --command youtube-dl --long-option hls-prefer-native --description '(experimental) Use the native HLS downloader instead of ffmpeg.'
 complete --command youtube-dl --long-option external-downloader --description '(experimental) Use the specified external downloader. Currently supports aria2c,curl,wget'
 complete --command youtube-dl --long-option batch-file --short-option a --description 'file containing URLs to download ('"'"'-'"'"' for stdin)' --require-parameter
 complete --command youtube-dl --long-option id --description 'use only video ID in file name'
@@ -97,7 +101,7 @@ complete --command youtube-dl --long-option referer --description 'specify a cus
 complete --command youtube-dl --long-option add-header --description 'specify a custom HTTP header and its value, separated by a colon '"'"':'"'"'. You can use this option multiple times'
 complete --command youtube-dl --long-option bidi-workaround --description 'Work around terminals that lack bidirectional text support. Requires bidiv or fribidi executable in PATH'
 complete --command youtube-dl --long-option sleep-interval --description 'Number of seconds to sleep before each download.'
-complete --command youtube-dl --long-option format --short-option f --description 'video format code, specify the order of preference using slashes, as in -f 22/17/18 .  Instead of format codes, you can select by extension for the extensions aac, m4a, mp3, mp4, ogg, wav, webm. You can also use the special names "best", "bestvideo", "bestaudio", "worst".  You can filter the video results by putting a condition in brackets, as in -f "best[height=720]" (or -f "[filesize>10M]").  This works for filesize, height, width, tbr, abr, vbr, and fps and the comparisons <, <=, >, >=, =, != . Formats for which the value is not known are excluded unless you put a question mark (?) after the operator. You can combine format filters, so  -f "[height <=? 720][tbr>500]" selects up to 720p videos (or videos where the height is not known) with a bitrate of at least 500 KBit/s. By default, youtube-dl will pick the best quality. Use commas to download multiple audio formats, such as -f  136/137/mp4/bestvideo,140/m4a/bestaudio. You can merge the video and audio of two formats into a single file using -f <video-format>+<audio-format> (requires ffmpeg or avconv), for example -f bestvideo+bestaudio.'
+complete --command youtube-dl --long-option format --short-option f --description 'video format code, specify the order of preference using slashes, as in -f 22/17/18 .  Instead of format codes, you can select by extension for the extensions aac, m4a, mp3, mp4, ogg, wav, webm. You can also use the special names "best", "bestvideo", "bestaudio", "worst".  You can filter the video results by putting a condition in brackets, as in -f "best[height=720]" (or -f "[filesize>10M]").  This works for filesize, height, width, tbr, abr, vbr, asr, and fps and the comparisons <, <=, >, >=, =, != and for ext, acodec, vcodec, container, and protocol and the comparisons =, != . Formats for which the value is not known are excluded unless you put a question mark (?) after the operator. You can combine format filters, so  -f "[height <=? 720][tbr>500]" selects up to 720p videos (or videos where the height is not known) with a bitrate of at least 500 KBit/s. By default, youtube-dl will pick the best quality. Use commas to download multiple audio formats, such as -f  136/137/mp4/bestvideo,140/m4a/bestaudio. You can merge the video and audio of two formats into a single file using -f <video-format>+<audio-format> (requires ffmpeg or avconv), for example -f bestvideo+bestaudio.'
 complete --command youtube-dl --long-option all-formats --description 'download all available video formats'
 complete --command youtube-dl --long-option prefer-free-formats --description 'prefer free video formats unless a specific one is requested'
 complete --command youtube-dl --long-option max-quality --description 'highest quality format to download'
@@ -109,7 +113,7 @@ complete --command youtube-dl --long-option write-sub --description 'write subti
 complete --command youtube-dl --long-option write-auto-sub --description 'write automatic subtitle file (youtube only)'
 complete --command youtube-dl --long-option all-subs --description 'downloads all the available subtitles of the video'
 complete --command youtube-dl --long-option list-subs --description 'lists all available subtitles for the video'
-complete --command youtube-dl --long-option sub-format --description 'subtitle format (default=srt) ([sbv/vtt] youtube only)'
+complete --command youtube-dl --long-option sub-format --description 'subtitle format, accepts formats preference, for example: "ass/srt/best"'
 complete --command youtube-dl --long-option sub-lang --description 'languages of the subtitles to download (optional) separated by commas, use IETF language tags like '"'"'en,pt'"'"''
 complete --command youtube-dl --long-option username --short-option u --description 'login with this account ID'
 complete --command youtube-dl --long-option password --short-option p --description 'account password. If this option is left out, youtube-dl will ask interactively.'
@@ -129,7 +133,9 @@ complete --command youtube-dl --long-option xattrs --description 'write metadata
 complete --command youtube-dl --long-option fixup --description 'Automatically correct known faults of the file. One of never (do nothing), warn (only emit a warning), detect_or_warn(the default; fix file if we can, warn otherwise)'
 complete --command youtube-dl --long-option prefer-avconv --description 'Prefer avconv over ffmpeg for running the postprocessors (default)'
 complete --command youtube-dl --long-option prefer-ffmpeg --description 'Prefer ffmpeg over avconv for running the postprocessors'
+complete --command youtube-dl --long-option ffmpeg-location --description 'Location of the ffmpeg/avconv binary; either the path to the binary or its containing directory.'
 complete --command youtube-dl --long-option exec --description 'Execute a command on the file after downloading, similar to find'"'"'s -exec syntax. Example: --exec '"'"'adb push {} /sdcard/Music/ && rm {}'"'"''
+complete --command youtube-dl --long-option convert-subtitles --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt)'
 
 
 complete --command youtube-dl --arguments ":ytfavorites :ytrecommended :ytsubscriptions :ytwatchlater :ythistory"

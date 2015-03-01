@@ -154,7 +154,7 @@ class YoutubeDL(object):
     allsubtitles:      Downloads all the subtitles of the video
                        (requires writesubtitles or writeautomaticsub)
     listsubtitles:     Lists all available subtitles for the video
-    subtitlesformat:   Subtitle format [srt/sbv/vtt] (default=srt)
+    subtitlesformat:   The format code for subtitles
     subtitleslangs:    List of languages of the subtitles to download
     keepvideo:         Keep the video file after post-processing
     daterange:         A DateRange object, download only if the upload_date is in the range.
@@ -199,18 +199,25 @@ class YoutubeDL(object):
                        postprocessor.
     progress_hooks:    A list of functions that get called on download
                        progress, with a dictionary with the entries
-                       * status: One of "downloading" and "finished".
+                       * status: One of "downloading", "error", or "finished".
                                  Check this first and ignore unknown values.
 
-                       If status is one of "downloading" or "finished", the
+                       If status is one of "downloading", or "finished", the
                        following properties may also be present:
                        * filename: The final filename (always present)
+                       * tmpfilename: The filename we're currently writing to
                        * downloaded_bytes: Bytes on disk
                        * total_bytes: Size of the whole file, None if unknown
-                       * tmpfilename: The filename we're currently writing to
+                       * total_bytes_estimate: Guess of the eventual file size,
+                                               None if unavailable.
+                       * elapsed: The number of seconds since download started.
                        * eta: The estimated time in seconds, None if unknown
                        * speed: The download speed in bytes/second, None if
                                 unknown
+                       * fragment_index: The counter of the currently
+                                         downloaded video fragment.
+                       * fragment_count: The number of fragments (= individual
+                                         files that will be merged)
 
                        Progress hooks are guaranteed to be called at least once
                        (with status "finished") if the download is successful.
@@ -225,10 +232,19 @@ class YoutubeDL(object):
     call_home:         Boolean, true iff we are allowed to contact the
                        youtube-dl servers for debugging.
     sleep_interval:    Number of seconds to sleep before each download.
-    external_downloader:  Executable of the external downloader to call.
     listformats:       Print an overview of available video formats and exit.
     list_thumbnails:   Print a table of all thumbnails and exit.
+    match_filter:      A function that gets called with the info_dict of
+                       every video.
+                       If it returns a message, the video is ignored.
+                       If it returns None, the video is downloaded.
+                       match_filter_func in utils.py is one example for this.
+    no_color:          Do not emit color codes in output.
 
+    The following options determine which downloader is picked:
+    external_downloader: Executable of the external downloader to call.
+                       None or unset for standard (built-in) downloader.
+    hls_prefer_native: Use the native HLS downloader instead of ffmpeg/avconv.
 
     The following parameters are not used by YoutubeDL itself, they are used by
     the FileDownloader:
@@ -292,8 +308,8 @@ class YoutubeDL(object):
                     raise
 
         if (sys.version_info >= (3,) and sys.platform != 'win32' and
-                sys.getfilesystemencoding() in ['ascii', 'ANSI_X3.4-1968']
-                and not params.get('restrictfilenames', False)):
+                sys.getfilesystemencoding() in ['ascii', 'ANSI_X3.4-1968'] and
+                not params.get('restrictfilenames', False)):
             # On Python 3, the Unicode filesystem API will throw errors (#1474)
             self.report_warning(
                 'Assuming --restrict-filenames since file system encoding '
@@ -485,7 +501,7 @@ class YoutubeDL(object):
         else:
             if self.params.get('no_warnings'):
                 return
-            if self._err_file.isatty() and os.name != 'nt':
+            if not self.params.get('no_color') and self._err_file.isatty() and os.name != 'nt':
                 _msg_header = '\033[0;33mWARNING:\033[0m'
             else:
                 _msg_header = 'WARNING:'
@@ -497,7 +513,7 @@ class YoutubeDL(object):
         Do the same as trouble, but prefixes the message with 'ERROR:', colored
         in red if stderr is a tty file.
         '''
-        if self._err_file.isatty() and os.name != 'nt':
+        if not self.params.get('no_color') and self._err_file.isatty() and os.name != 'nt':
             _msg_header = '\033[0;31mERROR:\033[0m'
         else:
             _msg_header = 'ERROR:'
@@ -554,7 +570,7 @@ class YoutubeDL(object):
             self.report_error('Error in output template: ' + str(err) + ' (encoding: ' + repr(preferredencoding()) + ')')
             return None
 
-    def _match_entry(self, info_dict):
+    def _match_entry(self, info_dict, incomplete):
         """ Returns None iff the file should be downloaded """
 
         video_title = info_dict.get('title', info_dict.get('id', 'video'))
@@ -583,9 +599,17 @@ class YoutubeDL(object):
             if max_views is not None and view_count > max_views:
                 return 'Skipping %s, because it has exceeded the maximum view count (%d/%d)' % (video_title, view_count, max_views)
         if age_restricted(info_dict.get('age_limit'), self.params.get('age_limit')):
-            return 'Skipping "%s" because it is age restricted' % title
+            return 'Skipping "%s" because it is age restricted' % video_title
         if self.in_download_archive(info_dict):
             return '%s has already been recorded in archive' % video_title
+
+        if not incomplete:
+            match_filter = self.params.get('match_filter')
+            if match_filter is not None:
+                ret = match_filter(info_dict)
+                if ret is not None:
+                    return ret
+
         return None
 
     @staticmethod
@@ -779,7 +803,7 @@ class YoutubeDL(object):
                     'extractor_key': ie_result['extractor_key'],
                 }
 
-                reason = self._match_entry(entry)
+                reason = self._match_entry(entry, incomplete=True)
                 if reason is not None:
                     self.to_screen('[download] ' + reason)
                     continue
@@ -826,26 +850,43 @@ class YoutubeDL(object):
             '!=': operator.ne,
         }
         operator_rex = re.compile(r'''(?x)\s*\[
-            (?P<key>width|height|tbr|abr|vbr|filesize|fps)
+            (?P<key>width|height|tbr|abr|vbr|asr|filesize|fps)
             \s*(?P<op>%s)(?P<none_inclusive>\s*\?)?\s*
             (?P<value>[0-9.]+(?:[kKmMgGtTpPeEzZyY]i?[Bb]?)?)
             \]$
             ''' % '|'.join(map(re.escape, OPERATORS.keys())))
         m = operator_rex.search(format_spec)
+        if m:
+            try:
+                comparison_value = int(m.group('value'))
+            except ValueError:
+                comparison_value = parse_filesize(m.group('value'))
+                if comparison_value is None:
+                    comparison_value = parse_filesize(m.group('value') + 'B')
+                if comparison_value is None:
+                    raise ValueError(
+                        'Invalid value %r in format specification %r' % (
+                            m.group('value'), format_spec))
+            op = OPERATORS[m.group('op')]
+
+        if not m:
+            STR_OPERATORS = {
+                '=': operator.eq,
+                '!=': operator.ne,
+            }
+            str_operator_rex = re.compile(r'''(?x)\s*\[
+                \s*(?P<key>ext|acodec|vcodec|container|protocol)
+                \s*(?P<op>%s)(?P<none_inclusive>\s*\?)?
+                \s*(?P<value>[a-zA-Z0-9_-]+)
+                \s*\]$
+                ''' % '|'.join(map(re.escape, STR_OPERATORS.keys())))
+            m = str_operator_rex.search(format_spec)
+            if m:
+                comparison_value = m.group('value')
+                op = STR_OPERATORS[m.group('op')]
+
         if not m:
             raise ValueError('Invalid format specification %r' % format_spec)
-
-        try:
-            comparison_value = int(m.group('value'))
-        except ValueError:
-            comparison_value = parse_filesize(m.group('value'))
-            if comparison_value is None:
-                comparison_value = parse_filesize(m.group('value') + 'B')
-            if comparison_value is None:
-                raise ValueError(
-                    'Invalid value %r in format specification %r' % (
-                        m.group('value'), format_spec))
-        op = OPERATORS[m.group('op')]
 
         def _filter(f):
             actual_value = f.get(m.group('key'))
@@ -920,27 +961,9 @@ class YoutubeDL(object):
         return res
 
     def _calc_cookies(self, info_dict):
-        class _PseudoRequest(object):
-            def __init__(self, url):
-                self.url = url
-                self.headers = {}
-                self.unverifiable = False
-
-            def add_unredirected_header(self, k, v):
-                self.headers[k] = v
-
-            def get_full_url(self):
-                return self.url
-
-            def is_unverifiable(self):
-                return self.unverifiable
-
-            def has_header(self, h):
-                return h in self.headers
-
-        pr = _PseudoRequest(info_dict['url'])
+        pr = compat_urllib_request.Request(info_dict['url'])
         self.cookiejar.add_cookie_header(pr)
-        return pr.headers.get('Cookie')
+        return pr.get_header('Cookie')
 
     def process_video_result(self, info_dict, download=True):
         assert info_dict.get('_type', 'video') == 'video'
@@ -984,6 +1007,15 @@ class YoutubeDL(object):
             upload_date = datetime.datetime.utcfromtimestamp(
                 info_dict['timestamp'])
             info_dict['upload_date'] = upload_date.strftime('%Y%m%d')
+
+        if self.params.get('listsubtitles', False):
+            if 'automatic_captions' in info_dict:
+                self.list_subtitles(info_dict['id'], info_dict.get('automatic_captions'), 'automatic captions')
+            self.list_subtitles(info_dict['id'], info_dict.get('subtitles'), 'subtitles')
+            return
+        info_dict['requested_subtitles'] = self.process_subtitles(
+            info_dict['id'], info_dict.get('subtitles'),
+            info_dict.get('automatic_captions'))
 
         # This extractors handle format selection themselves
         if info_dict['extractor'] in ['Youku']:
@@ -1113,6 +1145,55 @@ class YoutubeDL(object):
         info_dict.update(formats_to_download[-1])
         return info_dict
 
+    def process_subtitles(self, video_id, normal_subtitles, automatic_captions):
+        """Select the requested subtitles and their format"""
+        available_subs = {}
+        if normal_subtitles and self.params.get('writesubtitles'):
+            available_subs.update(normal_subtitles)
+        if automatic_captions and self.params.get('writeautomaticsub'):
+            for lang, cap_info in automatic_captions.items():
+                if lang not in available_subs:
+                    available_subs[lang] = cap_info
+
+        if (not self.params.get('writesubtitles') and not
+                self.params.get('writeautomaticsub') or not
+                available_subs):
+            return None
+
+        if self.params.get('allsubtitles', False):
+            requested_langs = available_subs.keys()
+        else:
+            if self.params.get('subtitleslangs', False):
+                requested_langs = self.params.get('subtitleslangs')
+            elif 'en' in available_subs:
+                requested_langs = ['en']
+            else:
+                requested_langs = [list(available_subs.keys())[0]]
+
+        formats_query = self.params.get('subtitlesformat', 'best')
+        formats_preference = formats_query.split('/') if formats_query else []
+        subs = {}
+        for lang in requested_langs:
+            formats = available_subs.get(lang)
+            if formats is None:
+                self.report_warning('%s subtitles not available for %s' % (lang, video_id))
+                continue
+            for ext in formats_preference:
+                if ext == 'best':
+                    f = formats[-1]
+                    break
+                matches = list(filter(lambda f: f['ext'] == ext, formats))
+                if matches:
+                    f = matches[-1]
+                    break
+            else:
+                f = formats[-1]
+                self.report_warning(
+                    'No subtitle format found matching "%s" for language %s, '
+                    'using %s' % (formats_query, lang, f['ext']))
+            subs[lang] = f
+        return subs
+
     def process_info(self, info_dict):
         """Process a single resolved IE result."""
 
@@ -1133,7 +1214,7 @@ class YoutubeDL(object):
         if 'format' not in info_dict:
             info_dict['format'] = info_dict['ext']
 
-        reason = self._match_entry(info_dict)
+        reason = self._match_entry(info_dict, incomplete=False)
         if reason is not None:
             self.to_screen('[download] ' + reason)
             return
@@ -1215,15 +1296,23 @@ class YoutubeDL(object):
         subtitles_are_requested = any([self.params.get('writesubtitles', False),
                                        self.params.get('writeautomaticsub')])
 
-        if subtitles_are_requested and 'subtitles' in info_dict and info_dict['subtitles']:
+        if subtitles_are_requested and info_dict.get('requested_subtitles'):
             # subtitles download errors are already managed as troubles in relevant IE
             # that way it will silently go on when used with unsupporting IE
-            subtitles = info_dict['subtitles']
-            sub_format = self.params.get('subtitlesformat', 'srt')
-            for sub_lang in subtitles.keys():
-                sub = subtitles[sub_lang]
-                if sub is None:
-                    continue
+            subtitles = info_dict['requested_subtitles']
+            ie = self.get_info_extractor(info_dict['extractor_key'])
+            for sub_lang, sub_info in subtitles.items():
+                sub_format = sub_info['ext']
+                if sub_info.get('data') is not None:
+                    sub_data = sub_info['data']
+                else:
+                    try:
+                        sub_data = ie._download_webpage(
+                            sub_info['url'], info_dict['id'], note=False)
+                    except ExtractorError as err:
+                        self.report_warning('Unable to download subtitle for "%s": %s' %
+                                            (sub_lang, compat_str(err.cause)))
+                        continue
                 try:
                     sub_filename = subtitles_filename(filename, sub_lang, sub_format)
                     if self.params.get('nooverwrites', False) and os.path.exists(encodeFilename(sub_filename)):
@@ -1231,7 +1320,7 @@ class YoutubeDL(object):
                     else:
                         self.to_screen('[info] Writing video subtitles to: ' + sub_filename)
                         with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8') as subfile:
-                            subfile.write(sub)
+                            subfile.write(sub_data)
                 except (OSError, IOError):
                     self.report_error('Cannot write subtitles file ' + sub_filename)
                     return
@@ -1264,7 +1353,7 @@ class YoutubeDL(object):
                     downloaded = []
                     success = True
                     merger = FFmpegMergerPP(self, not self.params.get('keepvideo'))
-                    if not merger._executable:
+                    if not merger.available:
                         postprocessors = []
                         self.report_warning('You have requested multiple '
                                             'formats but ffmpeg or avconv are not installed.'
@@ -1343,8 +1432,8 @@ class YoutubeDL(object):
         """Download a given list of URLs."""
         outtmpl = self.params.get('outtmpl', DEFAULT_OUTTMPL)
         if (len(url_list) > 1 and
-                '%' not in outtmpl
-                and self.params.get('max_downloads') != 1):
+                '%' not in outtmpl and
+                self.params.get('max_downloads') != 1):
             raise SameFileError(outtmpl)
 
         for url in url_list:
@@ -1511,30 +1600,18 @@ class YoutubeDL(object):
         return res
 
     def list_formats(self, info_dict):
-        def line(format, idlen=20):
-            return (('%-' + compat_str(idlen + 1) + 's%-10s%-12s%s') % (
-                format['format_id'],
-                format['ext'],
-                self.format_resolution(format),
-                self._format_note(format),
-            ))
-
         formats = info_dict.get('formats', [info_dict])
-        idlen = max(len('format code'),
-                    max(len(f['format_id']) for f in formats))
-        formats_s = [
-            line(f, idlen) for f in formats
+        table = [
+            [f['format_id'], f['ext'], self.format_resolution(f), self._format_note(f)]
+            for f in formats
             if f.get('preference') is None or f['preference'] >= -1000]
         if len(formats) > 1:
-            formats_s[0] += (' ' if self._format_note(formats[0]) else '') + '(worst)'
-            formats_s[-1] += (' ' if self._format_note(formats[-1]) else '') + '(best)'
+            table[-1][-1] += (' ' if table[-1][-1] else '') + '(best)'
 
-        header_line = line({
-            'format_id': 'format code', 'ext': 'extension',
-            'resolution': 'resolution', 'format_note': 'note'}, idlen=idlen)
+        header_line = ['format code', 'extension', 'resolution', 'note']
         self.to_screen(
-            '[info] Available formats for %s:\n%s\n%s' %
-            (info_dict['id'], header_line, '\n'.join(formats_s)))
+            '[info] Available formats for %s:\n%s' %
+            (info_dict['id'], render_table(header_line, table)))
 
     def list_thumbnails(self, info_dict):
         thumbnails = info_dict.get('thumbnails')
@@ -1552,6 +1629,17 @@ class YoutubeDL(object):
         self.to_screen(render_table(
             ['ID', 'width', 'height', 'URL'],
             [[t['id'], t.get('width', 'unknown'), t.get('height', 'unknown'), t['url']] for t in thumbnails]))
+
+    def list_subtitles(self, video_id, subtitles, name='subtitles'):
+        if not subtitles:
+            self.to_screen('%s has no %s' % (video_id, name))
+            return
+        self.to_screen(
+            'Available %s for %s:' % (name, video_id))
+        self.to_screen(render_table(
+            ['Language', 'formats'],
+            [[lang, ', '.join(f['ext'] for f in reversed(formats))]
+                for lang, formats in subtitles.items()]))
 
     def urlopen(self, req):
         """ Start an HTTP download """
@@ -1614,7 +1702,7 @@ class YoutubeDL(object):
         self._write_string('[debug] Python version %s - %s\n' % (
             platform.python_version(), platform_name()))
 
-        exe_versions = FFmpegPostProcessor.get_versions()
+        exe_versions = FFmpegPostProcessor.get_versions(self)
         exe_versions['rtmpdump'] = rtmpdump_version()
         exe_str = ', '.join(
             '%s %s' % (exe, v)
