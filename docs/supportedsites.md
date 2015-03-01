@@ -1,4 +1,5 @@
 # Supported sites
+ - **1tv**: Первый канал
  - **1up.com**
  - **220.ro**
  - **24video**
@@ -14,7 +15,9 @@
  - **AddAnime**
  - **AdobeTV**
  - **AdultSwim**
+ - **Aftenposten**
  - **Aftonbladet**
+ - **AirMozilla**
  - **AlJazeera**
  - **Allocine**
  - **AlphaPorno**
@@ -59,14 +62,19 @@
  - **Brightcove**
  - **BuzzFeed**
  - **BYUtv**
+ - **Camdemy**
+ - **CamdemyFolder**
  - **Canal13cl**
  - **canalc2.tv**
  - **Canalplus**: canalplus.fr, piwiplus.fr and d8.tv
  - **CBS**
  - **CBSNews**: CBS News
+ - **CBSSports**
  - **CeskaTelevize**
  - **channel9**: Channel 9
  - **Chilloutzone**
+ - **chirbit**
+ - **chirbit:profile**
  - **Cinchcast**
  - **Cinemassacre**
  - **clipfish**
@@ -117,6 +125,7 @@
  - **EllenTV**
  - **EllenTV:clips**
  - **ElPais**: El País
+ - **Embedly**
  - **EMPFlix**
  - **Engadget**
  - **Eporner**
@@ -133,7 +142,6 @@
  - **fernsehkritik.tv:postecke**
  - **Firedrive**
  - **Firstpost**
- - **firsttv**: Видеоархив - Первый канал
  - **Flickr**
  - **Folketinget**: Folketinget (ft.dk; Danish parliament)
  - **Foxgay**
@@ -173,6 +181,7 @@
  - **Helsinki**: helsinki.fi
  - **HentaiStigma**
  - **HistoricFilms**
+ - **History**
  - **hitbox**
  - **hitbox:live**
  - **HornBunny**
@@ -186,6 +195,7 @@
  - **ign.com**
  - **imdb**: Internet Movie Database trailers
  - **imdb:list**: Internet Movie Database lists
+ - **Imgur**
  - **Ina**
  - **InfoQ**
  - **Instagram**
@@ -200,6 +210,7 @@
  - **Jove**
  - **jpopsuki.tv**
  - **Jukebox**
+ - **Kaltura**
  - **Kankan**
  - **Karaoketv**
  - **keek**
@@ -211,6 +222,9 @@
  - **Ku6**
  - **la7.tv**
  - **Laola1Tv**
+ - **Letv**
+ - **LetvPlaylist**
+ - **LetvTv**
  - **lifenews**: LIFE | NEWS
  - **LiveLeak**
  - **livestream**
@@ -224,6 +238,7 @@
  - **mailru**: Видео@Mail.Ru
  - **Malemotion**
  - **MDR**
+ - **media.ccc.de**
  - **metacafe**
  - **Metacritic**
  - **Mgoon**
@@ -257,6 +272,7 @@
  - **myvideo**
  - **MyVidster**
  - **n-tv.de**
+ - **NationalGeographic**
  - **Naver**
  - **NBA**
  - **NBC**
@@ -285,12 +301,15 @@
  - **nowvideo**: NowVideo
  - **npo.nl**
  - **npo.nl:live**
+ - **npo.nl:radio**
+ - **npo.nl:radio:fragment**
  - **NRK**
  - **NRKTV**
  - **ntv.ru**
  - **Nuvid**
  - **NYTimes**
  - **ocw.mit.edu**
+ - **Odnoklassniki**
  - **OktoberfestTV**
  - **on.aol.com**
  - **Ooyala**
@@ -312,12 +331,15 @@
  - **podomatic**
  - **PornHd**
  - **PornHub**
+ - **PornHubPlaylist**
  - **Pornotube**
  - **PornoXO**
  - **PromptFile**
  - **prosiebensat1**: ProSiebenSat.1 Digital
+ - **Puls4**
  - **Pyvideo**
  - **QuickVid**
+ - **R7**
  - **radio.de**
  - **radiobremen**
  - **radiofrance**
@@ -331,9 +353,9 @@
  - **Roxwel**
  - **RTBF**
  - **Rte**
+ - **rtl.nl**: rtl.nl and rtlxl.nl
  - **RTL2**
  - **RTLnow**
- - **rtlxl.nl**
  - **RTP**
  - **RTS**: RTS.ch
  - **rtve.es:alacarta**: RTVE a la carta
@@ -345,6 +367,7 @@
  - **rutube:movie**: Rutube movies
  - **rutube:person**: Rutube person videos
  - **RUTV**: RUTV.RU
+ - **Sandia**: Sandia National Laboratories
  - **Sapo**: SAPO Vídeos
  - **savefrom.net**
  - **SBS**: sbs.com.au
@@ -372,7 +395,8 @@
  - **soundcloud:playlist**
  - **soundcloud:set**
  - **soundcloud:user**
- - **Soundgasm**
+ - **soundgasm**
+ - **soundgasm:profile**
  - **southpark.cc.com**
  - **southpark.de**
  - **Space**
@@ -391,6 +415,7 @@
  - **StreamCZ**
  - **StreetVoice**
  - **SunPorno**
+ - **SVTPlay**: SVT Play and Öppet arkiv
  - **SWRMediathek**
  - **Syfy**
  - **SztvHu**
@@ -437,6 +462,7 @@
  - **Turbo**
  - **Tutv**
  - **tv.dfb.de**
+ - **TV4**: tv4.se and tv4play.se
  - **tvigle**: Интернет-телевидение Tvigle.ru
  - **tvp.pl**
  - **tvp.pl:Series**
@@ -524,6 +550,7 @@
  - **XVideos**
  - **XXXYMovies**
  - **Yahoo**: Yahoo screen and movies
+ - **Yam**
  - **YesJapan**
  - **Ynet**
  - **YouJizz**
@@ -543,6 +570,7 @@
  - **youtube:subscriptions**: YouTube.com subscriptions feed, "ytsubs" keyword (requires authentication)
  - **youtube:user**: YouTube.com user videos (URL or "ytuser" keyword)
  - **youtube:watch_later**: Youtube watch later list, ":ytwatchlater" for short (requires authentication)
+ - **Zapiks**
  - **ZDF**
  - **ZDFChannel**
  - **zingmp3:album**: mp3.zing.vn albums

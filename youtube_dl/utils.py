@@ -17,6 +17,7 @@ import io
 import json
 import locale
 import math
+import operator
 import os
 import pipes
 import platform
@@ -53,12 +54,17 @@ from .compat import (
 compiled_regex_type = type(re.compile(''))
 
 std_headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0 (Chrome)',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/20.0 (Chrome)',
     'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-us,en;q=0.5',
 }
+
+
+ENGLISH_MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December']
 
 
 def preferredencoding():
@@ -298,6 +304,8 @@ def sanitize_filename(s, restricted=False, is_id=False):
         # Common case of "Foreign band name - English song title"
         if restricted and result.startswith('-_'):
             result = result[2:]
+        if result.startswith('-'):
+            result = '_' + result[len('-'):]
         if not result:
             result = '_'
     return result
@@ -665,26 +673,27 @@ class YoutubeDLHTTPSHandler(compat_urllib_request.HTTPSHandler):
             req, **kwargs)
 
 
-def parse_iso8601(date_str, delimiter='T'):
+def parse_iso8601(date_str, delimiter='T', timezone=None):
     """ Return a UNIX timestamp from the given date """
 
     if date_str is None:
         return None
 
-    m = re.search(
-        r'(\.[0-9]+)?(?:Z$| ?(?P<sign>\+|-)(?P<hours>[0-9]{2}):?(?P<minutes>[0-9]{2})$)',
-        date_str)
-    if not m:
-        timezone = datetime.timedelta()
-    else:
-        date_str = date_str[:-len(m.group(0))]
-        if not m.group('sign'):
+    if timezone is None:
+        m = re.search(
+            r'(\.[0-9]+)?(?:Z$| ?(?P<sign>\+|-)(?P<hours>[0-9]{2}):?(?P<minutes>[0-9]{2})$)',
+            date_str)
+        if not m:
             timezone = datetime.timedelta()
         else:
-            sign = 1 if m.group('sign') == '+' else -1
-            timezone = datetime.timedelta(
-                hours=sign * int(m.group('hours')),
-                minutes=sign * int(m.group('minutes')))
+            date_str = date_str[:-len(m.group(0))]
+            if not m.group('sign'):
+                timezone = datetime.timedelta()
+            else:
+                sign = 1 if m.group('sign') == '+' else -1
+                timezone = datetime.timedelta(
+                    hours=sign * int(m.group('hours')),
+                    minutes=sign * int(m.group('minutes')))
     date_format = '%Y-%m-%d{0}%H:%M:%S'.format(delimiter)
     dt = datetime.datetime.strptime(date_str, date_format) - timezone
     return calendar.timegm(dt.timetuple())
@@ -893,8 +902,8 @@ def _windows_write_string(s, out):
     def not_a_console(handle):
         if handle == INVALID_HANDLE_VALUE or handle is None:
             return True
-        return ((GetFileType(handle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR
-                or GetConsoleMode(handle, ctypes.byref(ctypes.wintypes.DWORD())) == 0)
+        return ((GetFileType(handle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR or
+                GetConsoleMode(handle, ctypes.byref(ctypes.wintypes.DWORD())) == 0)
 
     if not_a_console(h):
         return False
@@ -1183,11 +1192,18 @@ def get_term_width():
 def month_by_name(name):
     """ Return the number of a month by (locale-independently) English name """
 
-    ENGLISH_NAMES = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December']
     try:
-        return ENGLISH_NAMES.index(name) + 1
+        return ENGLISH_MONTH_NAMES.index(name) + 1
+    except ValueError:
+        return None
+
+
+def month_by_abbreviation(abbrev):
+    """ Return the number of a month by (locale-independently) English
+        abbreviations """
+
+    try:
+        return [s[:3] for s in ENGLISH_MONTH_NAMES].index(abbrev) + 1
     except ValueError:
         return None
 
@@ -1274,6 +1290,7 @@ def parse_duration(s):
             (?P<only_mins>[0-9.]+)\s*(?:mins?|minutes?)\s*|
             (?P<only_hours>[0-9.]+)\s*(?:hours?)|
 
+            \s*(?P<hours_reversed>[0-9]+)\s*(?:[:h]|hours?)\s*(?P<mins_reversed>[0-9]+)\s*(?:[:m]|mins?|minutes?)\s*|
             (?:
                 (?:
                     (?:(?P<days>[0-9]+)\s*(?:[:d]|days?)\s*)?
@@ -1292,10 +1309,14 @@ def parse_duration(s):
         return float_or_none(m.group('only_hours'), invscale=60 * 60)
     if m.group('secs'):
         res += int(m.group('secs'))
+    if m.group('mins_reversed'):
+        res += int(m.group('mins_reversed')) * 60
     if m.group('mins'):
         res += int(m.group('mins')) * 60
     if m.group('hours'):
         res += int(m.group('hours')) * 60 * 60
+    if m.group('hours_reversed'):
+        res += int(m.group('hours_reversed')) * 60 * 60
     if m.group('days'):
         res += int(m.group('days')) * 24 * 60 * 60
     if m.group('ms'):
@@ -1546,8 +1567,8 @@ def js_to_json(code):
         return '"%s"' % v
 
     res = re.sub(r'''(?x)
-        "(?:[^"\\]*(?:\\\\|\\")?)*"|
-        '(?:[^'\\]*(?:\\\\|\\')?)*'|
+        "(?:[^"\\]*(?:\\\\|\\['"nu]))*[^"\\]*"|
+        '(?:[^'\\]*(?:\\\\|\\['"nu]))*[^'\\]*'|
         [a-zA-Z_][.a-zA-Z_0-9]*
         ''', fix_kv, code)
     res = re.sub(r',(\s*\])', lambda m: m.group(1), res)
@@ -1602,6 +1623,15 @@ def args_to_str(args):
     return ' '.join(shlex_quote(a) for a in args)
 
 
+def mimetype2ext(mt):
+    _, _, res = mt.rpartition('/')
+
+    return {
+        'x-ms-wmv': 'wmv',
+        'x-mp4-fragmented': 'mp4',
+    }.get(res, res)
+
+
 def urlhandle_detect_ext(url_handle):
     try:
         url_handle.headers
@@ -1617,7 +1647,7 @@ def urlhandle_detect_ext(url_handle):
             if e:
                 return e
 
-    return getheader('Content-Type').split("/")[1]
+    return mimetype2ext(getheader('Content-Type'))
 
 
 def age_restricted(content_limit, age_limit):
@@ -1678,3 +1708,79 @@ def render_table(header_row, data):
     max_lens = [max(len(compat_str(v)) for v in col) for col in zip(*table)]
     format_str = ' '.join('%-' + compat_str(ml + 1) + 's' for ml in max_lens[:-1]) + '%s'
     return '\n'.join(format_str % tuple(row) for row in table)
+
+
+def _match_one(filter_part, dct):
+    COMPARISON_OPERATORS = {
+        '<': operator.lt,
+        '<=': operator.le,
+        '>': operator.gt,
+        '>=': operator.ge,
+        '=': operator.eq,
+        '!=': operator.ne,
+    }
+    operator_rex = re.compile(r'''(?x)\s*
+        (?P<key>[a-z_]+)
+        \s*(?P<op>%s)(?P<none_inclusive>\s*\?)?\s*
+        (?:
+            (?P<intval>[0-9.]+(?:[kKmMgGtTpPeEzZyY]i?[Bb]?)?)|
+            (?P<strval>(?![0-9.])[a-z0-9A-Z]*)
+        )
+        \s*$
+        ''' % '|'.join(map(re.escape, COMPARISON_OPERATORS.keys())))
+    m = operator_rex.search(filter_part)
+    if m:
+        op = COMPARISON_OPERATORS[m.group('op')]
+        if m.group('strval') is not None:
+            if m.group('op') not in ('=', '!='):
+                raise ValueError(
+                    'Operator %s does not support string values!' % m.group('op'))
+            comparison_value = m.group('strval')
+        else:
+            try:
+                comparison_value = int(m.group('intval'))
+            except ValueError:
+                comparison_value = parse_filesize(m.group('intval'))
+                if comparison_value is None:
+                    comparison_value = parse_filesize(m.group('intval') + 'B')
+                if comparison_value is None:
+                    raise ValueError(
+                        'Invalid integer value %r in filter part %r' % (
+                            m.group('intval'), filter_part))
+        actual_value = dct.get(m.group('key'))
+        if actual_value is None:
+            return m.group('none_inclusive')
+        return op(actual_value, comparison_value)
+
+    UNARY_OPERATORS = {
+        '': lambda v: v is not None,
+        '!': lambda v: v is None,
+    }
+    operator_rex = re.compile(r'''(?x)\s*
+        (?P<op>%s)\s*(?P<key>[a-z_]+)
+        \s*$
+        ''' % '|'.join(map(re.escape, UNARY_OPERATORS.keys())))
+    m = operator_rex.search(filter_part)
+    if m:
+        op = UNARY_OPERATORS[m.group('op')]
+        actual_value = dct.get(m.group('key'))
+        return op(actual_value)
+
+    raise ValueError('Invalid filter part %r' % filter_part)
+
+
+def match_str(filter_str, dct):
+    """ Filter a dictionary with a simple string syntax. Returns True (=passes filter) or false """
+
+    return all(
+        _match_one(filter_part, dct) for filter_part in filter_str.split('&'))
+
+
+def match_filter_func(filter_str):
+    def _match_func(info_dict):
+        if match_str(filter_str, info_dict):
+            return None
+        else:
+            video_title = info_dict.get('title', info_dict.get('id', 'video'))
+            return '%s does not pass filter %s, skipping ..' % (video_title, filter_str)
+    return _match_func

@@ -11,7 +11,6 @@ import time
 import traceback
 
 from .common import InfoExtractor, SearchInfoExtractor
-from .subtitles import SubtitlesInfoExtractor
 from ..jsinterp import JSInterpreter
 from ..swfinterp import SWFInterpreter
 from ..compat import (
@@ -25,6 +24,7 @@ from ..compat import (
 from ..utils import (
     clean_html,
     ExtractorError,
+    float_or_none,
     get_element_by_attribute,
     get_element_by_id,
     int_or_none,
@@ -184,7 +184,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             return
 
 
-class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
+class YoutubeIE(YoutubeBaseInfoExtractor):
     IE_DESC = 'YouTube.com'
     _VALID_URL = r"""(?x)^
                      (
@@ -540,26 +540,30 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
         if cache_spec is not None:
             return lambda s: ''.join(s[i] for i in cache_spec)
 
+        download_note = (
+            'Downloading player %s' % player_url
+            if self._downloader.params.get('verbose') else
+            'Downloading %s player %s' % (player_type, player_id)
+        )
         if player_type == 'js':
             code = self._download_webpage(
                 player_url, video_id,
-                note='Downloading %s player %s' % (player_type, player_id),
+                note=download_note,
                 errnote='Download of %s failed' % player_url)
             res = self._parse_sig_js(code)
         elif player_type == 'swf':
             urlh = self._request_webpage(
                 player_url, video_id,
-                note='Downloading %s player %s' % (player_type, player_id),
+                note=download_note,
                 errnote='Download of %s failed' % player_url)
             code = urlh.read()
             res = self._parse_sig_swf(code)
         else:
             assert False, 'Invalid player type %r' % player_type
 
-        if cache_spec is None:
-            test_string = ''.join(map(compat_chr, range(len(example_sig))))
-            cache_res = res(test_string)
-            cache_spec = [ord(c) for c in cache_res]
+        test_string = ''.join(map(compat_chr, range(len(example_sig))))
+        cache_res = res(test_string)
+        cache_spec = [ord(c) for c in cache_res]
 
         self._downloader.cache.store('youtube-sigfuncs', func_id, cache_spec)
         return res
@@ -643,7 +647,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             raise ExtractorError(
                 'Signature extraction failed: ' + tb, cause=e)
 
-    def _get_available_subtitles(self, video_id, webpage):
+    def _get_subtitles(self, video_id, webpage):
         try:
             subs_doc = self._download_xml(
                 'https://video.google.com/timedtext?hl=en&type=list&v=%s' % video_id,
@@ -657,23 +661,27 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             lang = track.attrib['lang_code']
             if lang in sub_lang_list:
                 continue
-            params = compat_urllib_parse.urlencode({
-                'lang': lang,
-                'v': video_id,
-                'fmt': self._downloader.params.get('subtitlesformat', 'srt'),
-                'name': track.attrib['name'].encode('utf-8'),
-            })
-            url = 'https://www.youtube.com/api/timedtext?' + params
-            sub_lang_list[lang] = url
+            sub_formats = []
+            for ext in ['sbv', 'vtt', 'srt']:
+                params = compat_urllib_parse.urlencode({
+                    'lang': lang,
+                    'v': video_id,
+                    'fmt': ext,
+                    'name': track.attrib['name'].encode('utf-8'),
+                })
+                sub_formats.append({
+                    'url': 'https://www.youtube.com/api/timedtext?' + params,
+                    'ext': ext,
+                })
+            sub_lang_list[lang] = sub_formats
         if not sub_lang_list:
             self._downloader.report_warning('video doesn\'t have subtitles')
             return {}
         return sub_lang_list
 
-    def _get_available_automatic_caption(self, video_id, webpage):
+    def _get_automatic_captions(self, video_id, webpage):
         """We need the webpage for getting the captions url, pass it as an
            argument to speed up the process."""
-        sub_format = self._downloader.params.get('subtitlesformat', 'srt')
         self.to_screen('%s: Looking for automatic captions' % video_id)
         mobj = re.search(r';ytplayer.config = ({.*?});', webpage)
         err_msg = 'Couldn\'t find automatic captions for %s' % video_id
@@ -703,14 +711,20 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             sub_lang_list = {}
             for lang_node in caption_list.findall('target'):
                 sub_lang = lang_node.attrib['lang_code']
-                params = compat_urllib_parse.urlencode({
-                    'lang': original_lang,
-                    'tlang': sub_lang,
-                    'fmt': sub_format,
-                    'ts': timestamp,
-                    'kind': caption_kind,
-                })
-                sub_lang_list[sub_lang] = caption_url + '&' + params
+                sub_formats = []
+                for ext in ['sbv', 'vtt', 'srt']:
+                    params = compat_urllib_parse.urlencode({
+                        'lang': original_lang,
+                        'tlang': sub_lang,
+                        'fmt': ext,
+                        'ts': timestamp,
+                        'kind': caption_kind,
+                    })
+                    sub_formats.append({
+                        'url': caption_url + '&' + params,
+                        'ext': ext,
+                    })
+                sub_lang_list[sub_lang] = sub_formats
             return sub_lang_list
         # An extractor error can be raise by the download process if there are
         # no automatic captions but there are subtitles
@@ -780,8 +794,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
                     fo for fo in formats
                     if fo['format_id'] == format_id)
             except StopIteration:
-                f.update(self._formats.get(format_id, {}).items())
-                formats.append(f)
+                full_info = self._formats.get(format_id, {}).copy()
+                full_info.update(f)
+                formats.append(full_info)
             else:
                 existing_format.update(f)
         return formats
@@ -964,10 +979,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
 
         # subtitles
         video_subtitles = self.extract_subtitles(video_id, video_webpage)
-
-        if self._downloader.params.get('listsubtitles', False):
-            self._list_available_subtitles(video_id, video_webpage)
-            return
+        automatic_captions = self.extract_automatic_captions(video_id, video_webpage)
 
         if 'length_seconds' not in video_info:
             self._downloader.report_warning('unable to extract video duration')
@@ -1116,6 +1128,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             'description': video_description,
             'categories': video_categories,
             'subtitles': video_subtitles,
+            'automatic_captions': automatic_captions,
             'duration': video_duration,
             'age_limit': 18 if age_gate else 0,
             'annotations': video_annotations,
@@ -1123,6 +1136,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor, SubtitlesInfoExtractor):
             'view_count': view_count,
             'like_count': like_count,
             'dislike_count': dislike_count,
+            'average_rating': float_or_none(video_info.get('avg_rating', [None])[0]),
             'formats': formats,
         }
 
@@ -1139,13 +1153,13 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor):
                         |  p/
                         )
                         (
-                            (?:PL|LL|EC|UU|FL|RD)?[0-9A-Za-z-_]{10,}
+                            (?:PL|LL|EC|UU|FL|RD|UL)?[0-9A-Za-z-_]{10,}
                             # Top tracks, they can also include dots
                             |(?:MC)[\w\.]*
                         )
                         .*
                      |
-                        ((?:PL|LL|EC|UU|FL|RD)[0-9A-Za-z-_]{10,})
+                        ((?:PL|LL|EC|UU|FL|RD|UL)[0-9A-Za-z-_]{10,})
                      )"""
     _TEMPLATE_URL = 'https://www.youtube.com/playlist?list=%s'
     _VIDEO_RE = r'href="\s*/watch\?v=(?P<id>[0-9A-Za-z_-]{11})&amp;[^"]*?index=(?P<index>\d+)'
@@ -1230,7 +1244,7 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor):
             for vid_id in ids]
 
     def _extract_mix(self, playlist_id):
-        # The mixes are generated from a a single video
+        # The mixes are generated from a single video
         # the id of the playlist is just 'RD' + video_id
         url = 'https://youtube.com/watch?v=%s&list=%s' % (playlist_id[-11:], playlist_id)
         webpage = self._download_webpage(
@@ -1266,7 +1280,7 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor):
             else:
                 self.to_screen('Downloading playlist %s - add --no-playlist to just download video %s' % (playlist_id, video_id))
 
-        if playlist_id.startswith('RD'):
+        if playlist_id.startswith('RD') or playlist_id.startswith('UL'):
             # Mixes require a custom extraction process
             return self._extract_mix(playlist_id)
 

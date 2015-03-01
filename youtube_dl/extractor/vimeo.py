@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 import json
 import re
 import itertools
+import hashlib
 
 from .common import InfoExtractor
-from .subtitles import SubtitlesInfoExtractor
 from ..compat import (
     compat_HTTPError,
     compat_urllib_parse,
@@ -18,6 +18,7 @@ from ..utils import (
     InAdvancePagedList,
     int_or_none,
     RegexNotFoundError,
+    smuggle_url,
     std_headers,
     unsmuggle_url,
     urlencode_postdata,
@@ -51,7 +52,7 @@ class VimeoBaseInfoExtractor(InfoExtractor):
         self._download_webpage(login_request, None, False, 'Wrong login info')
 
 
-class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
+class VimeoIE(VimeoBaseInfoExtractor):
     """Information extractor for vimeo.com."""
 
     # _VALID_URL matches Vimeo URLs
@@ -174,7 +175,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
     def _verify_video_password(self, url, video_id, webpage):
         password = self._downloader.params.get('videopassword', None)
         if password is None:
-            raise ExtractorError('This video is protected by a password, use the --video-password option')
+            raise ExtractorError('This video is protected by a password, use the --video-password option', expected=True)
         token = self._search_regex(r'xsrft: \'(.*?)\'', webpage, 'login token')
         data = compat_urllib_parse.urlencode({
             'password': password,
@@ -188,9 +189,9 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         password_request = compat_urllib_request.Request(pass_url + '/password', data)
         password_request.add_header('Content-Type', 'application/x-www-form-urlencoded')
         password_request.add_header('Cookie', 'xsrft=%s' % token)
-        self._download_webpage(password_request, video_id,
-                               'Verifying the password',
-                               'Wrong password')
+        return self._download_webpage(
+            password_request, video_id,
+            'Verifying the password', 'Wrong password')
 
     def _verify_player_video_password(self, url, video_id):
         password = self._downloader.params.get('videopassword', None)
@@ -223,6 +224,11 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         orig_url = url
         if mobj.group('pro') or mobj.group('player'):
             url = 'http://player.vimeo.com/video/' + video_id
+
+        password = self._downloader.params.get('videopassword', None)
+        if password:
+            headers['Cookie'] = '%s_password=%s' % (
+                video_id, hashlib.md5(password.encode('utf-8')).hexdigest())
 
         # Retrieve video webpage to extract further information
         request = compat_urllib_request.Request(url, None, headers)
@@ -266,9 +272,12 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
             if re.search('The creator of this video has not given you permission to embed it on this domain.', webpage):
                 raise ExtractorError('The author has restricted the access to this video, try with the "--referer" option')
 
-            if re.search('<form[^>]+?id="pw_form"', webpage) is not None:
+            if re.search(r'<form[^>]+?id="pw_form"', webpage) is not None:
+                if data and '_video_password_verified' in data:
+                    raise ExtractorError('video password verification failed!')
                 self._verify_video_password(url, video_id, webpage)
-                return self._real_extract(url)
+                return self._real_extract(
+                    smuggle_url(url, {'_video_password_verified': 'verified'}))
             else:
                 raise ExtractorError('Unable to extract info section',
                                      cause=e)
@@ -368,12 +377,10 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         text_tracks = config['request'].get('text_tracks')
         if text_tracks:
             for tt in text_tracks:
-                subtitles[tt['lang']] = 'http://vimeo.com' + tt['url']
-
-        video_subtitles = self.extract_subtitles(video_id, subtitles)
-        if self._downloader.params.get('listsubtitles', False):
-            self._list_available_subtitles(video_id, subtitles)
-            return
+                subtitles[tt['lang']] = [{
+                    'ext': 'vtt',
+                    'url': 'http://vimeo.com' + tt['url'],
+                }]
 
         return {
             'id': video_id,
@@ -389,7 +396,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
             'view_count': view_count,
             'like_count': like_count,
             'comment_count': comment_count,
-            'subtitles': video_subtitles,
+            'subtitles': subtitles,
         }
 
 
@@ -401,6 +408,7 @@ class VimeoChannelIE(InfoExtractor):
     _TESTS = [{
         'url': 'http://vimeo.com/channels/tributes',
         'info_dict': {
+            'id': 'tributes',
             'title': 'Vimeo Tributes',
         },
         'playlist_mincount': 25,
@@ -412,12 +420,47 @@ class VimeoChannelIE(InfoExtractor):
     def _extract_list_title(self, webpage):
         return self._html_search_regex(self._TITLE_RE, webpage, 'list title')
 
+    def _login_list_password(self, page_url, list_id, webpage):
+        login_form = self._search_regex(
+            r'(?s)<form[^>]+?id="pw_form"(.*?)</form>',
+            webpage, 'login form', default=None)
+        if not login_form:
+            return webpage
+
+        password = self._downloader.params.get('videopassword', None)
+        if password is None:
+            raise ExtractorError('This album is protected by a password, use the --video-password option', expected=True)
+        fields = dict(re.findall(r'''(?x)<input\s+
+            type="hidden"\s+
+            name="([^"]+)"\s+
+            value="([^"]*)"
+            ''', login_form))
+        token = self._search_regex(r'xsrft: \'(.*?)\'', webpage, 'login token')
+        fields['token'] = token
+        fields['password'] = password
+        post = compat_urllib_parse.urlencode(fields)
+        password_path = self._search_regex(
+            r'action="([^"]+)"', login_form, 'password URL')
+        password_url = compat_urlparse.urljoin(page_url, password_path)
+        password_request = compat_urllib_request.Request(password_url, post)
+        password_request.add_header('Content-type', 'application/x-www-form-urlencoded')
+        self._set_cookie('vimeo.com', 'xsrft', token)
+
+        return self._download_webpage(
+            password_request, list_id,
+            'Verifying the password', 'Wrong password')
+
     def _extract_videos(self, list_id, base_url):
         video_ids = []
         for pagenum in itertools.count(1):
+            page_url = self._page_url(base_url, pagenum)
             webpage = self._download_webpage(
-                self._page_url(base_url, pagenum), list_id,
+                page_url, list_id,
                 'Downloading page %s' % pagenum)
+
+            if pagenum == 1:
+                webpage = self._login_list_password(page_url, list_id, webpage)
+
             video_ids.extend(re.findall(r'id="clip_(\d+?)"', webpage))
             if re.search(self._MORE_PAGES_INDICATOR, webpage, re.DOTALL) is None:
                 break
@@ -444,6 +487,7 @@ class VimeoUserIE(VimeoChannelIE):
         'url': 'http://vimeo.com/nkistudio/videos',
         'info_dict': {
             'title': 'Nki',
+            'id': 'nkistudio',
         },
         'playlist_mincount': 66,
     }]
@@ -461,17 +505,28 @@ class VimeoAlbumIE(VimeoChannelIE):
     _TESTS = [{
         'url': 'http://vimeo.com/album/2632481',
         'info_dict': {
+            'id': '2632481',
             'title': 'Staff Favorites: November 2013',
         },
         'playlist_mincount': 13,
+    }, {
+        'note': 'Password-protected album',
+        'url': 'https://vimeo.com/album/3253534',
+        'info_dict': {
+            'title': 'test',
+            'id': '3253534',
+        },
+        'playlist_count': 1,
+        'params': {
+            'videopassword': 'youtube-dl',
+        }
     }]
 
     def _page_url(self, base_url, pagenum):
         return '%s/page:%d/' % (base_url, pagenum)
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        album_id = mobj.group('id')
+        album_id = self._match_id(url)
         return self._extract_videos(album_id, 'http://vimeo.com/album/%s' % album_id)
 
 
@@ -481,6 +536,7 @@ class VimeoGroupsIE(VimeoAlbumIE):
     _TESTS = [{
         'url': 'http://vimeo.com/groups/rolexawards',
         'info_dict': {
+            'id': 'rolexawards',
             'title': 'Rolex Awards for Enterprise',
         },
         'playlist_mincount': 73,
@@ -563,6 +619,7 @@ class VimeoLikesIE(InfoExtractor):
         'url': 'https://vimeo.com/user755559/likes/',
         'playlist_mincount': 293,
         "info_dict": {
+            'id': 'user755559_likes',
             "description": "See all the videos urza likes",
             "title": 'Videos urza likes',
         },

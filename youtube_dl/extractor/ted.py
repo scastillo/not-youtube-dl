@@ -3,14 +3,14 @@ from __future__ import unicode_literals
 import json
 import re
 
-from .subtitles import SubtitlesInfoExtractor
+from .common import InfoExtractor
 
 from ..compat import (
     compat_str,
 )
 
 
-class TEDIE(SubtitlesInfoExtractor):
+class TEDIE(InfoExtractor):
     _VALID_URL = r'''(?x)
         (?P<proto>https?://)
         (?P<type>www|embed(?:-ssl)?)(?P<urlmain>\.ted\.com/
@@ -83,6 +83,22 @@ class TEDIE(SubtitlesInfoExtractor):
         'params': {
             'skip_download': True,
         },
+    }, {
+        # YouTube video
+        'url': 'http://www.ted.com/talks/jeffrey_kluger_the_sibling_bond',
+        'add_ie': ['Youtube'],
+        'info_dict': {
+            'id': 'aFBIPO-P7LM',
+            'ext': 'mp4',
+            'title': 'The hidden power of siblings: Jeff Kluger at TEDxAsheville',
+            'description': 'md5:3d7a4f50d95ca5dd67104e2a20f43fe1',
+            'uploader': 'TEDx Talks',
+            'uploader_id': 'TEDxTalks',
+            'upload_date': '20111216',
+        },
+        'params': {
+            'skip_download': True,
+        },
     }]
 
     _NATIVE_FORMATS = {
@@ -132,11 +148,16 @@ class TEDIE(SubtitlesInfoExtractor):
 
         talk_info = self._extract_info(webpage)['talks'][0]
 
-        if talk_info.get('external') is not None:
-            self.to_screen('Found video from %s' % talk_info['external']['service'])
+        external = talk_info.get('external')
+        if external:
+            service = external['service']
+            self.to_screen('Found video from %s' % service)
+            ext_url = None
+            if service.lower() == 'youtube':
+                ext_url = external.get('code')
             return {
                 '_type': 'url',
-                'url': talk_info['external']['uri'],
+                'url': ext_url or external['uri'],
             }
 
         formats = [{
@@ -163,11 +184,6 @@ class TEDIE(SubtitlesInfoExtractor):
         self._sort_formats(formats)
 
         video_id = compat_str(talk_info['id'])
-        # subtitles
-        video_subtitles = self.extract_subtitles(video_id, talk_info)
-        if self._downloader.params.get('listsubtitles', False):
-            self._list_available_subtitles(video_id, talk_info)
-            return
 
         thumbnail = talk_info['thumb']
         if not thumbnail.startswith('http'):
@@ -178,21 +194,25 @@ class TEDIE(SubtitlesInfoExtractor):
             'uploader': talk_info['speaker'],
             'thumbnail': thumbnail,
             'description': self._og_search_description(webpage),
-            'subtitles': video_subtitles,
+            'subtitles': self._get_subtitles(video_id, talk_info),
             'formats': formats,
             'duration': talk_info.get('duration'),
         }
 
-    def _get_available_subtitles(self, video_id, talk_info):
+    def _get_subtitles(self, video_id, talk_info):
         languages = [lang['languageCode'] for lang in talk_info.get('languages', [])]
         if languages:
             sub_lang_list = {}
             for l in languages:
-                url = 'http://www.ted.com/talks/subtitles/id/%s/lang/%s/format/srt' % (video_id, l)
-                sub_lang_list[l] = url
+                sub_lang_list[l] = [
+                    {
+                        'url': 'http://www.ted.com/talks/subtitles/id/%s/lang/%s/format/%s' % (video_id, l, ext),
+                        'ext': ext,
+                    }
+                    for ext in ['ted', 'srt']
+                ]
             return sub_lang_list
         else:
-            self._downloader.report_warning('video doesn\'t have subtitles')
             return {}
 
     def _watch_info(self, url, name):

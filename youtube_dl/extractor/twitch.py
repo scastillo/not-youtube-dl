@@ -34,7 +34,15 @@ class TwitchBaseIE(InfoExtractor):
                 expected=True)
 
     def _download_json(self, url, video_id, note='Downloading JSON metadata'):
-        response = super(TwitchBaseIE, self)._download_json(url, video_id, note)
+        headers = {
+            'Referer': 'http://api.twitch.tv/crossdomain/receiver.html?v=2',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+        for cookie in self._downloader.cookiejar:
+            if cookie.name == 'api_token':
+                headers['Twitch-Api-Token'] = cookie.value
+        request = compat_urllib_request.Request(url, headers=headers)
+        response = super(TwitchBaseIE, self)._download_json(request, video_id, note)
         self._handle_error(response)
         return response
 
@@ -348,6 +356,13 @@ class TwitchStreamIE(TwitchBaseIE):
             '%s/api/channel/hls/%s.m3u8?%s'
             % (self._USHER_BASE, channel_id, compat_urllib_parse.urlencode(query).encode('utf-8')),
             channel_id, 'mp4')
+
+        # prefer the 'source' stream, the others are limited to 30 fps
+        def _sort_source(f):
+            if f.get('m3u8_media') is not None and f['m3u8_media'].get('NAME') == 'Source':
+                return 1
+            return 0
+        formats = sorted(formats, key=_sort_source)
 
         view_count = stream.get('viewers')
         timestamp = parse_iso8601(stream.get('created_at'))
