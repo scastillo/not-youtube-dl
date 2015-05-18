@@ -2,19 +2,12 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: youtube-dl
 Upstream-Contact: https://github.com/rg3/youtube-dl
 Source: git://github.com/rg3/youtube-dl.git
-License: public-domain
-    youtube-dl is released into the public domain by the copyright holders.
 
 Files: *
 Copyright: none
 License: public-domain
-
-Files: debian/*
-Copyright: © 2006, Robert S. Edmonds <edmonds@debian.org>.
-	   © 2009-2015, Rogério Brito <rbrito@ime.usp.br>.
-License: GPL-2+
-
-License: public-domain
+    youtube-dl is released into the public domain by the copyright holders.
+    .
     This is free and unencumbered software released into the public domain.
     .
     Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -40,6 +33,9 @@ License: public-domain
     .
     For more information, please refer to <http://unlicense.org/>
 
+Files: debian/*
+Copyright: © 2006, Robert S. Edmonds <edmonds@debian.org>.
+	   © 2009-2015, Rogério Brito <rbrito@ime.usp.br>.
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
