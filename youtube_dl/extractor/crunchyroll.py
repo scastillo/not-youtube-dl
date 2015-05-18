@@ -23,12 +23,12 @@ from ..utils import (
 )
 from ..aes import (
     aes_cbc_decrypt,
-    inc,
 )
 
 
 class CrunchyrollIE(InfoExtractor):
     _VALID_URL = r'https?://(?:(?P<prefix>www|m)\.)?(?P<url>crunchyroll\.(?:com|fr)/(?:[^/]*/[^/?&]*?|media/\?id=)(?P<video_id>[0-9]+))(?:[/?&]|$)'
+    _NETRC_MACHINE = 'crunchyroll'
     _TESTS = [{
         'url': 'http://www.crunchyroll.com/wanna-be-the-strongest-in-the-world/episode-1-an-idol-wrestler-is-born-645513',
         'info_dict': {
@@ -101,13 +101,6 @@ class CrunchyrollIE(InfoExtractor):
 
         key = obfuscate_key(id)
 
-        class Counter:
-            __value = iv
-
-            def next_value(self):
-                temp = self.__value
-                self.__value = inc(self.__value)
-                return temp
         decrypted_data = intlist_to_bytes(aes_cbc_decrypt(data, key, iv))
         return zlib.decompress(decrypted_data)
 
@@ -270,8 +263,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             streamdata = self._download_xml(
                 streamdata_req, video_id,
                 note='Downloading media info for %s' % video_format)
-            video_url = streamdata.find('.//host').text
-            video_play_path = streamdata.find('.//file').text
+            video_url = streamdata.find('./host').text
+            video_play_path = streamdata.find('./file').text
             formats.append({
                 'url': video_url,
                 'play_path': video_play_path,

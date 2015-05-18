@@ -3,13 +3,11 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import (
-    int_or_none,
-)
+from ..utils import int_or_none
 
 
 class InstagramIE(InfoExtractor):
-    _VALID_URL = r'http://instagram\.com/p/(?P<id>.*?)/'
+    _VALID_URL = r'https?://instagram\.com/p/(?P<id>[\da-zA-Z]+)'
     _TEST = {
         'url': 'http://instagram.com/p/aye83DjauH/?foo=bar#abc',
         'md5': '0d2da106a9d2631273e192b372806516',
@@ -23,8 +21,8 @@ class InstagramIE(InfoExtractor):
     }
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        video_id = mobj.group('id')
+        video_id = self._match_id(url)
+
         webpage = self._download_webpage(url, video_id)
         uploader_id = self._search_regex(r'"owner":{"username":"(.+?)"',
                                          webpage, 'uploader id', fatal=False)

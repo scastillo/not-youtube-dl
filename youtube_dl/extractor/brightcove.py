@@ -117,7 +117,10 @@ class BrightcoveIE(InfoExtractor):
         object_str = re.sub(r'(<object[^>]*)(xmlns=".*?")', r'\1', object_str)
         object_str = fix_xml_ampersands(object_str)
 
-        object_doc = xml.etree.ElementTree.fromstring(object_str.encode('utf-8'))
+        try:
+            object_doc = xml.etree.ElementTree.fromstring(object_str.encode('utf-8'))
+        except xml.etree.ElementTree.ParseError:
+            return
 
         fv_el = find_xpath_attr(object_doc, './param', 'name', 'flashVars')
         if fv_el is not None:
@@ -183,9 +186,9 @@ class BrightcoveIE(InfoExtractor):
             (?:
                 [^>]+?class=[\'"][^>]*?BrightcoveExperience.*?[\'"] |
                 [^>]*?>\s*<param\s+name="movie"\s+value="https?://[^/]*brightcove\.com/
-            ).+?</object>''',
+            ).+?>\s*</object>''',
             webpage)
-        return [cls._build_brighcove_url(m) for m in matches]
+        return list(filter(None, [cls._build_brighcove_url(m) for m in matches]))
 
     def _real_extract(self, url):
         url, smuggled_data = unsmuggle_url(url, {})

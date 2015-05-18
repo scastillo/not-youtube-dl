@@ -25,8 +25,7 @@ class DailymotionBaseInfoExtractor(InfoExtractor):
     def _build_request(url):
         """Build a request with the family filter disabled"""
         request = compat_urllib_request.Request(url)
-        request.add_header('Cookie', 'family_filter=off')
-        request.add_header('Cookie', 'ff=off')
+        request.add_header('Cookie', 'family_filter=off; ff=off')
         return request
 
 
@@ -46,13 +45,14 @@ class DailymotionIE(DailymotionBaseInfoExtractor):
 
     _TESTS = [
         {
-            'url': 'http://www.dailymotion.com/video/x33vw9_tutoriel-de-youtubeur-dl-des-video_tech',
-            'md5': '392c4b85a60a90dc4792da41ce3144eb',
+            'url': 'https://www.dailymotion.com/video/x2iuewm_steam-machine-models-pricing-listed-on-steam-store-ign-news_videogames',
+            'md5': '2137c41a8e78554bb09225b8eb322406',
             'info_dict': {
-                'id': 'x33vw9',
+                'id': 'x2iuewm',
                 'ext': 'mp4',
-                'uploader': 'Amphora Alex and Van .',
-                'title': 'Tutoriel de Youtubeur"DL DES VIDEO DE YOUTUBE"',
+                'uploader': 'IGN',
+                'title': 'Steam Machine Models, Pricing Listed on Steam Store - IGN News',
+                'upload_date': '20150306',
             }
         },
         # Vevo video
@@ -86,7 +86,7 @@ class DailymotionIE(DailymotionBaseInfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        url = 'http://www.dailymotion.com/video/%s' % video_id
+        url = 'https://www.dailymotion.com/video/%s' % video_id
 
         # Retrieve video webpage to extract further information
         request = self._build_request(url)
@@ -107,13 +107,14 @@ class DailymotionIE(DailymotionBaseInfoExtractor):
         age_limit = self._rta_search(webpage)
 
         video_upload_date = None
-        mobj = re.search(r'<div class="[^"]*uploaded_cont[^"]*" title="[^"]*">([0-9]{2})-([0-9]{2})-([0-9]{4})</div>', webpage)
+        mobj = re.search(r'<meta property="video:release_date" content="([0-9]{4})-([0-9]{2})-([0-9]{2}).+?"/>', webpage)
         if mobj is not None:
-            video_upload_date = mobj.group(3) + mobj.group(2) + mobj.group(1)
+            video_upload_date = mobj.group(1) + mobj.group(2) + mobj.group(3)
 
-        embed_url = 'http://www.dailymotion.com/embed/video/%s' % video_id
-        embed_page = self._download_webpage(embed_url, video_id,
-                                            'Downloading embed page')
+        embed_url = 'https://www.dailymotion.com/embed/video/%s' % video_id
+        embed_request = self._build_request(embed_url)
+        embed_page = self._download_webpage(
+            embed_request, video_id, 'Downloading embed page')
         info = self._search_regex(r'var info = ({.*?}),$', embed_page,
                                   'video info', flags=re.MULTILINE)
         info = json.loads(info)
@@ -224,7 +225,7 @@ class DailymotionPlaylistIE(DailymotionBaseInfoExtractor):
 
 class DailymotionUserIE(DailymotionPlaylistIE):
     IE_NAME = 'dailymotion:user'
-    _VALID_URL = r'https?://(?:www\.)?dailymotion\.[a-z]{2,3}/user/(?P<user>[^/]+)'
+    _VALID_URL = r'https?://(?:www\.)?dailymotion\.[a-z]{2,3}/(?:old/)?user/(?P<user>[^/]+)'
     _PAGE_TEMPLATE = 'http://www.dailymotion.com/user/%s/%s'
     _TESTS = [{
         'url': 'https://www.dailymotion.com/user/nqtv',

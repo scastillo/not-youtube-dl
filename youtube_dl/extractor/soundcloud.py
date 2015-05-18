@@ -180,7 +180,7 @@ class SoundcloudIE(InfoExtractor):
                     'format_id': key,
                     'url': url,
                     'play_path': 'mp3:' + path,
-                    'ext': ext,
+                    'ext': 'flv',
                     'vcodec': 'none',
                 })
 
@@ -200,8 +200,9 @@ class SoundcloudIE(InfoExtractor):
                 if f['format_id'].startswith('rtmp'):
                     f['protocol'] = 'rtmp'
 
-            self._sort_formats(formats)
-            result['formats'] = formats
+        self._check_formats(formats, track_id)
+        self._sort_formats(formats)
+        result['formats'] = formats
 
         return result
 
@@ -220,7 +221,12 @@ class SoundcloudIE(InfoExtractor):
                 info_json_url += "&secret_token=" + token
         elif mobj.group('player'):
             query = compat_urlparse.parse_qs(compat_urlparse.urlparse(url).query)
-            return self.url_result(query['url'][0])
+            real_url = query['url'][0]
+            # If the token is in the query of the original url we have to
+            # manually add it
+            if 'secret_token' in query:
+                real_url += '?secret_token=' + query['secret_token'][0]
+            return self.url_result(real_url)
         else:
             # extract uploader (which is in the url)
             uploader = mobj.group('uploader')
@@ -241,7 +247,7 @@ class SoundcloudIE(InfoExtractor):
 
 
 class SoundcloudSetIE(SoundcloudIE):
-    _VALID_URL = r'https?://(?:www\.)?soundcloud\.com/(?P<uploader>[\w\d-]+)/sets/(?P<slug_title>[\w\d-]+)(?:/(?P<token>[^?/]+))?'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)?soundcloud\.com/(?P<uploader>[\w\d-]+)/sets/(?P<slug_title>[\w\d-]+)(?:/(?P<token>[^?/]+))?'
     IE_NAME = 'soundcloud:set'
     _TESTS = [{
         'url': 'https://soundcloud.com/the-concept-band/sets/the-royal-concept-ep',
@@ -273,9 +279,8 @@ class SoundcloudSetIE(SoundcloudIE):
         info = self._download_json(resolv_url, full_title)
 
         if 'errors' in info:
-            for err in info['errors']:
-                self._downloader.report_error('unable to download video webpage: %s' % compat_str(err['error_message']))
-            return
+            msgs = (compat_str(err['error_message']) for err in info['errors'])
+            raise ExtractorError('unable to download video webpage: %s' % ','.join(msgs))
 
         return {
             '_type': 'playlist',
@@ -286,7 +291,7 @@ class SoundcloudSetIE(SoundcloudIE):
 
 
 class SoundcloudUserIE(SoundcloudIE):
-    _VALID_URL = r'https?://(www\.)?soundcloud\.com/(?P<user>[^/]+)/?((?P<rsrc>tracks|likes)/?)?(\?.*)?$'
+    _VALID_URL = r'https?://(?:(?:www|m)\.)?soundcloud\.com/(?P<user>[^/]+)/?((?P<rsrc>tracks|likes)/?)?(\?.*)?$'
     IE_NAME = 'soundcloud:user'
     _TESTS = [{
         'url': 'https://soundcloud.com/the-concept-band',
@@ -331,7 +336,7 @@ class SoundcloudUserIE(SoundcloudIE):
             if len(new_entries) == 0:
                 self.to_screen('%s: End page received' % uploader)
                 break
-            entries.extend(self._extract_info_dict(e, quiet=True) for e in new_entries)
+            entries.extend(self.url_result(e['permalink_url'], 'Soundcloud') for e in new_entries)
 
         return {
             '_type': 'playlist',
