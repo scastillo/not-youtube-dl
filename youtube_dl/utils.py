@@ -35,9 +35,9 @@ import zlib
 from .compat import (
     compat_basestring,
     compat_chr,
-    compat_getenv,
     compat_html_entities,
     compat_http_client,
+    compat_kwargs,
     compat_parse_qs,
     compat_socket_create_connection,
     compat_str,
@@ -76,7 +76,7 @@ def preferredencoding():
     try:
         pref = locale.getpreferredencoding()
         'TEST'.encode(pref)
-    except:
+    except Exception:
         pref = 'UTF-8'
 
     return pref
@@ -115,7 +115,7 @@ def write_json_file(obj, fn):
             'encoding': 'utf-8',
         })
 
-    tf = tempfile.NamedTemporaryFile(**args)
+    tf = tempfile.NamedTemporaryFile(**compat_kwargs(args))
 
     try:
         with tf:
@@ -128,7 +128,7 @@ def write_json_file(obj, fn):
             except OSError:
                 pass
         os.rename(tf.name, fn)
-    except:
+    except Exception:
         try:
             os.remove(tf.name)
         except OSError:
@@ -253,15 +253,12 @@ def sanitize_open(filename, open_mode):
             raise
 
         # In case of error, try to remove win32 forbidden chars
-        alt_filename = os.path.join(
-            re.sub('[/<>:"\\|\\\\?\\*]', '#', path_part)
-            for path_part in os.path.split(filename)
-        )
+        alt_filename = sanitize_path(filename)
         if alt_filename == filename:
             raise
         else:
             # An exception here should be caught in the caller
-            stream = open(encodeFilename(filename), open_mode)
+            stream = open(encodeFilename(alt_filename), open_mode)
             return (stream, alt_filename)
 
 
@@ -306,9 +303,28 @@ def sanitize_filename(s, restricted=False, is_id=False):
             result = result[2:]
         if result.startswith('-'):
             result = '_' + result[len('-'):]
+        result = result.lstrip('.')
         if not result:
             result = '_'
     return result
+
+
+def sanitize_path(s):
+    """Sanitizes and normalizes path on Windows"""
+    if sys.platform != 'win32':
+        return s
+    drive_or_unc, _ = os.path.splitdrive(s)
+    if sys.version_info < (2, 7) and not drive_or_unc:
+        drive_or_unc, _ = os.path.splitunc(s)
+    norm_path = os.path.normpath(remove_start(s, drive_or_unc)).split(os.path.sep)
+    if drive_or_unc:
+        norm_path.pop(0)
+    sanitized_path = [
+        path_part if path_part in ['.', '..'] else re.sub('(?:[/<>:"\\|\\\\?\\*]|\.$)', '#', path_part)
+        for path_part in norm_path]
+    if drive_or_unc:
+        sanitized_path.insert(0, drive_or_unc + os.path.sep)
+    return os.path.join(*sanitized_path)
 
 
 def orderedSet(iterable):
@@ -326,7 +342,7 @@ def _htmlentity_transform(entity):
     if entity in compat_html_entities.name2codepoint:
         return compat_chr(compat_html_entities.name2codepoint[entity])
 
-    mobj = re.match(r'#(x?[0-9]+)', entity)
+    mobj = re.match(r'#(x[0-9a-fA-F]+|[0-9]+)', entity)
     if mobj is not None:
         numstr = mobj.group(1)
         if numstr.startswith('x'):
@@ -349,6 +365,18 @@ def unescapeHTML(s):
         r'&([^;]+);', lambda m: _htmlentity_transform(m.group(1)), s)
 
 
+def get_subprocess_encoding():
+    if sys.platform == 'win32' and sys.getwindowsversion()[0] >= 5:
+        # For subprocess calls, encode with locale encoding
+        # Refer to http://stackoverflow.com/a/9951851/35070
+        encoding = preferredencoding()
+    else:
+        encoding = sys.getfilesystemencoding()
+    if encoding is None:
+        encoding = 'utf-8'
+    return encoding
+
+
 def encodeFilename(s, for_subprocess=False):
     """
     @param s The name of the file
@@ -360,21 +388,24 @@ def encodeFilename(s, for_subprocess=False):
     if sys.version_info >= (3, 0):
         return s
 
-    if sys.platform == 'win32' and sys.getwindowsversion()[0] >= 5:
-        # Pass '' directly to use Unicode APIs on Windows 2000 and up
-        # (Detecting Windows NT 4 is tricky because 'major >= 4' would
-        # match Windows 9x series as well. Besides, NT 4 is obsolete.)
-        if not for_subprocess:
-            return s
-        else:
-            # For subprocess calls, encode with locale encoding
-            # Refer to http://stackoverflow.com/a/9951851/35070
-            encoding = preferredencoding()
-    else:
-        encoding = sys.getfilesystemencoding()
-    if encoding is None:
-        encoding = 'utf-8'
-    return s.encode(encoding, 'ignore')
+    # Pass '' directly to use Unicode APIs on Windows 2000 and up
+    # (Detecting Windows NT 4 is tricky because 'major >= 4' would
+    # match Windows 9x series as well. Besides, NT 4 is obsolete.)
+    if not for_subprocess and sys.platform == 'win32' and sys.getwindowsversion()[0] >= 5:
+        return s
+
+    return s.encode(get_subprocess_encoding(), 'ignore')
+
+
+def decodeFilename(b, for_subprocess=False):
+
+    if sys.version_info >= (3, 0):
+        return b
+
+    if not isinstance(b, bytes):
+        return b
+
+    return b.decode(get_subprocess_encoding(), 'ignore')
 
 
 def encodeArgument(s):
@@ -384,6 +415,10 @@ def encodeArgument(s):
         # assert False, 'Internal error: %r should be of type %r, is %r' % (s, compat_str, type(s))
         s = s.decode('ascii')
     return encodeFilename(s, True)
+
+
+def decodeArgument(b):
+    return decodeFilename(b, True)
 
 
 def decodeOption(optval):
@@ -430,6 +465,17 @@ def make_HTTPS_handler(params, **kwargs):
         return YoutubeDLHTTPSHandler(params, context=context, **kwargs)
 
 
+def bug_reports_message():
+    if ytdl_is_updateable():
+        update_cmd = 'type  youtube-dl -U  to update'
+    else:
+        update_cmd = 'see  https://yt-dl.org/update  on how to update'
+    msg = '; please report this issue on https://yt-dl.org/bug .'
+    msg += ' Make sure you are using the latest version; %s.' % update_cmd
+    msg += ' Be sure to call youtube-dl with the --verbose flag and include its complete output.'
+    return msg
+
+
 class ExtractorError(Exception):
     """Error during info extraction."""
 
@@ -445,13 +491,7 @@ class ExtractorError(Exception):
         if cause:
             msg += ' (caused by %r)' % cause
         if not expected:
-            if ytdl_is_updateable():
-                update_cmd = 'type  youtube-dl -U  to update'
-            else:
-                update_cmd = 'see  https://yt-dl.org/update  on how to update'
-            msg += '; please report this issue on https://yt-dl.org/bug .'
-            msg += ' Make sure you are using the latest version; %s.' % update_cmd
-            msg += ' Be sure to call youtube-dl with the --verbose flag and include its complete output.'
+            msg += bug_reports_message()
         super(ExtractorError, self).__init__(msg)
 
         self.traceback = tb
@@ -708,7 +748,8 @@ def unified_strdate(date_str, day_first=True):
     # Replace commas
     date_str = date_str.replace(',', ' ')
     # %z (UTC offset) is only supported in python>=3.2
-    date_str = re.sub(r' ?(\+|-)[0-9]{2}:?[0-9]{2}$', '', date_str)
+    if not re.match(r'^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}$', date_str):
+        date_str = re.sub(r' ?(\+|-)[0-9]{2}:?[0-9]{2}$', '', date_str)
     # Remove AM/PM + timezone
     date_str = re.sub(r'(?i)\s*(?:AM|PM)(?:\s+[A-Z]+)?', '', date_str)
 
@@ -737,6 +778,7 @@ def unified_strdate(date_str, day_first=True):
     ]
     if day_first:
         format_expressions.extend([
+            '%d-%m-%Y',
             '%d.%m.%Y',
             '%d/%m/%Y',
             '%d/%m/%y',
@@ -744,6 +786,7 @@ def unified_strdate(date_str, day_first=True):
         ])
     else:
         format_expressions.extend([
+            '%m-%d-%Y',
             '%m.%d.%Y',
             '%m/%d/%Y',
             '%m/%d/%y',
@@ -1079,15 +1122,6 @@ def shell_quote(args):
     return ' '.join(quoted_args)
 
 
-def takewhile_inclusive(pred, seq):
-    """ Like itertools.takewhile, but include the latest evaluated element
-        (the first element so that Not pred(e)) """
-    for e in seq:
-        yield e
-        if not pred(e):
-            return
-
-
 def smuggle_url(url, data):
     """ Pass additional data in a URL for internal use. """
 
@@ -1171,22 +1205,6 @@ def parse_filesize(s):
     num_str = m.group('num').replace(',', '.')
     mult = _UNIT_TABLE[m.group('unit')]
     return int(float(num_str) * mult)
-
-
-def get_term_width():
-    columns = compat_getenv('COLUMNS', None)
-    if columns:
-        return int(columns)
-
-    try:
-        sp = subprocess.Popen(
-            ['stty', 'size'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = sp.communicate()
-        return int(out.split()[1])
-    except:
-        pass
-    return None
 
 
 def month_by_name(name):
@@ -1324,9 +1342,19 @@ def parse_duration(s):
     return res
 
 
-def prepend_extension(filename, ext):
+def prepend_extension(filename, ext, expected_real_ext=None):
     name, real_ext = os.path.splitext(filename)
-    return '{0}.{1}{2}'.format(name, ext, real_ext)
+    return (
+        '{0}.{1}{2}'.format(name, ext, real_ext)
+        if not expected_real_ext or real_ext[1:] == expected_real_ext
+        else '{0}.{1}'.format(filename, ext))
+
+
+def replace_extension(filename, ext, expected_real_ext=None):
+    name, real_ext = os.path.splitext(filename)
+    return '{0}.{1}'.format(
+        name if not expected_real_ext or real_ext[1:] == expected_real_ext else filename,
+        ext)
 
 
 def check_executable(exe, args=[]):
@@ -1345,7 +1373,7 @@ def get_exe_version(exe, args=['--version'],
     or False if the executable is not present """
     try:
         out, _ = subprocess.Popen(
-            [exe] + args,
+            [encodeArgument(exe)] + args,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
     except OSError:
         return False
@@ -1447,6 +1475,14 @@ def uppercase_escape(s):
     unicode_escape = codecs.getdecoder('unicode_escape')
     return re.sub(
         r'\\U[0-9a-fA-F]{8}',
+        lambda m: unicode_escape(m.group(0))[0],
+        s)
+
+
+def lowercase_escape(s):
+    unicode_escape = codecs.getdecoder('unicode_escape')
+    return re.sub(
+        r'\\u[0-9a-fA-F]{4}',
         lambda m: unicode_escape(m.group(0))[0],
         s)
 
@@ -1571,7 +1607,7 @@ def js_to_json(code):
         '(?:[^'\\]*(?:\\\\|\\['"nu]))*[^'\\]*'|
         [a-zA-Z_][.a-zA-Z_0-9]*
         ''', fix_kv, code)
-    res = re.sub(r',(\s*\])', lambda m: m.group(1), res)
+    res = re.sub(r',(\s*[\]}])', lambda m: m.group(1), res)
     return res
 
 
@@ -1784,3 +1820,77 @@ def match_filter_func(filter_str):
             video_title = info_dict.get('title', info_dict.get('id', 'video'))
             return '%s does not pass filter %s, skipping ..' % (video_title, filter_str)
     return _match_func
+
+
+def parse_dfxp_time_expr(time_expr):
+    if not time_expr:
+        return 0.0
+
+    mobj = re.match(r'^(?P<time_offset>\d+(?:\.\d+)?)s?$', time_expr)
+    if mobj:
+        return float(mobj.group('time_offset'))
+
+    mobj = re.match(r'^(\d+):(\d\d):(\d\d(?:\.\d+)?)$', time_expr)
+    if mobj:
+        return 3600 * int(mobj.group(1)) + 60 * int(mobj.group(2)) + float(mobj.group(3))
+
+
+def srt_subtitles_timecode(seconds):
+    return '%02d:%02d:%02d,%03d' % (seconds / 3600, (seconds % 3600) / 60, seconds % 60, (seconds % 1) * 1000)
+
+
+def dfxp2srt(dfxp_data):
+    _x = functools.partial(xpath_with_ns, ns_map={'ttml': 'http://www.w3.org/ns/ttml'})
+
+    def parse_node(node):
+        str_or_empty = functools.partial(str_or_none, default='')
+
+        out = str_or_empty(node.text)
+
+        for child in node:
+            if child.tag == _x('ttml:br'):
+                out += '\n' + str_or_empty(child.tail)
+            elif child.tag == _x('ttml:span'):
+                out += str_or_empty(parse_node(child))
+            else:
+                out += str_or_empty(xml.etree.ElementTree.tostring(child))
+
+        return out
+
+    dfxp = xml.etree.ElementTree.fromstring(dfxp_data.encode('utf-8'))
+    out = []
+    paras = dfxp.findall(_x('.//ttml:p'))
+
+    for para, index in zip(paras, itertools.count(1)):
+        begin_time = parse_dfxp_time_expr(para.attrib['begin'])
+        end_time = parse_dfxp_time_expr(para.attrib.get('end'))
+        if not end_time:
+            end_time = begin_time + parse_dfxp_time_expr(para.attrib['dur'])
+        out.append('%d\n%s --> %s\n%s\n\n' % (
+            index,
+            srt_subtitles_timecode(begin_time),
+            srt_subtitles_timecode(end_time),
+            parse_node(para)))
+
+    return ''.join(out)
+
+
+class PerRequestProxyHandler(compat_urllib_request.ProxyHandler):
+    def __init__(self, proxies=None):
+        # Set default handlers
+        for type in ('http', 'https'):
+            setattr(self, '%s_open' % type,
+                    lambda r, proxy='__noproxy__', type=type, meth=self.proxy_open:
+                        meth(r, proxy, type))
+        return compat_urllib_request.ProxyHandler.__init__(self, proxies)
+
+    def proxy_open(self, req, proxy, type):
+        req_proxy = req.headers.get('Ytdl-request-proxy')
+        if req_proxy is not None:
+            proxy = req_proxy
+            del req.headers['Ytdl-request-proxy']
+
+        if proxy == '__noproxy__':
+            return None  # No Proxy
+        return compat_urllib_request.ProxyHandler.proxy_open(
+            self, req, proxy, type)

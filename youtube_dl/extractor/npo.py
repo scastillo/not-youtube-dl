@@ -219,7 +219,8 @@ class NPOLiveIE(NPOBaseIE):
         if streams:
             for stream in streams:
                 stream_type = stream.get('type').lower()
-                if stream_type == 'ss':
+                # smooth streaming is not supported
+                if stream_type in ['ss', 'ms']:
                     continue
                 stream_info = self._download_json(
                     'http://ida.omroep.nl/aapi/?stream=%s&token=%s&type=jsonp'
@@ -230,7 +231,10 @@ class NPOLiveIE(NPOBaseIE):
                 stream_url = self._download_json(
                     stream_info['stream'], display_id,
                     'Downloading %s URL' % stream_type,
-                    transform_source=strip_jsonp)
+                    'Unable to download %s URL' % stream_type,
+                    transform_source=strip_jsonp, fatal=False)
+                if not stream_url:
+                    continue
                 if stream_type == 'hds':
                     f4m_formats = self._extract_f4m_formats(stream_url, display_id)
                     # f4m downloader downloads only piece of live stream
@@ -242,6 +246,7 @@ class NPOLiveIE(NPOBaseIE):
                 else:
                     formats.append({
                         'url': stream_url,
+                        'preference': -10,
                     })
 
         self._sort_formats(formats)

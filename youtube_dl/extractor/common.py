@@ -23,6 +23,7 @@ from ..compat import (
 )
 from ..utils import (
     age_restricted,
+    bug_reports_message,
     clean_html,
     compiled_regex_type,
     ExtractorError,
@@ -46,7 +47,7 @@ class InfoExtractor(object):
     information possibly downloading the video to the file system, among
     other possible outcomes.
 
-    The type field determines the the type of the result.
+    The type field determines the type of the result.
     By far the most common value (and the default if _type is missing) is
     "video", which indicates a single video.
 
@@ -110,11 +111,8 @@ class InfoExtractor(object):
                                   (quality takes higher priority)
                                  -1 for default (order by other properties),
                                  -2 or smaller for less than default.
-                    * http_method  HTTP method to use for the download.
                     * http_headers  A dictionary of additional HTTP headers
                                  to add to the request.
-                    * http_post_data  Additional data to send with a POST
-                                 request.
                     * stretched_ratio  If given and not 1, indicates that the
                                  video's pixels are not square.
                                  width : height ratio as float.
@@ -324,7 +322,7 @@ class InfoExtractor(object):
                 self._downloader.report_warning(errmsg)
                 return False
 
-    def _download_webpage_handle(self, url_or_request, video_id, note=None, errnote=None, fatal=True):
+    def _download_webpage_handle(self, url_or_request, video_id, note=None, errnote=None, fatal=True, encoding=None):
         """ Returns a tuple (page content as string, URL handle) """
         # Strip hashes from the URL (#1038)
         if isinstance(url_or_request, (compat_str, str)):
@@ -334,14 +332,11 @@ class InfoExtractor(object):
         if urlh is False:
             assert not fatal
             return False
-        content = self._webpage_read_content(urlh, url_or_request, video_id, note, errnote, fatal)
+        content = self._webpage_read_content(urlh, url_or_request, video_id, note, errnote, fatal, encoding=encoding)
         return (content, urlh)
 
-    def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True, prefix=None):
-        content_type = urlh.headers.get('Content-Type', '')
-        webpage_bytes = urlh.read()
-        if prefix is not None:
-            webpage_bytes = prefix + webpage_bytes
+    @staticmethod
+    def _guess_encoding_from_content(content_type, webpage_bytes):
         m = re.match(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+\s*;\s*charset=(.+)', content_type)
         if m:
             encoding = m.group(1)
@@ -354,6 +349,16 @@ class InfoExtractor(object):
                 encoding = 'utf-16'
             else:
                 encoding = 'utf-8'
+
+        return encoding
+
+    def _webpage_read_content(self, urlh, url_or_request, video_id, note=None, errnote=None, fatal=True, prefix=None, encoding=None):
+        content_type = urlh.headers.get('Content-Type', '')
+        webpage_bytes = urlh.read()
+        if prefix is not None:
+            webpage_bytes = prefix + webpage_bytes
+        if not encoding:
+            encoding = self._guess_encoding_from_content(content_type, webpage_bytes)
         if self._downloader.params.get('dump_intermediate_pages', False):
             try:
                 url = url_or_request.get_full_url()
@@ -410,13 +415,13 @@ class InfoExtractor(object):
 
         return content
 
-    def _download_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, tries=1, timeout=5):
+    def _download_webpage(self, url_or_request, video_id, note=None, errnote=None, fatal=True, tries=1, timeout=5, encoding=None):
         """ Returns the data of the page as a string """
         success = False
         try_count = 0
         while success is False:
             try:
-                res = self._download_webpage_handle(url_or_request, video_id, note, errnote, fatal)
+                res = self._download_webpage_handle(url_or_request, video_id, note, errnote, fatal, encoding=encoding)
                 success = True
             except compat_http_client.IncompleteRead as e:
                 try_count += 1
@@ -431,10 +436,10 @@ class InfoExtractor(object):
 
     def _download_xml(self, url_or_request, video_id,
                       note='Downloading XML', errnote='Unable to download XML',
-                      transform_source=None, fatal=True):
+                      transform_source=None, fatal=True, encoding=None):
         """Return the xml as an xml.etree.ElementTree.Element"""
         xml_string = self._download_webpage(
-            url_or_request, video_id, note, errnote, fatal=fatal)
+            url_or_request, video_id, note, errnote, fatal=fatal, encoding=encoding)
         if xml_string is False:
             return xml_string
         if transform_source:
@@ -445,9 +450,10 @@ class InfoExtractor(object):
                        note='Downloading JSON metadata',
                        errnote='Unable to download JSON metadata',
                        transform_source=None,
-                       fatal=True):
+                       fatal=True, encoding=None):
         json_string = self._download_webpage(
-            url_or_request, video_id, note, errnote, fatal=fatal)
+            url_or_request, video_id, note, errnote, fatal=fatal,
+            encoding=encoding)
         if (not fatal) and json_string is False:
             return None
         return self._parse_json(
@@ -492,7 +498,7 @@ class InfoExtractor(object):
 
     # Methods for following #608
     @staticmethod
-    def url_result(url, ie=None, video_id=None):
+    def url_result(url, ie=None, video_id=None, video_title=None):
         """Returns a url that points to a page that should be processed"""
         # TODO: ie should be the class used for getting the info
         video_info = {'_type': 'url',
@@ -500,6 +506,8 @@ class InfoExtractor(object):
                       'ie_key': ie}
         if video_id is not None:
             video_info['id'] = video_id
+        if video_title is not None:
+            video_info['title'] = video_title
         return video_info
 
     @staticmethod
@@ -546,8 +554,7 @@ class InfoExtractor(object):
         elif fatal:
             raise RegexNotFoundError('Unable to extract %s' % _name)
         else:
-            self._downloader.report_warning('unable to extract %s; '
-                                            'please report this issue on http://yt-dl.org/bug' % _name)
+            self._downloader.report_warning('unable to extract %s' % _name + bug_reports_message())
             return None
 
     def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
@@ -562,7 +569,7 @@ class InfoExtractor(object):
 
     def _get_login_info(self):
         """
-        Get the the login info as (username, password)
+        Get the login info as (username, password)
         It will look in the netrc file using the _NETRC_MACHINE value
         If there's no info available, return (None, None)
         """
@@ -698,7 +705,7 @@ class InfoExtractor(object):
         return self._html_search_meta('twitter:player', html,
                                       'twitter card player')
 
-    def _sort_formats(self, formats):
+    def _sort_formats(self, formats, field_preference=None):
         if not formats:
             raise ExtractorError('No video formats found')
 
@@ -707,6 +714,9 @@ class InfoExtractor(object):
             from ..utils import determine_ext
             if not f.get('ext') and 'url' in f:
                 f['ext'] = determine_ext(f['url'])
+
+            if isinstance(field_preference, (list, tuple)):
+                return tuple(f.get(field) if f.get(field) is not None else -1 for field in field_preference)
 
             preference = f.get('preference')
             if preference is None:
@@ -754,7 +764,7 @@ class InfoExtractor(object):
                 f.get('fps') if f.get('fps') is not None else -1,
                 f.get('filesize_approx') if f.get('filesize_approx') is not None else -1,
                 f.get('source_preference') if f.get('source_preference') is not None else -1,
-                f.get('format_id'),
+                f.get('format_id') if f.get('format_id') is not None else '',
             )
         formats.sort(key=_formats_key)
 
@@ -767,6 +777,10 @@ class InfoExtractor(object):
                 formats)
 
     def _is_valid_url(self, url, video_id, item='video'):
+        url = self._proto_relative_url(url, scheme='http:')
+        # For now assume non HTTP(S) URLs always valid
+        if not (url.startswith('http://') or url.startswith('https://')):
+            return True
         try:
             self._request_webpage(url, video_id, 'Checking %s URL' % item)
             return True
@@ -818,7 +832,7 @@ class InfoExtractor(object):
                                 (media_el.attrib.get('href') or media_el.attrib.get('url')))
             tbr = int_or_none(media_el.attrib.get('bitrate'))
             formats.append({
-                'format_id': '-'.join(filter(None, [f4m_id, 'f4m-%d' % (i if tbr is None else tbr)])),
+                'format_id': '-'.join(filter(None, [f4m_id, compat_str(i if tbr is None else tbr)])),
                 'url': manifest_url,
                 'ext': 'flv',
                 'tbr': tbr,
@@ -835,7 +849,7 @@ class InfoExtractor(object):
                               m3u8_id=None):
 
         formats = [{
-            'format_id': '-'.join(filter(None, [m3u8_id, 'm3u8-meta'])),
+            'format_id': '-'.join(filter(None, [m3u8_id, 'meta'])),
             'url': m3u8_url,
             'ext': ext,
             'protocol': 'm3u8',
@@ -879,8 +893,13 @@ class InfoExtractor(object):
                     formats.append({'url': format_url(line)})
                     continue
                 tbr = int_or_none(last_info.get('BANDWIDTH'), scale=1000)
+                format_id = []
+                if m3u8_id:
+                    format_id.append(m3u8_id)
+                last_media_name = last_media.get('NAME') if last_media and last_media.get('TYPE') != 'SUBTITLES' else None
+                format_id.append(last_media_name if last_media_name else '%d' % (tbr if tbr else len(formats)))
                 f = {
-                    'format_id': '-'.join(filter(None, [m3u8_id, 'm3u8-%d' % (tbr if tbr else len(formats))])),
+                    'format_id': '-'.join(format_id),
                     'url': format_url(line.strip()),
                     'tbr': tbr,
                     'ext': ext,

@@ -26,12 +26,18 @@ from ..utils import (
     unsmuggle_url,
     UnsupportedError,
     url_basename,
+    xpath_text,
 )
 from .brightcove import BrightcoveIE
+from .nbc import NBCSportsVPlayerIE
 from .ooyala import OoyalaIE
 from .rutv import RUTVIE
 from .smotri import SmotriIE
 from .condenast import CondeNastIE
+from .udn import UDNEmbedIE
+from .senateisvp import SenateISVPIE
+from .bliptv import BlipTVIE
+from .svt import SVTIE
 
 
 class GenericIE(InfoExtractor):
@@ -526,6 +532,17 @@ class GenericIE(InfoExtractor):
             },
             'add_ie': ['Viddler'],
         },
+        # Libsyn embed
+        {
+            'url': 'http://thedailyshow.cc.com/podcast/episodetwelve',
+            'info_dict': {
+                'id': '3377616',
+                'ext': 'mp3',
+                'title': "The Daily Show Podcast without Jon Stewart - Episode 12: Bassem Youssef: Egypt's Jon Stewart",
+                'description': 'md5:601cb790edd05908957dae8aaa866465',
+                'upload_date': '20150220',
+            },
+        },
         # jwplayer YouTube
         {
             'url': 'http://media.nationalarchives.gov.uk/index.php/webinar-using-discovery-national-archives-online-catalogue/',
@@ -569,6 +586,162 @@ class GenericIE(InfoExtractor):
                 'title': 'John Carlson Postgame 2/25/15',
             },
         },
+        # Eagle.Platform embed (generic URL)
+        {
+            'url': 'http://lenta.ru/news/2015/03/06/navalny/',
+            'info_dict': {
+                'id': '227304',
+                'ext': 'mp4',
+                'title': 'Навальный вышел на свободу',
+                'description': 'md5:d97861ac9ae77377f3f20eaf9d04b4f5',
+                'thumbnail': 're:^https?://.*\.jpg$',
+                'duration': 87,
+                'view_count': int,
+                'age_limit': 0,
+            },
+        },
+        # ClipYou (Eagle.Platform) embed (custom URL)
+        {
+            'url': 'http://muz-tv.ru/play/7129/',
+            'info_dict': {
+                'id': '12820',
+                'ext': 'mp4',
+                'title': "'O Sole Mio",
+                'thumbnail': 're:^https?://.*\.jpg$',
+                'duration': 216,
+                'view_count': int,
+            },
+        },
+        # Pladform embed
+        {
+            'url': 'http://muz-tv.ru/kinozal/view/7400/',
+            'info_dict': {
+                'id': '100183293',
+                'ext': 'mp4',
+                'title': 'Тайны перевала Дятлова • 1 серия 2 часть',
+                'description': 'Документальный сериал-расследование одной из самых жутких тайн ХХ века',
+                'thumbnail': 're:^https?://.*\.jpg$',
+                'duration': 694,
+                'age_limit': 0,
+            },
+        },
+        # Playwire embed
+        {
+            'url': 'http://www.cinemablend.com/new/First-Joe-Dirt-2-Trailer-Teaser-Stupid-Greatness-70874.html',
+            'info_dict': {
+                'id': '3519514',
+                'ext': 'mp4',
+                'title': 'Joe Dirt 2 Beautiful Loser Teaser Trailer',
+                'thumbnail': 're:^https?://.*\.png$',
+                'duration': 45.115,
+            },
+        },
+        # 5min embed
+        {
+            'url': 'http://techcrunch.com/video/facebook-creates-on-this-day-crunch-report/518726732/',
+            'md5': '4c6f127a30736b59b3e2c19234ee2bf7',
+            'info_dict': {
+                'id': '518726732',
+                'ext': 'mp4',
+                'title': 'Facebook Creates "On This Day" | Crunch Report',
+            },
+        },
+        # SVT embed
+        {
+            'url': 'http://www.svt.se/sport/ishockey/jagr-tacklar-giroux-under-intervjun',
+            'info_dict': {
+                'id': '2900353',
+                'ext': 'flv',
+                'title': 'Här trycker Jagr till Giroux (under SVT-intervjun)',
+                'duration': 27,
+                'age_limit': 0,
+            },
+        },
+        # RSS feed with enclosure
+        {
+            'url': 'http://podcastfeeds.nbcnews.com/audio/podcast/MSNBC-MADDOW-NETCAST-M4V.xml',
+            'info_dict': {
+                'id': 'pdv_maddow_netcast_m4v-02-27-2015-201624',
+                'ext': 'm4v',
+                'upload_date': '20150228',
+                'title': 'pdv_maddow_netcast_m4v-02-27-2015-201624',
+            }
+        },
+        # Crooks and Liars embed
+        {
+            'url': 'http://crooksandliars.com/2015/04/fox-friends-says-protecting-atheists',
+            'info_dict': {
+                'id': '8RUoRhRi',
+                'ext': 'mp4',
+                'title': "Fox & Friends Says Protecting Atheists From Discrimination Is Anti-Christian!",
+                'description': 'md5:e1a46ad1650e3a5ec7196d432799127f',
+                'timestamp': 1428207000,
+                'upload_date': '20150405',
+                'uploader': 'Heather',
+            },
+        },
+        # Crooks and Liars external embed
+        {
+            'url': 'http://theothermccain.com/2010/02/02/video-proves-that-bill-kristol-has-been-watching-glenn-beck/comment-page-1/',
+            'info_dict': {
+                'id': 'MTE3MjUtMzQ2MzA',
+                'ext': 'mp4',
+                'title': 'md5:5e3662a81a4014d24c250d76d41a08d5',
+                'description': 'md5:9b8e9542d6c3c5de42d6451b7d780cec',
+                'timestamp': 1265032391,
+                'upload_date': '20100201',
+                'uploader': 'Heather',
+            },
+        },
+        # NBC Sports vplayer embed
+        {
+            'url': 'http://www.riderfans.com/forum/showthread.php?121827-Freeman&s=e98fa1ea6dc08e886b1678d35212494a',
+            'info_dict': {
+                'id': 'ln7x1qSThw4k',
+                'ext': 'flv',
+                'title': "PFT Live: New leader in the 'new-look' defense",
+                'description': 'md5:65a19b4bbfb3b0c0c5768bed1dfad74e',
+            },
+        },
+        # UDN embed
+        {
+            'url': 'http://www.udn.com/news/story/7314/822787',
+            'md5': 'fd2060e988c326991037b9aff9df21a6',
+            'info_dict': {
+                'id': '300346',
+                'ext': 'mp4',
+                'title': '中一中男師變性 全校師生力挺',
+                'thumbnail': 're:^https?://.*\.jpg$',
+            }
+        },
+        # Ooyala embed
+        {
+            'url': 'http://www.businessinsider.com/excel-index-match-vlookup-video-how-to-2015-2?IR=T',
+            'info_dict': {
+                'id': '50YnY4czr4ms1vJ7yz3xzq0excz_pUMs',
+                'ext': 'mp4',
+                'description': 'VIDEO: Index/Match versus VLOOKUP.',
+                'title': 'This is what separates the Excel masters from the wannabes',
+            },
+            'params': {
+                # m3u8 downloads
+                'skip_download': True,
+            }
+        },
+        # Contains a SMIL manifest
+        {
+            'url': 'http://www.telewebion.com/fa/1263668/%D9%82%D8%B1%D8%B9%D9%87%E2%80%8C%DA%A9%D8%B4%DB%8C-%D9%84%DB%8C%DA%AF-%D9%82%D9%87%D8%B1%D9%85%D8%A7%D9%86%D8%A7%D9%86-%D8%A7%D8%B1%D9%88%D9%BE%D8%A7/%2B-%D9%81%D9%88%D8%AA%D8%A8%D8%A7%D9%84.html',
+            'info_dict': {
+                'id': 'file',
+                'ext': 'flv',
+                'title': '+ Football: Lottery Champions League Europe',
+                'uploader': 'www.telewebion.com',
+            },
+            'params': {
+                # rtmpe downloads
+                'skip_download': True,
+            }
+        }
     ]
 
     def report_following_redirect(self, new_url):
@@ -580,11 +753,24 @@ class GenericIE(InfoExtractor):
         playlist_desc_el = doc.find('./channel/description')
         playlist_desc = None if playlist_desc_el is None else playlist_desc_el.text
 
-        entries = [{
-            '_type': 'url',
-            'url': e.find('link').text,
-            'title': e.find('title').text,
-        } for e in doc.findall('./channel/item')]
+        entries = []
+        for it in doc.findall('./channel/item'):
+            next_url = xpath_text(it, 'link', fatal=False)
+            if not next_url:
+                enclosure_nodes = it.findall('./enclosure')
+                for e in enclosure_nodes:
+                    next_url = e.attrib.get('url')
+                    if next_url:
+                        break
+
+            if not next_url:
+                continue
+
+            entries.append({
+                '_type': 'url',
+                'url': next_url,
+                'title': it.find('title').text,
+            })
 
         return {
             '_type': 'playlist',
@@ -900,12 +1086,14 @@ class GenericIE(InfoExtractor):
             }
 
         # Look for embedded blip.tv player
-        mobj = re.search(r'<meta\s[^>]*https?://api\.blip\.tv/\w+/redirect/\w+/(\d+)', webpage)
-        if mobj:
-            return self.url_result('http://blip.tv/a/a-' + mobj.group(1), 'BlipTV')
-        mobj = re.search(r'<(?:iframe|embed|object)\s[^>]*(https?://(?:\w+\.)?blip\.tv/(?:play/|api\.swf#)[a-zA-Z0-9_]+)', webpage)
-        if mobj:
-            return self.url_result(mobj.group(1), 'BlipTV')
+        bliptv_url = BlipTVIE._extract_url(webpage)
+        if bliptv_url:
+            return self.url_result(bliptv_url, 'BlipTV')
+
+        # Look for SVT player
+        svt_url = SVTIE._extract_url(webpage)
+        if svt_url:
+            return self.url_result(svt_url, 'SVT')
 
         # Look for embedded condenast player
         matches = re.findall(
@@ -943,10 +1131,24 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group('url'))
 
+        # Look for NYTimes player
+        mobj = re.search(
+            r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//graphics8\.nytimes\.com/bcvideo/[^/]+/iframe/embed\.html.+?)\1>',
+            webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+
+        # Look for Libsyn player
+        mobj = re.search(
+            r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//html5-player\.libsyn\.com/embed/.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+
         # Look for Ooyala videos
         mobj = (re.search(r'player\.ooyala\.com/[^"?]+\?[^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
                 re.search(r'OO\.Player\.create\([\'"].*?[\'"],\s*[\'"](?P<ec>.{32})[\'"]', webpage) or
-                re.search(r'SBN\.VideoLinkset\.ooyala\([\'"](?P<ec>.{32})[\'"]\)', webpage))
+                re.search(r'SBN\.VideoLinkset\.ooyala\([\'"](?P<ec>.{32})[\'"]\)', webpage) or
+                re.search(r'data-ooyala-video-id\s*=\s*[\'"](?P<ec>.{32})[\'"]', webpage))
         if mobj is not None:
             return OoyalaIE._build_url_result(mobj.group('ec'))
 
@@ -1104,6 +1306,10 @@ class GenericIE(InfoExtractor):
         mobj = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>https?://m(?:lb)?\.mlb\.com/shared/video/embed/embed\.html\?.+?)\1',
             webpage)
+        if not mobj:
+            mobj = re.search(
+                r'data-video-link=["\'](?P<url>http://m.mlb.com/video/[^"\']+)',
+                webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'MLB')
 
@@ -1130,6 +1336,59 @@ class GenericIE(InfoExtractor):
             r"(?s)kWidget\.(?:thumb)?[Ee]mbed\(\{.*?'wid'\s*:\s*'_?(?P<partner_id>[^']+)',.*?'entry_id'\s*:\s*'(?P<id>[^']+)',", webpage)
         if mobj is not None:
             return self.url_result('kaltura:%(partner_id)s:%(id)s' % mobj.groupdict(), 'Kaltura')
+
+        # Look for Eagle.Platform embeds
+        mobj = re.search(
+            r'<iframe[^>]+src="(?P<url>https?://.+?\.media\.eagleplatform\.com/index/player\?.+?)"', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'EaglePlatform')
+
+        # Look for ClipYou (uses Eagle.Platform) embeds
+        mobj = re.search(
+            r'<iframe[^>]+src="https?://(?P<host>media\.clipyou\.ru)/index/player\?.*\brecord_id=(?P<id>\d+).*"', webpage)
+        if mobj is not None:
+            return self.url_result('eagleplatform:%(host)s:%(id)s' % mobj.groupdict(), 'EaglePlatform')
+
+        # Look for Pladform embeds
+        mobj = re.search(
+            r'<iframe[^>]+src="(?P<url>https?://out\.pladform\.ru/player\?.+?)"', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Pladform')
+
+        # Look for Playwire embeds
+        mobj = re.search(
+            r'<script[^>]+data-config=(["\'])(?P<url>(?:https?:)?//config\.playwire\.com/.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+
+        # Look for 5min embeds
+        mobj = re.search(
+            r'<meta[^>]+property="og:video"[^>]+content="https?://embed\.5min\.com/(?P<id>[0-9]+)/?', webpage)
+        if mobj is not None:
+            return self.url_result('5min:%s' % mobj.group('id'), 'FiveMin')
+
+        # Look for Crooks and Liars embeds
+        mobj = re.search(
+            r'<(?:iframe[^>]+src|param[^>]+value)=(["\'])(?P<url>(?:https?:)?//embed\.crooksandliars\.com/(?:embed|v)/.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'))
+
+        # Look for NBC Sports VPlayer embeds
+        nbc_sports_url = NBCSportsVPlayerIE._extract_url(webpage)
+        if nbc_sports_url:
+            return self.url_result(nbc_sports_url, 'NBCSportsVPlayer')
+
+        # Look for UDN embeds
+        mobj = re.search(
+            r'<iframe[^>]+src="(?P<url>%s)"' % UDNEmbedIE._VALID_URL, webpage)
+        if mobj is not None:
+            return self.url_result(
+                compat_urlparse.urljoin(url, mobj.group('url')), 'UDNEmbed')
+
+        # Look for Senate ISVP iframe
+        senate_isvp_url = SenateISVPIE._search_iframe_url(webpage)
+        if senate_isvp_url:
+            return self.url_result(surl, 'SenateISVP')
 
         def check_video(vurl):
             if YoutubeIE.suitable(vurl):
@@ -1187,12 +1446,18 @@ class GenericIE(InfoExtractor):
             # HTML5 video
             found = re.findall(r'(?s)<video[^<]*(?:>.*?<source[^>]*)?\s+src=["\'](.*?)["\']', webpage)
         if not found:
+            REDIRECT_REGEX = r'[0-9]{,2};\s*(?:URL|url)=\'?([^\'"]+)'
             found = re.search(
                 r'(?i)<meta\s+(?=(?:[a-z-]+="[^"]+"\s+)*http-equiv="refresh")'
-                r'(?:[a-z-]+="[^"]+"\s+)*?content="[0-9]{,2};url=\'?([^\'"]+)',
+                r'(?:[a-z-]+="[^"]+"\s+)*?content="%s' % REDIRECT_REGEX,
                 webpage)
+            if not found:
+                # Look also in Refresh HTTP header
+                refresh_header = head_response.headers.get('Refresh')
+                if refresh_header:
+                    found = re.search(REDIRECT_REGEX, refresh_header)
             if found:
-                new_url = found.group(1)
+                new_url = compat_urlparse.urljoin(url, found.group(1))
                 self.report_following_redirect(new_url)
                 return {
                     '_type': 'url',
@@ -1214,13 +1479,22 @@ class GenericIE(InfoExtractor):
             # here's a fun little line of code for you:
             video_id = os.path.splitext(video_id)[0]
 
-            entries.append({
-                'id': video_id,
-                'url': video_url,
-                'uploader': video_uploader,
-                'title': video_title,
-                'age_limit': age_limit,
-            })
+            if determine_ext(video_url) == 'smil':
+                entries.append({
+                    'id': video_id,
+                    'formats': self._extract_smil_formats(video_url, video_id),
+                    'uploader': video_uploader,
+                    'title': video_title,
+                    'age_limit': age_limit,
+                })
+            else:
+                entries.append({
+                    'id': video_id,
+                    'url': video_url,
+                    'uploader': video_uploader,
+                    'title': video_title,
+                    'age_limit': age_limit,
+                })
 
         if len(entries) == 1:
             return entries[0]
