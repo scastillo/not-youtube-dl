@@ -49,6 +49,7 @@ from .utils import (
     ExtractorError,
     format_bytes,
     formatSeconds,
+    HEADRequest,
     locked_file,
     make_HTTPS_handler,
     MaxDownloadsReached,
@@ -759,7 +760,9 @@ class YoutubeDL(object):
             if isinstance(ie_entries, list):
                 n_all_entries = len(ie_entries)
                 if playlistitems:
-                    entries = [ie_entries[i - 1] for i in playlistitems]
+                    entries = [
+                        ie_entries[i - 1] for i in playlistitems
+                        if -n_all_entries <= i - 1 < n_all_entries]
                 else:
                     entries = ie_entries[playliststart:playlistend]
                 n_entries = len(entries)
@@ -921,8 +924,9 @@ class YoutubeDL(object):
                 if f.get('vcodec') != 'none' and f.get('acodec') != 'none']
             if audiovideo_formats:
                 return audiovideo_formats[format_idx]
-            # for audio only urls, select the best/worst audio format
-            elif all(f.get('acodec') != 'none' for f in available_formats):
+            # for audio only (soundcloud) or video only (imgur) urls, select the best/worst audio format
+            elif (all(f.get('acodec') != 'none' for f in available_formats) or
+                  all(f.get('vcodec') != 'none' for f in available_formats)):
                 return available_formats[format_idx]
         elif format_spec == 'bestaudio':
             audio_formats = [
@@ -1045,6 +1049,8 @@ class YoutubeDL(object):
         if not formats:
             raise ExtractorError('No video formats found!')
 
+        formats_dict = {}
+
         # We check that all the formats have the format and format_id fields
         for i, format in enumerate(formats):
             if 'url' not in format:
@@ -1052,6 +1058,18 @@ class YoutubeDL(object):
 
             if format.get('format_id') is None:
                 format['format_id'] = compat_str(i)
+            format_id = format['format_id']
+            if format_id not in formats_dict:
+                formats_dict[format_id] = []
+            formats_dict[format_id].append(format)
+
+        # Make sure all formats have unique format_id
+        for format_id, ambiguous_formats in formats_dict.items():
+            if len(ambiguous_formats) > 1:
+                for i, format in enumerate(ambiguous_formats):
+                    format['format_id'] = '%s-%d' % (format_id, i)
+
+        for i, format in enumerate(formats):
             if format.get('format') is None:
                 format['format'] = '{id} - {res}{note}'.format(
                     id=format['format_id'],
@@ -1366,7 +1384,7 @@ class YoutubeDL(object):
                         postprocessors = []
                         self.report_warning('You have requested multiple '
                                             'formats but ffmpeg or avconv are not installed.'
-                                            ' The formats won\'t be merged')
+                                            ' The formats won\'t be merged.')
                     else:
                         postprocessors = [merger]
 
@@ -1393,8 +1411,8 @@ class YoutubeDL(object):
                     requested_formats = info_dict['requested_formats']
                     if self.params.get('merge_output_format') is None and not compatible_formats(requested_formats):
                         info_dict['ext'] = 'mkv'
-                        self.report_warning('You have requested formats incompatible for merge. '
-                                            'The formats will be merged into mkv')
+                        self.report_warning(
+                            'Requested formats are incompatible for merge and will be merged into mkv.')
                     # Ensure filename always has a correct extension for successful merge
                     filename = '%s.%s' % (filename_wo_ext, info_dict['ext'])
                     if os.path.exists(encodeFilename(filename)):
@@ -1525,6 +1543,7 @@ class YoutubeDL(object):
             pps_chain.extend(ie_info['__postprocessors'])
         pps_chain.extend(self._pps)
         for pp in pps_chain:
+            files_to_delete = []
             try:
                 files_to_delete, info = pp.run(info)
             except PostProcessingError as e:
@@ -1703,7 +1722,8 @@ class YoutubeDL(object):
             if req_is_string:
                 req = url_escaped
             else:
-                req = compat_urllib_request.Request(
+                req_type = HEADRequest if req.get_method() == 'HEAD' else compat_urllib_request.Request
+                req = req_type(
                     url_escaped, data=req.data, headers=req.headers,
                     origin_req_host=req.origin_req_host, unverifiable=req.unverifiable)
 

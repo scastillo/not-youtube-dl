@@ -10,6 +10,7 @@
  - **56.com**
  - **5min**
  - **8tracks**
+ - **91porn**
  - **9gag**
  - **abc.net.au**
  - **Abc7News**
@@ -26,8 +27,7 @@
  - **anitube.se**
  - **AnySex**
  - **Aparat**
- - **AppleDailyAnimationNews**
- - **AppleDailyRealtimeNews**
+ - **AppleDaily**
  - **AppleTrailers**
  - **archive.org**: archive.org videos
  - **ARD**
@@ -142,6 +142,7 @@
  - **Eporner**
  - **EroProfile**
  - **Escapist**
+ - **ESPN** (Currently broken)
  - **EveryonesMixtape**
  - **exfm**: ex.fm
  - **ExpoTV**
@@ -151,7 +152,6 @@
  - **fc2**
  - **fernsehkritik.tv**
  - **fernsehkritik.tv:postecke**
- - **Firedrive**
  - **Firstpost**
  - **Flickr**
  - **Folketinget**: Folketinget (ft.dk; Danish parliament)
@@ -229,6 +229,7 @@
  - **KanalPlay**: Kanal 5/9/11 Play
  - **Kankan**
  - **Karaoketv**
+ - **KarriereVideos**
  - **keek**
  - **KeezMovies**
  - **KhanAcademy**
@@ -319,8 +320,10 @@
  - **Noco**
  - **Normalboots**
  - **NosVideo**
+ - **Nova**: TN.cz, Prásk.tv, Nova.cz, Novaplus.cz, FANDA.tv, Krásná.cz and Doma.cz
  - **novamov**: NovaMov
  - **Nowness**
+ - **NowTV**
  - **nowvideo**: NowVideo
  - **npo.nl**
  - **npo.nl:live**
@@ -338,6 +341,7 @@
  - **OktoberfestTV**
  - **on.aol.com**
  - **Ooyala**
+ - **OoyalaExternal**
  - **OpenFilm**
  - **orf:fm4**: radio FM4
  - **orf:iptv**: iptv.ORF.at
@@ -391,7 +395,6 @@
  - **Rte**
  - **rtl.nl**: rtl.nl and rtlxl.nl
  - **RTL2**
- - **RTLnow**
  - **RTP**
  - **RTS**: RTS.ch
  - **rtve.es:alacarta**: RTVE a la carta
@@ -429,8 +432,9 @@
  - **smotri:community**: Smotri.com community videos
  - **smotri:user**: Smotri.com user videos
  - **Snotr**
- - **Sockshare**
  - **Sohu**
+ - **soompi**
+ - **soompi:show**
  - **soundcloud**
  - **soundcloud:playlist**
  - **soundcloud:set**
@@ -451,6 +455,7 @@
  - **Spike**
  - **Sport5**
  - **SportBox**
+ - **SportBoxEmbed**
  - **SportDeutschland**
  - **Srf**
  - **SRMediathek**: Saarländischer Rundfunk
@@ -504,12 +509,15 @@
  - **Trilulilu**
  - **TruTube**
  - **Tube8**
+ - **TubiTv**
  - **Tudou**
  - **Tumblr**
  - **TuneIn**
  - **Turbo**
  - **Tutv**
  - **tv.dfb.de**
+ - **TV2**
+ - **TV2Article**
  - **TV4**: tv4.se and tv4play.se
  - **tvigle**: Интернет-телевидение Tvigle.ru
  - **tvp.pl**
@@ -559,6 +567,7 @@
  - **vier:videos**
  - **Viewster**
  - **viki**
+ - **viki:channel**
  - **vimeo**
  - **vimeo:album**
  - **vimeo:channel**

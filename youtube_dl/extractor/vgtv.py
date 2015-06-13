@@ -4,7 +4,10 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import float_or_none
+from ..utils import (
+    ExtractorError,
+    float_or_none,
+)
 
 
 class VGTVIE(InfoExtractor):
@@ -59,16 +62,16 @@ class VGTVIE(InfoExtractor):
         },
         {
             # streamType: live
-            'url': 'http://www.vgtv.no/#!/live/100015/direkte-her-kan-du-se-laksen-live-fra-suldalslaagen',
+            'url': 'http://www.vgtv.no/#!/live/113063/direkte-v75-fra-solvalla',
             'info_dict': {
-                'id': '100015',
+                'id': '113063',
                 'ext': 'flv',
-                'title': 'DIREKTE: Her kan du se laksen live fra Suldalslågen!',
-                'description': 'md5:9a60cc23fa349f761628924e56eeec2d',
+                'title': 're:^DIREKTE: V75 fra Solvalla [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$',
+                'description': 'md5:b3743425765355855f88e096acc93231',
                 'thumbnail': 're:^https?://.*\.jpg',
                 'duration': 0,
-                'timestamp': 1407423348,
-                'upload_date': '20140807',
+                'timestamp': 1432975582,
+                'upload_date': '20150530',
                 'view_count': int,
             },
             'params': {
@@ -97,7 +100,12 @@ class VGTVIE(InfoExtractor):
             % (host, video_id, HOST_WEBSITES[host]),
             video_id, 'Downloading media JSON')
 
+        if data.get('status') == 'inactive':
+            raise ExtractorError(
+                'Video %s is no longer available' % video_id, expected=True)
+
         streams = data['streamUrls']
+        stream_type = data.get('streamType')
 
         formats = []
 
@@ -107,7 +115,8 @@ class VGTVIE(InfoExtractor):
                 hls_url, video_id, 'mp4', m3u8_id='hls'))
 
         hds_url = streams.get('hds')
-        if hds_url:
+        # wasLive hds are always 404
+        if hds_url and stream_type != 'wasLive':
             formats.extend(self._extract_f4m_formats(
                 hds_url + '?hdcore=3.2.0&plugin=aasp-3.2.0.77.18',
                 video_id, f4m_id='hds'))
@@ -135,13 +144,14 @@ class VGTVIE(InfoExtractor):
 
         return {
             'id': video_id,
-            'title': data['title'],
+            'title': self._live_title(data['title']),
             'description': data['description'],
             'thumbnail': data['images']['main'] + '?t[]=900x506q80',
             'timestamp': data['published'],
             'duration': float_or_none(data['duration'], 1000),
             'view_count': data['displays'],
             'formats': formats,
+            'is_live': True if stream_type == 'live' else False,
         }
 
 

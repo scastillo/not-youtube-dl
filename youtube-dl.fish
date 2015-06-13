@@ -89,7 +89,7 @@ complete --command youtube-dl --long-option newline --description 'Output progre
 complete --command youtube-dl --long-option no-progress --description 'Do not print progress bar'
 complete --command youtube-dl --long-option console-title --description 'Display progress in console titlebar'
 complete --command youtube-dl --long-option verbose --short-option v --description 'Print various debugging information'
-complete --command youtube-dl --long-option dump-pages --description 'Print downloaded pages to debug problems (very verbose)'
+complete --command youtube-dl --long-option dump-pages --description 'Print downloaded pages encoded using base64 to debug problems (very verbose)'
 complete --command youtube-dl --long-option write-pages --description 'Write downloaded intermediary pages to files in the current directory to debug problems'
 complete --command youtube-dl --long-option youtube-print-sig-code
 complete --command youtube-dl --long-option print-traffic --description 'Display sent and read HTTP traffic'
@@ -130,7 +130,7 @@ complete --command youtube-dl --long-option no-post-overwrites --description 'Do
 complete --command youtube-dl --long-option embed-subs --description 'Embed subtitles in the video (only for mkv and mp4 videos)'
 complete --command youtube-dl --long-option embed-thumbnail --description 'Embed thumbnail in the audio as cover art'
 complete --command youtube-dl --long-option add-metadata --description 'Write metadata to the video file'
-complete --command youtube-dl --long-option metadata-from-title --description 'Parse additional metadata like song title / artist from the video title. The format syntax is the same as --output, the parsed parameters replace existing values. Additional templates: %(album), %(artist). Example: --metadata-from-title "%(artist)s - %(title)s" matches a title like "Coldplay - Paradise"'
+complete --command youtube-dl --long-option metadata-from-title --description 'Parse additional metadata like song title / artist from the video title. The format syntax is the same as --output, the parsed parameters replace existing values. Additional templates: %(album)s, %(artist)s. Example: --metadata-from-title "%(artist)s - %(title)s" matches a title like "Coldplay - Paradise"'
 complete --command youtube-dl --long-option xattrs --description 'Write metadata to the video file'"'"'s xattrs (using dublin core and xdg standards)'
 complete --command youtube-dl --long-option fixup --description 'Automatically correct known faults of the file. One of never (do nothing), warn (only emit a warning), detect_or_warn(the default; fix file if we can, warn otherwise)'
 complete --command youtube-dl --long-option prefer-avconv --description 'Prefer avconv over ffmpeg for running the postprocessors (default)'
