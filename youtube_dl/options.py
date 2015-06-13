@@ -537,7 +537,7 @@ def parseOpts(overrideArguments=None):
     verbosity.add_option(
         '--dump-pages', '--dump-intermediate-pages',
         action='store_true', dest='dump_intermediate_pages', default=False,
-        help='Print downloaded pages to debug problems (very verbose)')
+        help='Print downloaded pages encoded using base64 to debug problems (very verbose)')
     verbosity.add_option(
         '--write-pages',
         action='store_true', dest='write_pages', default=False,
@@ -713,7 +713,7 @@ def parseOpts(overrideArguments=None):
         help='Parse additional metadata like song title / artist from the video title. '
              'The format syntax is the same as --output, '
              'the parsed parameters replace existing values. '
-             'Additional templates: %(album), %(artist). '
+             'Additional templates: %(album)s, %(artist)s. '
              'Example: --metadata-from-title "%(artist)s - %(title)s" matches a title like '
              '"Coldplay - Paradise"')
     postproc.add_option(

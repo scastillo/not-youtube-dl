@@ -10,26 +10,32 @@ from ..utils import (
 
 
 class TNAFlixIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?tnaflix\.com/(?P<cat_id>[\w-]+)/(?P<display_id>[\w-]+)/video(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?tnaflix\.com/[^/]+/(?P<display_id>[^/]+)/video(?P<id>\d+)'
 
     _TITLE_REGEX = r'<title>(.+?) - TNAFlix Porn Videos</title>'
     _DESCRIPTION_REGEX = r'<h3 itemprop="description">([^<]+)</h3>'
     _CONFIG_REGEX = r'flashvars\.config\s*=\s*escape\("([^"]+)"'
 
-    _TEST = {
-        'url': 'http://www.tnaflix.com/porn-stars/Carmella-Decesare-striptease/video553878',
-        'md5': 'ecf3498417d09216374fc5907f9c6ec0',
-        'info_dict': {
-            'id': '553878',
-            'display_id': 'Carmella-Decesare-striptease',
-            'ext': 'mp4',
-            'title': 'Carmella Decesare - striptease',
-            'description': '',
-            'thumbnail': 're:https?://.*\.jpg$',
-            'duration': 91,
-            'age_limit': 18,
+    _TESTS = [
+        {
+            'url': 'http://www.tnaflix.com/porn-stars/Carmella-Decesare-striptease/video553878',
+            'md5': 'ecf3498417d09216374fc5907f9c6ec0',
+            'info_dict': {
+                'id': '553878',
+                'display_id': 'Carmella-Decesare-striptease',
+                'ext': 'mp4',
+                'title': 'Carmella Decesare - striptease',
+                'description': '',
+                'thumbnail': 're:https?://.*\.jpg$',
+                'duration': 91,
+                'age_limit': 18,
+            }
+        },
+        {
+            'url': 'https://www.tnaflix.com/amateur-porn/bunzHD-Ms.Donk/video358632',
+            'only_matching': True,
         }
-    }
+    ]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -45,9 +51,8 @@ class TNAFlixIE(InfoExtractor):
 
         age_limit = self._rta_search(webpage)
 
-        duration = self._html_search_meta('duration', webpage, 'duration', default=None)
-        if duration:
-            duration = parse_duration(duration[1:])
+        duration = parse_duration(self._html_search_meta(
+            'duration', webpage, 'duration', default=None))
 
         cfg_url = self._proto_relative_url(self._html_search_regex(
             self._CONFIG_REGEX, webpage, 'flashvars.config'), 'http:')
@@ -56,14 +61,15 @@ class TNAFlixIE(InfoExtractor):
             cfg_url, display_id, note='Downloading metadata',
             transform_source=fix_xml_ampersands)
 
-        thumbnail = cfg_xml.find('./startThumb').text
+        thumbnail = self._proto_relative_url(
+            cfg_xml.find('./startThumb').text, 'http:')
 
         formats = []
         for item in cfg_xml.findall('./quality/item'):
             video_url = re.sub('speed=\d+', 'speed=', item.find('videoLink').text)
             format_id = item.find('res').text
             fmt = {
-                'url': video_url,
+                'url': self._proto_relative_url(video_url, 'http:'),
                 'format_id': format_id,
             }
             m = re.search(r'^(\d+)', format_id)
