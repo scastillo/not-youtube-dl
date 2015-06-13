@@ -12,6 +12,8 @@ youtube-dl (2015.06.04.1-1~2.gbp67afe8) UNRELEASED; urgency=medium
   * debian/NEWS:
     + Document that the --max-quality option is gone.
     + Update with version to be uploaded.
+  * debian/control:
+    + Add build-dependency on dh-python as per warning from dh_python2.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Mon, 18 May 2015 07:49:18 -0300
 
