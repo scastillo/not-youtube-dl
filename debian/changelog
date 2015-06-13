@@ -1,6 +1,4 @@
-youtube-dl (2015.06.04.1-1~2.gbp67afe8) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @67afe88251ff8b1fcb43246c9a4bb1a0ea0185a2 **
+youtube-dl (2015.06.04.1-1) unstable; urgency=medium
 
   * Imported Upstream version 2015.05.15 (Closes: #784322, #783093, #785335)
   * Imported Upstream version 2015.06.04.1
@@ -15,7 +13,7 @@ youtube-dl (2015.06.04.1-1~2.gbp67afe8) UNRELEASED; urgency=medium
   * debian/control:
     + Add build-dependency on dh-python as per warning from dh_python2.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Mon, 18 May 2015 07:49:18 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 13 Jun 2015 17:41:32 -0300
 
 youtube-dl (2015.02.28-1) unstable; urgency=medium
 
