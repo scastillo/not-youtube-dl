@@ -5,7 +5,7 @@ youtube-dl (2015.06.04.1-1~1.gbp139d14) UNRELEASED; urgency=medium
   * debian/README.source: Adapt according to changes in git-builpackage.
   * debian/copyright: Update my copyright years.
   * debian/gbp.conf: Change to new git-buildpackage syntax.
-  * Imported Upstream version 2015.05.15
+  * Imported Upstream version 2015.05.15 (Closes: #784322, #783093, #785335)
   * debian/copyright: Fix lintian's dep5-copyright-license-name-not-unique.
   * debian/NEWS: Document that the --max-quality option is gone.
   * Imported Upstream version 2015.06.04.1
