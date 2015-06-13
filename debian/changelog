@@ -1,14 +1,17 @@
-youtube-dl (2015.06.04.1-1~1.gbp139d14) UNRELEASED; urgency=medium
+youtube-dl (2015.06.04.1-1~2.gbp67afe8) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @139d14b198add5b26a11ed5dca022feaa6581d98 **
+  ** SNAPSHOT build @67afe88251ff8b1fcb43246c9a4bb1a0ea0185a2 **
 
-  * debian/README.source: Adapt according to changes in git-builpackage.
-  * debian/copyright: Update my copyright years.
-  * debian/gbp.conf: Change to new git-buildpackage syntax.
   * Imported Upstream version 2015.05.15 (Closes: #784322, #783093, #785335)
-  * debian/copyright: Fix lintian's dep5-copyright-license-name-not-unique.
-  * debian/NEWS: Document that the --max-quality option is gone.
   * Imported Upstream version 2015.06.04.1
+  * debian/README.source: Adapt according to changes in git-builpackage.
+  * debian/copyright:
+    + Update my copyright years.
+    + Fix lintian's dep5-copyright-license-name-not-unique.
+  * debian/gbp.conf: Change to new git-buildpackage syntax.
+  * debian/NEWS:
+    + Document that the --max-quality option is gone.
+    + Update with version to be uploaded.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Mon, 18 May 2015 07:49:18 -0300
 
