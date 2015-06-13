@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
  debhelper (>= 9),
+ dh-python,
  python-pkg-resources
 Build-Depends-Indep:
  python
