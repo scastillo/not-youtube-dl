@@ -1,6 +1,6 @@
-youtube-dl (2015.05.15-1) unstable; urgency=medium
+youtube-dl (2015.06.04.1-1) unstable; urgency=medium
 
-  Starting with Debian's version 2015.05.15-1, the handling of video
+  Starting with Debian's version 2015.06.04.1-1, the handling of video
   formats has been revamped in youtube-dl.  In particular, the option
   `--max-quality` doesn't exist anymore.  This is likely to break scripts
   and/or other programs that use this option.
