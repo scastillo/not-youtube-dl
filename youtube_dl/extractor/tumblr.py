@@ -39,6 +39,17 @@ class TumblrIE(InfoExtractor):
             'timestamp': 1430931613,
         },
         'add_ie': ['Vidme'],
+    }, {
+        'url': 'http://camdamage.tumblr.com/post/98846056295/',
+        'md5': 'a9e0c8371ea1ca306d6554e3fecf50b6',
+        'info_dict': {
+            'id': '105463834',
+            'ext': 'mp4',
+            'title': 'Cam Damage-HD 720p',
+            'uploader': 'John Moyer',
+            'uploader_id': 'user32021558',
+        },
+        'add_ie': ['Vimeo'],
     }]
 
     def _real_extract(self, url):
@@ -47,18 +58,16 @@ class TumblrIE(InfoExtractor):
         blog = m_url.group('blog_name')
 
         url = 'http://%s.tumblr.com/post/%s/' % (blog, video_id)
-        webpage = self._download_webpage(url, video_id)
-
-        vid_me_embed_url = self._search_regex(
-            r'src=[\'"](https?://vid\.me/[^\'"]+)[\'"]',
-            webpage, 'vid.me embed', default=None)
-        if vid_me_embed_url is not None:
-            return self.url_result(vid_me_embed_url, 'Vidme')
+        webpage, urlh = self._download_webpage_handle(url, video_id)
 
         iframe_url = self._search_regex(
             r'src=\'(https?://www\.tumblr\.com/video/[^\']+)\'',
-            webpage, 'iframe url')
-        iframe = self._download_webpage(iframe_url, video_id)
+            webpage, 'iframe url', default=None)
+        if iframe_url is None:
+            return self.url_result(urlh.geturl(), 'Generic')
+
+        iframe = self._download_webpage(iframe_url, video_id,
+                                        'Downloading iframe page')
         video_url = self._search_regex(r'<source src="([^"]+)"',
                                        iframe, 'video url')
 

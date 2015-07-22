@@ -22,18 +22,20 @@ from ..compat import (
     compat_str,
 )
 from ..utils import (
+    NO_DEFAULT,
     age_restricted,
     bug_reports_message,
     clean_html,
     compiled_regex_type,
+    determine_ext,
     ExtractorError,
+    fix_xml_ampersands,
     float_or_none,
     int_or_none,
     RegexNotFoundError,
     sanitize_filename,
     unescapeHTML,
 )
-_NO_DEFAULT = object()
 
 
 class InfoExtractor(object):
@@ -523,7 +525,7 @@ class InfoExtractor(object):
             video_info['description'] = playlist_description
         return video_info
 
-    def _search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
+    def _search_regex(self, pattern, string, name, default=NO_DEFAULT, fatal=True, flags=0, group=None):
         """
         Perform a regex search on the given string, using a single or a list of
         patterns returning the first matching group.
@@ -549,7 +551,7 @@ class InfoExtractor(object):
                 return next(g for g in mobj.groups() if g is not None)
             else:
                 return mobj.group(group)
-        elif default is not _NO_DEFAULT:
+        elif default is not NO_DEFAULT:
             return default
         elif fatal:
             raise RegexNotFoundError('Unable to extract %s' % _name)
@@ -557,7 +559,7 @@ class InfoExtractor(object):
             self._downloader.report_warning('unable to extract %s' % _name + bug_reports_message())
             return None
 
-    def _html_search_regex(self, pattern, string, name, default=_NO_DEFAULT, fatal=True, flags=0, group=None):
+    def _html_search_regex(self, pattern, string, name, default=NO_DEFAULT, fatal=True, flags=0, group=None):
         """
         Like _search_regex, but strips HTML tags and unescapes entities.
         """
@@ -705,6 +707,25 @@ class InfoExtractor(object):
         return self._html_search_meta('twitter:player', html,
                                       'twitter card player')
 
+    @staticmethod
+    def _hidden_inputs(html):
+        return dict([
+            (input.group('name'), input.group('value')) for input in re.finditer(
+                r'''(?x)
+                    <input\s+
+                        type=(?P<q_hidden>["\'])hidden(?P=q_hidden)\s+
+                        name=(?P<q_name>["\'])(?P<name>.+?)(?P=q_name)\s+
+                        (?:id=(?P<q_id>["\']).+?(?P=q_id)\s+)?
+                        value=(?P<q_value>["\'])(?P<value>.*?)(?P=q_value)
+                ''', html)
+        ])
+
+    def _form_hidden_inputs(self, form_id, html):
+        form = self._search_regex(
+            r'(?s)<form[^>]+?id=(["\'])%s\1[^>]*>(?P<form>.+?)</form>' % form_id,
+            html, '%s form' % form_id, group='form')
+        return self._hidden_inputs(form)
+
     def _sort_formats(self, formats, field_preference=None):
         if not formats:
             raise ExtractorError('No video formats found')
@@ -815,10 +836,14 @@ class InfoExtractor(object):
         self.to_screen(msg)
         time.sleep(timeout)
 
-    def _extract_f4m_formats(self, manifest_url, video_id, preference=None, f4m_id=None):
+    def _extract_f4m_formats(self, manifest_url, video_id, preference=None, f4m_id=None,
+                             transform_source=lambda s: fix_xml_ampersands(s).strip()):
         manifest = self._download_xml(
             manifest_url, video_id, 'Downloading f4m manifest',
-            'Unable to download f4m manifest')
+            'Unable to download f4m manifest',
+            # Some manifests may be malformed, e.g. prosiebensat1 generated manifests
+            # (see https://github.com/rg3/youtube-dl/issues/6215#issuecomment-121704244)
+            transform_source=transform_source)
 
         formats = []
         manifest_version = '1.0'
@@ -828,8 +853,19 @@ class InfoExtractor(object):
             media_nodes = manifest.findall('{http://ns.adobe.com/f4m/2.0}media')
         for i, media_el in enumerate(media_nodes):
             if manifest_version == '2.0':
-                manifest_url = ('/'.join(manifest_url.split('/')[:-1]) + '/' +
-                                (media_el.attrib.get('href') or media_el.attrib.get('url')))
+                media_url = media_el.attrib.get('href') or media_el.attrib.get('url')
+                if not media_url:
+                    continue
+                manifest_url = (
+                    media_url if media_url.startswith('http://') or media_url.startswith('https://')
+                    else ('/'.join(manifest_url.split('/')[:-1]) + '/' + media_url))
+                # If media_url is itself a f4m manifest do the recursive extraction
+                # since bitrates in parent manifest (this one) and media_url manifest
+                # may differ leading to inability to resolve the format by requested
+                # bitrate in f4m downloader
+                if determine_ext(manifest_url) == 'f4m':
+                    formats.extend(self._extract_f4m_formats(manifest_url, video_id, preference, f4m_id))
+                    continue
             tbr = int_or_none(media_el.attrib.get('bitrate'))
             formats.append({
                 'format_id': '-'.join(filter(None, [f4m_id, compat_str(i if tbr is None else tbr)])),
@@ -846,7 +882,8 @@ class InfoExtractor(object):
 
     def _extract_m3u8_formats(self, m3u8_url, video_id, ext=None,
                               entry_protocol='m3u8', preference=None,
-                              m3u8_id=None):
+                              m3u8_id=None, note=None, errnote=None,
+                              fatal=True):
 
         formats = [{
             'format_id': '-'.join(filter(None, [m3u8_id, 'meta'])),
@@ -865,8 +902,11 @@ class InfoExtractor(object):
 
         m3u8_doc = self._download_webpage(
             m3u8_url, video_id,
-            note='Downloading m3u8 information',
-            errnote='Failed to download m3u8 information')
+            note=note or 'Downloading m3u8 information',
+            errnote=errnote or 'Failed to download m3u8 information',
+            fatal=fatal)
+        if m3u8_doc is False:
+            return m3u8_doc
         last_info = None
         last_media = None
         kv_rex = re.compile(
@@ -956,7 +996,7 @@ class InfoExtractor(object):
     def _parse_smil_video(self, video, video_id, base, rtmp_count):
         src = video.get('src')
         if not src:
-            return ([], rtmp_count)
+            return [], rtmp_count
         bitrate = int_or_none(video.get('system-bitrate') or video.get('systemBitrate'), 1000)
         width = int_or_none(video.get('width'))
         height = int_or_none(video.get('height'))
@@ -969,7 +1009,7 @@ class InfoExtractor(object):
                     proto = 'http'
         ext = video.get('ext')
         if proto == 'm3u8':
-            return (self._extract_m3u8_formats(src, video_id, ext), rtmp_count)
+            return self._extract_m3u8_formats(src, video_id, ext), rtmp_count
         elif proto == 'rtmp':
             rtmp_count += 1
             streamer = video.get('streamer') or base

@@ -182,7 +182,6 @@ class NiconicoIE(InfoExtractor):
         extension = xpath_text(video_info, './/movie_type')
         if not extension:
             extension = determine_ext(video_real_url)
-        video_format = extension.upper()
 
         thumbnail = (
             xpath_text(video_info, './/thumbnail_url') or
@@ -241,7 +240,7 @@ class NiconicoIE(InfoExtractor):
             'url': video_real_url,
             'title': title,
             'ext': extension,
-            'format': video_format,
+            'format_id': 'economy' if video_real_url.endswith('low') else 'normal',
             'thumbnail': thumbnail,
             'description': description,
             'uploader': uploader,

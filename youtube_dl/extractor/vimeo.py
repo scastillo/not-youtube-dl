@@ -22,6 +22,7 @@ from ..utils import (
     unified_strdate,
     unsmuggle_url,
     urlencode_postdata,
+    unescapeHTML,
 )
 
 
@@ -172,6 +173,21 @@ class VimeoIE(VimeoBaseInfoExtractor):
             },
         },
     ]
+
+    @staticmethod
+    def _extract_vimeo_url(url, webpage):
+        # Look for embedded (iframe) Vimeo player
+        mobj = re.search(
+            r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//player\.vimeo\.com/video/.+?)\1', webpage)
+        if mobj:
+            player_url = unescapeHTML(mobj.group('url'))
+            surl = smuggle_url(player_url, {'Referer': url})
+            return surl
+        # Look for embedded (swf embed) Vimeo player
+        mobj = re.search(
+            r'<embed[^>]+?src="((?:https?:)?//(?:www\.)?vimeo\.com/moogaloop\.swf.+?)"', webpage)
+        if mobj:
+            return mobj.group(1)
 
     def _verify_video_password(self, url, video_id, webpage):
         password = self._downloader.params.get('videopassword', None)
@@ -436,11 +452,7 @@ class VimeoChannelIE(InfoExtractor):
         password = self._downloader.params.get('videopassword', None)
         if password is None:
             raise ExtractorError('This album is protected by a password, use the --video-password option', expected=True)
-        fields = dict(re.findall(r'''(?x)<input\s+
-            type="hidden"\s+
-            name="([^"]+)"\s+
-            value="([^"]*)"
-            ''', login_form))
+        fields = self._hidden_inputs(login_form)
         token = self._search_regex(r'xsrft[\s=:"\']+([^"\']+)', webpage, 'login token')
         fields['token'] = token
         fields['password'] = password

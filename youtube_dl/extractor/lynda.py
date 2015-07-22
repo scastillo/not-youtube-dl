@@ -30,13 +30,13 @@ class LyndaBaseIE(InfoExtractor):
             return
 
         login_form = {
-            'username': username,
-            'password': password,
+            'username': username.encode('utf-8'),
+            'password': password.encode('utf-8'),
             'remember': 'false',
             'stayPut': 'false'
         }
         request = compat_urllib_request.Request(
-            self._LOGIN_URL, compat_urllib_parse.urlencode(login_form))
+            self._LOGIN_URL, compat_urllib_parse.urlencode(login_form).encode('utf-8'))
         login_page = self._download_webpage(
             request, None, 'Logging in as %s' % username)
 
@@ -65,7 +65,7 @@ class LyndaBaseIE(InfoExtractor):
                     'stayPut': 'false',
                 }
                 request = compat_urllib_request.Request(
-                    self._LOGIN_URL, compat_urllib_parse.urlencode(confirm_form))
+                    self._LOGIN_URL, compat_urllib_parse.urlencode(confirm_form).encode('utf-8'))
                 login_page = self._download_webpage(
                     request, None,
                     'Confirming log in and log out from another device')

@@ -8,6 +8,7 @@ from ..compat import compat_urlparse
 from ..utils import (
     determine_ext,
     int_or_none,
+    remove_end,
     unified_strdate,
     ExtractorError,
 )
@@ -39,7 +40,6 @@ class LifeNewsIE(InfoExtractor):
             'title': 'В Сети появилось видео захвата «Правым сектором» колхозных полей ',
             'description': 'Жители двух поселков Днепропетровской области не простили радикалам угрозу лишения плодородных земель и пошли в лобовую. ',
             'upload_date': '20150402',
-            'uploader': 'embed.life.ru',
         }
     }, {
         'url': 'http://lifenews.ru/news/153461',
@@ -50,7 +50,6 @@ class LifeNewsIE(InfoExtractor):
             'title': 'В Москве спасли потерявшегося медвежонка, который спрятался на дереве',
             'description': 'Маленький хищник не смог найти дорогу домой и обрел временное убежище на тополе недалеко от жилого массива, пока его не нашла соседская собака.',
             'upload_date': '20150505',
-            'uploader': 'embed.life.ru',
         }
     }, {
         'url': 'http://lifenews.ru/video/13035',
@@ -72,20 +71,20 @@ class LifeNewsIE(InfoExtractor):
         if not videos and not iframe_link:
             raise ExtractorError('No media links available for %s' % video_id)
 
-        title = self._og_search_title(webpage)
-        TITLE_SUFFIX = ' - Первый по срочным новостям — LIFE | NEWS'
-        if title.endswith(TITLE_SUFFIX):
-            title = title[:-len(TITLE_SUFFIX)]
+        title = remove_end(
+            self._og_search_title(webpage),
+            ' - Первый по срочным новостям — LIFE | NEWS')
 
         description = self._og_search_description(webpage)
 
         view_count = self._html_search_regex(
             r'<div class=\'views\'>\s*(\d+)\s*</div>', webpage, 'view count', fatal=False)
         comment_count = self._html_search_regex(
-            r'<div class=\'comments\'>\s*<span class=\'counter\'>\s*(\d+)\s*</span>', webpage, 'comment count', fatal=False)
+            r'=\'commentCount\'[^>]*>\s*(\d+)\s*<',
+            webpage, 'comment count', fatal=False)
 
         upload_date = self._html_search_regex(
-            r'<time datetime=\'([^\']+)\'>', webpage, 'upload date', fatal=False)
+            r'<time[^>]*datetime=\'([^\']+)\'', webpage, 'upload date', fatal=False)
         if upload_date is not None:
             upload_date = unified_strdate(upload_date)
 

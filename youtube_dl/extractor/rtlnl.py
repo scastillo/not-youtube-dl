@@ -12,10 +12,10 @@ class RtlNlIE(InfoExtractor):
     IE_NAME = 'rtl.nl'
     IE_DESC = 'rtl.nl and rtlxl.nl'
     _VALID_URL = r'''(?x)
-        https?://(www\.)?
+        https?://(?:www\.)?
         (?:
             rtlxl\.nl/\#!/[^/]+/|
-            rtl\.nl/system/videoplayer/[^?#]+?/video_embed\.html\#uuid=
+            rtl\.nl/system/videoplayer/(?:[^/]+/)+(?:video_)?embed\.html\b.+?\buuid=
         )
         (?P<id>[0-9a-f-]+)'''
 
@@ -43,22 +43,51 @@ class RtlNlIE(InfoExtractor):
             'upload_date': '20150215',
             'description': 'Er zijn nieuwe beelden vrijgegeven die vlak na de aanslag in Kopenhagen zijn gemaakt. Op de video is goed te zien hoe omstanders zich bekommeren om één van de slachtoffers, terwijl de eerste agenten ter plaatse komen.',
         }
+    }, {
+        # empty synopsis and missing episodes (see https://github.com/rg3/youtube-dl/issues/6275)
+        'url': 'http://www.rtl.nl/system/videoplayer/derden/rtlnieuws/video_embed.html#uuid=f536aac0-1dc3-4314-920e-3bd1c5b3811a/autoplay=false',
+        'info_dict': {
+            'id': 'f536aac0-1dc3-4314-920e-3bd1c5b3811a',
+            'ext': 'mp4',
+            'title': 'RTL Nieuws - Meer beelden van overval juwelier',
+            'thumbnail': 're:^https?://screenshots\.rtl\.nl/system/thumb/sz=[0-9]+x[0-9]+/uuid=f536aac0-1dc3-4314-920e-3bd1c5b3811a$',
+            'timestamp': 1437233400,
+            'upload_date': '20150718',
+            'duration': 30.474,
+        },
+        'params': {
+            'skip_download': True,
+        },
+    }, {
+        # encrypted m3u8 streams, georestricted
+        'url': 'http://www.rtlxl.nl/#!/afl-2-257632/52a74543-c504-4cde-8aa8-ec66fe8d68a7',
+        'only_matching': True,
+    }, {
+        'url': 'http://www.rtl.nl/system/videoplayer/derden/embed.html#!/uuid=bb0353b0-d6a4-1dad-90e9-18fe75b8d1f0',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
         uuid = self._match_id(url)
         info = self._download_json(
-            'http://www.rtl.nl/system/s4m/vfd/version=2/uuid=%s/fmt=flash/' % uuid,
+            'http://www.rtl.nl/system/s4m/vfd/version=2/uuid=%s/fmt=adaptive/' % uuid,
             uuid)
 
         material = info['material'][0]
-        progname = info['abstracts'][0]['name']
-        subtitle = material['title'] or info['episodes'][0]['name']
-        description = material.get('synopsis') or info['episodes'][0]['synopsis']
+        title = info['abstracts'][0]['name']
+        subtitle = material.get('title')
+        if subtitle:
+            title += ' - %s' % subtitle
+        description = material.get('synopsis')
+
+        meta = info.get('meta', {})
 
         # Use unencrypted m3u8 streams (See https://github.com/rg3/youtube-dl/issues/4118)
-        videopath = material['videopath'].replace('.f4m', '.m3u8')
-        m3u8_url = 'http://manifest.us.rtl.nl' + videopath
+        # NB: nowadays, recent ffmpeg and avconv can handle these encrypted streams, so
+        # this adaptive -> flash workaround is not required in general, but it also
+        # allows bypassing georestriction therefore is retained for now.
+        videopath = material['videopath'].replace('/adaptive/', '/flash/')
+        m3u8_url = meta.get('videohost', 'http://manifest.us.rtl.nl') + videopath
 
         formats = self._extract_m3u8_formats(m3u8_url, uuid, ext='mp4')
 
@@ -79,7 +108,7 @@ class RtlNlIE(InfoExtractor):
         self._sort_formats(formats)
 
         thumbnails = []
-        meta = info.get('meta', {})
+
         for p in ('poster_base_url', '"thumb_base_url"'):
             if not meta.get(p):
                 continue
@@ -95,7 +124,7 @@ class RtlNlIE(InfoExtractor):
 
         return {
             'id': uuid,
-            'title': '%s - %s' % (progname, subtitle),
+            'title': title,
             'formats': formats,
             'timestamp': material['original_date'],
             'description': description,
