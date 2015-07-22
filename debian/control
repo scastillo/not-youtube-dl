@@ -23,7 +23,7 @@ Depends:
 Recommends:
  aria2 | wget | curl,
  ffmpeg | libav-tools,
- mplayer2 | mplayer,
+ mplayer | mplayer2,
  rtmpdump
 Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
