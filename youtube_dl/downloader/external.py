@@ -109,6 +109,14 @@ class Aria2cFD(ExternalFD):
         cmd += ['--', info_dict['url']]
         return cmd
 
+
+class HttpieFD(ExternalFD):
+    def _make_cmd(self, tmpfilename, info_dict):
+        cmd = ['http', '--download', '--output', tmpfilename, info_dict['url']]
+        for key, val in info_dict['http_headers'].items():
+            cmd += ['%s:%s' % (key, val)]
+        return cmd
+
 _BY_NAME = dict(
     (klass.get_basename(), klass)
     for name, klass in globals().items()
@@ -123,5 +131,6 @@ def list_external_downloaders():
 def get_external_downloader(external_downloader):
     """ Given the name of the executable, see whether we support the given
         downloader . """
-    bn = os.path.basename(external_downloader)
+    # Drop .exe extension on Windows
+    bn = os.path.splitext(os.path.basename(external_downloader))[0]
     return _BY_NAME[bn]

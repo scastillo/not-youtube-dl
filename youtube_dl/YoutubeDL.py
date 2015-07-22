@@ -119,7 +119,7 @@ class YoutubeDL(object):
 
     username:          Username for authentication purposes.
     password:          Password for authentication purposes.
-    videopassword:     Password for acces a video.
+    videopassword:     Password for accessing a video.
     usenetrc:          Use netrc for authentication instead.
     verbose:           Print additional info to stdout.
     quiet:             Do not print messages to stdout.
@@ -139,6 +139,7 @@ class YoutubeDL(object):
     outtmpl:           Template for output names.
     restrictfilenames: Do not allow "&" and spaces in file names
     ignoreerrors:      Do not stop on download errors.
+    force_generic_extractor: Force downloader to use the generic extractor
     nooverwrites:      Prevent overwriting files.
     playliststart:     Playlist item to start at.
     playlistend:       Playlist item to end at.
@@ -261,6 +262,8 @@ class YoutubeDL(object):
     The following options are used by the post processors:
     prefer_ffmpeg:     If True, use ffmpeg instead of avconv if both are available,
                        otherwise prefer avconv.
+    postprocessor_args: A list of additional command-line arguments for the
+                        postprocessor.
     """
 
     params = None
@@ -626,12 +629,15 @@ class YoutubeDL(object):
             info_dict.setdefault(key, value)
 
     def extract_info(self, url, download=True, ie_key=None, extra_info={},
-                     process=True):
+                     process=True, force_generic_extractor=False):
         '''
         Returns a list with a dictionary for each video we find.
         If 'download', also downloads the videos.
         extra_info is a dict containing the extra values to add to each result
         '''
+
+        if not ie_key and force_generic_extractor:
+            ie_key = 'Generic'
 
         if ie_key:
             ies = [self.get_info_extractor(ie_key)]
@@ -1004,7 +1010,7 @@ class YoutubeDL(object):
                 t.get('preference'), t.get('width'), t.get('height'),
                 t.get('id'), t.get('url')))
             for i, t in enumerate(thumbnails):
-                if 'width' in t and 'height' in t:
+                if t.get('width') and t.get('height'):
                     t['resolution'] = '%dx%d' % (t['width'], t['height'])
                 if t.get('id') is None:
                     t['id'] = '%d' % i
@@ -1016,13 +1022,13 @@ class YoutubeDL(object):
             info_dict['display_id'] = info_dict['id']
 
         if info_dict.get('upload_date') is None and info_dict.get('timestamp') is not None:
-            # Working around negative timestamps in Windows
-            # (see http://bugs.python.org/issue1646728)
-            if info_dict['timestamp'] < 0 and os.name == 'nt':
-                info_dict['timestamp'] = 0
-            upload_date = datetime.datetime.utcfromtimestamp(
-                info_dict['timestamp'])
-            info_dict['upload_date'] = upload_date.strftime('%Y%m%d')
+            # Working around out-of-range timestamp values (e.g. negative ones on Windows,
+            # see http://bugs.python.org/issue1646728)
+            try:
+                upload_date = datetime.datetime.utcfromtimestamp(info_dict['timestamp'])
+                info_dict['upload_date'] = upload_date.strftime('%Y%m%d')
+            except (ValueError, OverflowError, OSError):
+                pass
 
         if self.params.get('listsubtitles', False):
             if 'automatic_captions' in info_dict:
@@ -1032,12 +1038,6 @@ class YoutubeDL(object):
         info_dict['requested_subtitles'] = self.process_subtitles(
             info_dict['id'], info_dict.get('subtitles'),
             info_dict.get('automatic_captions'))
-
-        # This extractors handle format selection themselves
-        if info_dict['extractor'] in ['Youku']:
-            if download:
-                self.process_info(info_dict)
-            return info_dict
 
         # We now pick which formats have to be downloaded
         if info_dict.get('formats') is None:
@@ -1499,7 +1499,8 @@ class YoutubeDL(object):
         for url in url_list:
             try:
                 # It also downloads the videos
-                res = self.extract_info(url)
+                res = self.extract_info(
+                    url, force_generic_extractor=self.params.get('force_generic_extractor', False))
             except UnavailableVideoError:
                 self.report_error('unable to download video')
             except MaxDownloadsReached:

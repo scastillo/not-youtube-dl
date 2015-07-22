@@ -130,6 +130,20 @@ class BBCCoUkIE(InfoExtractor):
             },
             'skip': 'geolocation',
         }, {
+            'url': 'http://www.bbc.co.uk/iplayer/episode/b05zmgwn/royal-academy-summer-exhibition',
+            'info_dict': {
+                'id': 'b05zmgw1',
+                'ext': 'flv',
+                'description': 'Kirsty Wark and Morgan Quaintance visit the Royal Academy as it prepares for its annual artistic extravaganza, meeting people who have come together to make the show unique.',
+                'title': 'Royal Academy Summer Exhibition',
+                'duration': 3540,
+            },
+            'params': {
+                # rtmp download
+                'skip_download': True,
+            },
+            'skip': 'geolocation',
+        }, {
             'url': 'http://www.bbc.co.uk/iplayer/playlist/p01dvks4',
             'only_matching': True,
         }, {
@@ -237,25 +251,10 @@ class BBCCoUkIE(InfoExtractor):
         for connection in self._extract_connections(media):
             captions = self._download_xml(connection.get('href'), programme_id, 'Downloading captions')
             lang = captions.get('{http://www.w3.org/XML/1998/namespace}lang', 'en')
-            ps = captions.findall('./{0}body/{0}div/{0}p'.format('{http://www.w3.org/2006/10/ttaf1}'))
-            srt = ''
-
-            def _extract_text(p):
-                if p.text is not None:
-                    stripped_text = p.text.strip()
-                    if stripped_text:
-                        return stripped_text
-                return ' '.join(span.text.strip() for span in p.findall('{http://www.w3.org/2006/10/ttaf1}span'))
-            for pos, p in enumerate(ps):
-                srt += '%s\r\n%s --> %s\r\n%s\r\n\r\n' % (str(pos), p.get('begin'), p.get('end'), _extract_text(p))
             subtitles[lang] = [
                 {
                     'url': connection.get('href'),
                     'ext': 'ttml',
-                },
-                {
-                    'data': srt,
-                    'ext': 'srt',
                 },
             ]
         return subtitles
@@ -267,7 +266,7 @@ class BBCCoUkIE(InfoExtractor):
                 programme_id, 'Downloading media selection XML')
         except ExtractorError as ee:
             if isinstance(ee.cause, compat_HTTPError) and ee.cause.code == 403:
-                media_selection = xml.etree.ElementTree.fromstring(ee.cause.read().encode('utf-8'))
+                media_selection = xml.etree.ElementTree.fromstring(ee.cause.read().decode('utf-8'))
             else:
                 raise
 
@@ -362,7 +361,7 @@ class BBCCoUkIE(InfoExtractor):
             formats, subtitles = self._download_media_selector(programme_id)
             title = self._og_search_title(webpage)
             description = self._search_regex(
-                r'<p class="medium-description">([^<]+)</p>',
+                r'<p class="[^"]*medium-description[^"]*">([^<]+)</p>',
                 webpage, 'description', fatal=False)
         else:
             programme_id, title, description, duration, formats, subtitles = self._download_playlist(group_id)

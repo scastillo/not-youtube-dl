@@ -145,11 +145,15 @@ def parseOpts(overrideArguments=None):
     general.add_option(
         '--list-extractors',
         action='store_true', dest='list_extractors', default=False,
-        help='List all supported extractors and the URLs they would handle')
+        help='List all supported extractors')
     general.add_option(
         '--extractor-descriptions',
         action='store_true', dest='list_extractor_descriptions', default=False,
         help='Output descriptions of all supported extractors')
+    general.add_option(
+        '--force-generic-extractor',
+        action='store_true', dest='force_generic_extractor', default=False,
+        help='Force extraction to use the generic extractor')
     general.add_option(
         '--default-search',
         dest='default_search', metavar='PREFIX',
@@ -215,7 +219,7 @@ def parseOpts(overrideArguments=None):
     selection.add_option(
         '--playlist-items',
         dest='playlist_items', metavar='ITEM_SPEC', default=None,
-        help='Playlist video items to download. Specify indices of the videos in the playlist seperated by commas like: "--playlist-items 1,2,5,8" if you want to download videos indexed 1, 2, 5, 8 in the playlist. You can specify range: "--playlist-items 1-3,7,10-13", it will download the videos at index 1, 2, 3, 7, 10, 11, 12 and 13.')
+        help='Playlist video items to download. Specify indices of the videos in the playlist separated by commas like: "--playlist-items 1,2,5,8" if you want to download videos indexed 1, 2, 5, 8 in the playlist. You can specify range: "--playlist-items 1-3,7,10-13", it will download the videos at index 1, 2, 3, 7, 10, 11, 12 and 13.')
     selection.add_option(
         '--match-title',
         dest='matchtitle', metavar='REGEX',
@@ -342,12 +346,13 @@ def parseOpts(overrideArguments=None):
     video_format.add_option(
         '--youtube-skip-dash-manifest',
         action='store_false', dest='youtube_include_dash_manifest',
-        help='Do not download the DASH manifest on YouTube videos')
+        help='Do not download the DASH manifests and related data on YouTube videos')
     video_format.add_option(
         '--merge-output-format',
         action='store', dest='merge_output_format', metavar='FORMAT', default=None,
         help=(
-            'If a merge is required (e.g. bestvideo+bestaudio), output to given container format. One of mkv, mp4, ogg, webm, flv.'
+            'If a merge is required (e.g. bestvideo+bestaudio), '
+            'output to given container format. One of mkv, mp4, ogg, webm, flv. '
             'Ignored if no merge is required'))
 
     subtitles = optparse.OptionGroup(parser, 'Subtitle Options')
@@ -686,7 +691,11 @@ def parseOpts(overrideArguments=None):
     postproc.add_option(
         '--recode-video',
         metavar='FORMAT', dest='recodevideo', default=None,
-        help='Encode the video to another format if necessary (currently supported: mp4|flv|ogg|webm|mkv)')
+        help='Encode the video to another format if necessary (currently supported: mp4|flv|ogg|webm|mkv|avi)')
+    postproc.add_option(
+        '--postprocessor-args',
+        dest='postprocessor_args', metavar='ARGS',
+        help='Give these arguments to the postprocessor')
     postproc.add_option(
         '-k', '--keep-video',
         action='store_true', dest='keepvideo', default=False,
@@ -725,7 +734,7 @@ def parseOpts(overrideArguments=None):
         metavar='POLICY', dest='fixup', default='detect_or_warn',
         help='Automatically correct known faults of the file. '
              'One of never (do nothing), warn (only emit a warning), '
-             'detect_or_warn(the default; fix file if we can, warn otherwise)')
+             'detect_or_warn (the default; fix file if we can, warn otherwise)')
     postproc.add_option(
         '--prefer-avconv',
         action='store_false', dest='prefer_ffmpeg',
