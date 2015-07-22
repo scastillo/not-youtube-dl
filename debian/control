@@ -22,7 +22,7 @@ Depends:
  ${python:Depends}
 Recommends:
  aria2 | wget | curl,
- libav-tools | ffmpeg,
+ ffmpeg | libav-tools,
  mplayer2 | mplayer,
  rtmpdump
 Description: downloader of videos from YouTube and other sites
