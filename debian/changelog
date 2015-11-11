@@ -3,7 +3,7 @@ youtube-dl (2015.11.10-1~2.gbp3477c6) UNRELEASED; urgency=medium
   ** SNAPSHOT build @3477c644417600d9ec8f8d2a44f82da0a4b15eb5 **
 
   * Imported Upstream version 2015.07.21 (Closes: #735012, #736151)
-  * Imported Upstream version 2015.11.10 (Closes: #796035, #804724).
+  * Imported Upstream version 2015.11.10 (Closes: #796035, #804724, #801491).
   * debian/control:
     + Drop really ancient Recommends to have ffprobe.
     + Prefer ffmpeg to libav-tools in Recommends.
