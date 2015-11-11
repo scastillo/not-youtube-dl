@@ -1,6 +1,4 @@
-youtube-dl (2015.11.10-1~2.gbp3477c6) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @3477c644417600d9ec8f8d2a44f82da0a4b15eb5 **
+youtube-dl (2015.11.10-1) unstable; urgency=medium
 
   * Imported Upstream version 2015.07.21 (Closes: #735012, #736151)
   * Imported Upstream version 2015.11.10 (Closes: #796035, #804724, #801491).
@@ -11,7 +9,7 @@ youtube-dl (2015.11.10-1~2.gbp3477c6) UNRELEASED; urgency=medium
       Note: I'm still leaving mplayer2 to ease the life of backporters.
     + Prefer mpv to mplayer in Recommends.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 Jul 2015 01:05:38 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 11 Nov 2015 12:23:08 -0200
 
 youtube-dl (2015.06.04.1-1) unstable; urgency=medium
 
