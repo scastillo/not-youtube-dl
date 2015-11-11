@@ -1,11 +1,12 @@
-youtube-dl (2015.07.21-1~1.gbp82d01c) UNRELEASED; urgency=medium
+youtube-dl (2015.07.21-1~2.gbp3477c6) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @82d01c1a88911e89e3e7ed4518d54c028f9e4792 **
+  ** SNAPSHOT build @3477c644417600d9ec8f8d2a44f82da0a4b15eb5 **
 
   * Imported Upstream version 2015.07.21 (Closes: #735012, #736151)
   * debian/control: Drop really ancient Recommends to have ffprobe.
   * debian/control: Prefer ffmpeg to libav-tools in Recommends.
   * debian/control: Prefer mplayer to mplayer2 in Recommends.
+  * debian/control: Prefer mpv to mplayer in Recommends.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 Jul 2015 01:05:38 -0300
 
