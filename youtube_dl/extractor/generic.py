@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 
 import os
 import re
+import sys
 
 from .common import InfoExtractor
 from .youtube import YoutubeIE
 from ..compat import (
+    compat_etree_fromstring,
     compat_urllib_parse_unquote,
     compat_urllib_request,
     compat_urlparse,
@@ -20,7 +22,6 @@ from ..utils import (
     HEADRequest,
     is_html,
     orderedSet,
-    parse_xml,
     smuggle_url,
     unescapeHTML,
     unified_strdate,
@@ -48,6 +49,8 @@ from .vimeo import VimeoIE
 from .dailymotion import DailymotionCloudIE
 from .onionstudios import OnionStudiosIE
 from .snagfilms import SnagFilmsEmbedIE
+from .screenwavemedia import ScreenwaveMediaIE
+from .mtv import MTVServicesEmbeddedIE
 
 
 class GenericIE(InfoExtractor):
@@ -130,6 +133,90 @@ class GenericIE(InfoExtractor):
                 'title': 'pdv_maddow_netcast_m4v-02-27-2015-201624',
             }
         },
+        # SMIL from http://videolectures.net/promogram_igor_mekjavic_eng
+        {
+            'url': 'http://videolectures.net/promogram_igor_mekjavic_eng/video/1/smil.xml',
+            'info_dict': {
+                'id': 'smil',
+                'ext': 'mp4',
+                'title': 'Automatics, robotics and biocybernetics',
+                'description': 'md5:815fc1deb6b3a2bff99de2d5325be482',
+                'upload_date': '20130627',
+                'formats': 'mincount:16',
+                'subtitles': 'mincount:1',
+            },
+            'params': {
+                'force_generic_extractor': True,
+                'skip_download': True,
+            },
+        },
+        # SMIL from http://www1.wdr.de/mediathek/video/livestream/index.html
+        {
+            'url': 'http://metafilegenerator.de/WDR/WDR_FS/hds/hds.smil',
+            'info_dict': {
+                'id': 'hds',
+                'ext': 'flv',
+                'title': 'hds',
+                'formats': 'mincount:1',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # SMIL from https://www.restudy.dk/video/play/id/1637
+        {
+            'url': 'https://www.restudy.dk/awsmedia/SmilDirectory/video_1637.xml',
+            'info_dict': {
+                'id': 'video_1637',
+                'ext': 'flv',
+                'title': 'video_1637',
+                'formats': 'mincount:3',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # SMIL from http://adventure.howstuffworks.com/5266-cool-jobs-iditarod-musher-video.htm
+        {
+            'url': 'http://services.media.howstuffworks.com/videos/450221/smil-service.smil',
+            'info_dict': {
+                'id': 'smil-service',
+                'ext': 'flv',
+                'title': 'smil-service',
+                'formats': 'mincount:1',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # SMIL from http://new.livestream.com/CoheedandCambria/WebsterHall/videos/4719370
+        {
+            'url': 'http://api.new.livestream.com/accounts/1570303/events/1585861/videos/4719370.smil',
+            'info_dict': {
+                'id': '4719370',
+                'ext': 'mp4',
+                'title': '571de1fd-47bc-48db-abf9-238872a58d1f',
+                'formats': 'mincount:3',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        # XSPF playlist from http://www.telegraaf.nl/tv/nieuws/binnenland/24353229/__Tikibad_ontruimd_wegens_brand__.html
+        {
+            'url': 'http://www.telegraaf.nl/xml/playlist/2015/8/7/mZlp2ctYIUEB.xspf',
+            'info_dict': {
+                'id': 'mZlp2ctYIUEB',
+                'ext': 'mp4',
+                'title': 'Tikibad ontruimd wegens brand',
+                'description': 'md5:05ca046ff47b931f9b04855015e163a4',
+                'thumbnail': 're:^https?://.*\.jpg$',
+                'duration': 33,
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
         # google redirect
         {
             'url': 'http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&ved=0CCUQtwIwAA&url=http%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DcmQHVoWB5FY&ei=F-sNU-LLCaXk4QT52ICQBQ&usg=AFQjCNEw4hL29zgOohLXvpJ-Bdh2bils1Q&bvm=bv.61965928,d.bGE',
@@ -145,6 +232,22 @@ class GenericIE(InfoExtractor):
             'params': {
                 'skip_download': False,
             }
+        },
+        {
+            # redirect in Refresh HTTP header
+            'url': 'https://www.facebook.com/l.php?u=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DpO8h3EaFRdo&h=TAQHsoToz&enc=AZN16h-b6o4Zq9pZkCCdOLNKMN96BbGMNtcFwHSaazus4JHT_MFYkAA-WARTX2kvsCIdlAIyHZjl6d33ILIJU7Jzwk_K3mcenAXoAzBNoZDI_Q7EXGDJnIhrGkLXo_LJ_pAa2Jzbx17UHMd3jAs--6j2zaeto5w9RTn8T_1kKg3fdC5WPX9Dbb18vzH7YFX0eSJmoa6SP114rvlkw6pkS1-T&s=1',
+            'info_dict': {
+                'id': 'pO8h3EaFRdo',
+                'ext': 'mp4',
+                'title': 'Tripeo Boiler Room x Dekmantel Festival DJ Set',
+                'description': 'md5:6294cc1af09c4049e0652b51a2df10d5',
+                'upload_date': '20150917',
+                'uploader_id': 'brtvofficial',
+                'uploader': 'Boiler Room',
+            },
+            'params': {
+                'skip_download': False,
+            },
         },
         {
             'url': 'http://www.hodiho.fr/2013/02/regis-plante-sa-jeep.html',
@@ -236,6 +339,19 @@ class GenericIE(InfoExtractor):
             },
             'add_ie': ['Ooyala'],
         },
+        {
+            # ooyala video embedded with http://player.ooyala.com/iframe.js
+            'url': 'http://www.macrumors.com/2015/07/24/steve-jobs-the-man-in-the-machine-first-trailer/',
+            'info_dict': {
+                'id': 'p0MGJndjoG5SOKqO_hZJuZFPB-Tr5VgB',
+                'ext': 'mp4',
+                'title': '"Steve Jobs: Man in the Machine" trailer',
+                'description': 'The first trailer for the Alex Gibney documentary "Steve Jobs: Man in the Machine."',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
         # multiple ooyala embeds on SBN network websites
         {
             'url': 'http://www.sbnation.com/college-football-recruiting/2015/2/3/7970291/national-signing-day-rationalizations-itll-be-ok-itll-be-ok',
@@ -275,14 +391,6 @@ class GenericIE(InfoExtractor):
                 'title': 'Between Two Ferns with Zach Galifianakis: President Barack Obama',
                 'description': 'Episode 18: President Barack Obama sits down with Zach Galifianakis for his most memorable interview yet.',
             },
-        },
-        # BBC iPlayer embeds
-        {
-            'url': 'http://www.bbc.co.uk/blogs/adamcurtis/posts/BUGGER',
-            'info_dict': {
-                'title': 'BBC - Blogs -  Adam Curtis - BUGGER',
-            },
-            'playlist_mincount': 18,
         },
         # RUTV embed
         {
@@ -913,6 +1021,16 @@ class GenericIE(InfoExtractor):
                 'description': 'New experience with Acrobat DC',
                 'duration': 248.667,
             },
+        },
+        # ScreenwaveMedia embed
+        {
+            'url': 'http://www.thecinemasnob.com/the-cinema-snob/a-nightmare-on-elm-street-2-freddys-revenge1',
+            'md5': '24ace5baba0d35d55c6810b51f34e9e0',
+            'info_dict': {
+                'id': 'cinemasnob-55d26273809dd',
+                'ext': 'mp4',
+                'title': 'cinemasnob',
+            },
         }
     ]
 
@@ -1118,11 +1236,15 @@ class GenericIE(InfoExtractor):
 
         self.report_extraction(video_id)
 
-        # Is it an RSS feed?
+        # Is it an RSS feed, a SMIL file or a XSPF playlist?
         try:
-            doc = parse_xml(webpage)
+            doc = compat_etree_fromstring(webpage.encode('utf-8'))
             if doc.tag == 'rss':
                 return self._extract_rss(url, video_id, doc)
+            elif re.match(r'^(?:{[^}]+})?smil$', doc.tag):
+                return self._parse_smil(doc, url, video_id)
+            elif doc.tag == '{http://xspf.org/ns/0/}playlist':
+                return self.playlist_result(self._parse_xspf(doc, video_id), video_id)
         except compat_xml_parse_error:
             pass
 
@@ -1328,7 +1450,7 @@ class GenericIE(InfoExtractor):
             return self.url_result(mobj.group('url'))
 
         # Look for Ooyala videos
-        mobj = (re.search(r'player\.ooyala\.com/[^"?]+\?[^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
+        mobj = (re.search(r'player\.ooyala\.com/[^"?]+[?#][^"]*?(?:embedCode|ec)=(?P<ec>[^"&]+)', webpage) or
                 re.search(r'OO\.Player\.create\([\'"].*?[\'"],\s*[\'"](?P<ec>.{32})[\'"]', webpage) or
                 re.search(r'SBN\.VideoLinkset\.ooyala\([\'"](?P<ec>.{32})[\'"]\)', webpage) or
                 re.search(r'data-ooyala-video-id\s*=\s*[\'"](?P<ec>.{32})[\'"]', webpage))
@@ -1491,12 +1613,9 @@ class GenericIE(InfoExtractor):
             return self.url_result(url, ie='Vulture')
 
         # Look for embedded mtvservices player
-        mobj = re.search(
-            r'<iframe src="(?P<url>https?://media\.mtvnservices\.com/embed/[^"]+)"',
-            webpage)
-        if mobj is not None:
-            url = unescapeHTML(mobj.group('url'))
-            return self.url_result(url, ie='MTVServicesEmbedded')
+        mtvservices_url = MTVServicesEmbeddedIE._extract_url(webpage)
+        if mtvservices_url:
+            return self.url_result(mtvservices_url, ie='MTVServicesEmbedded')
 
         # Look for embedded yahoo player
         mobj = re.search(
@@ -1535,7 +1654,7 @@ class GenericIE(InfoExtractor):
             return self.url_result(mobj.group('url'), 'MLB')
 
         mobj = re.search(
-            r'<iframe[^>]+?src=(["\'])(?P<url>%s)\1' % CondeNastIE.EMBED_URL,
+            r'<(?:iframe|script)[^>]+?src=(["\'])(?P<url>%s)\1' % CondeNastIE.EMBED_URL,
             webpage)
         if mobj is not None:
             return self.url_result(self._proto_relative_url(mobj.group('url'), scheme='http:'), 'CondeNast')
@@ -1553,8 +1672,8 @@ class GenericIE(InfoExtractor):
             return self.url_result(mobj.group('url'), 'Zapiks')
 
         # Look for Kaltura embeds
-        mobj = (re.search(r"(?s)kWidget\.(?:thumb)?[Ee]mbed\(\{.*?'wid'\s*:\s*'_?(?P<partner_id>[^']+)',.*?'entry_id'\s*:\s*'(?P<id>[^']+)',", webpage) or
-                re.search(r'(?s)(["\'])(?:https?:)?//cdnapisec\.kaltura\.com/.*?(?:p|partner_id)/(?P<partner_id>\d+).*?\1.*?entry_id\s*:\s*(["\'])(?P<id>[^\2]+?)\2', webpage))
+        mobj = (re.search(r"(?s)kWidget\.(?:thumb)?[Ee]mbed\(\{.*?'wid'\s*:\s*'_?(?P<partner_id>[^']+)',.*?'entry_?[Ii]d'\s*:\s*'(?P<id>[^']+)',", webpage) or
+                re.search(r'(?s)(?P<q1>["\'])(?:https?:)?//cdnapi(?:sec)?\.kaltura\.com/.*?(?:p|partner_id)/(?P<partner_id>\d+).*?(?P=q1).*?entry_?[Ii]d\s*:\s*(?P<q2>["\'])(?P<id>.+?)(?P=q2)', webpage))
         if mobj is not None:
             return self.url_result('kaltura:%(partner_id)s:%(id)s' % mobj.groupdict(), 'Kaltura')
 
@@ -1626,6 +1745,11 @@ class GenericIE(InfoExtractor):
         if snagfilms_url:
             return self.url_result(snagfilms_url)
 
+        # Look for ScreenwaveMedia embeds
+        mobj = re.search(ScreenwaveMediaIE.EMBED_PATTERN, webpage)
+        if mobj is not None:
+            return self.url_result(unescapeHTML(mobj.group('url')), 'ScreenwaveMedia')
+
         # Look for AdobeTVVideo embeds
         mobj = re.search(
             r'<iframe[^>]+src=[\'"]((?:https?:)?//video\.tv\.adobe\.com/v/\d+[^"]+)[\'"]',
@@ -1663,7 +1787,7 @@ class GenericIE(InfoExtractor):
         if not found:
             # Broaden the findall a little bit: JWPlayer JS loader
             found = filter_video(re.findall(
-                r'[^A-Za-z0-9]?file["\']?:\s*["\'](http(?![^\'"]+\.[0-9]+[\'"])[^\'"]+)["\']', webpage))
+                r'[^A-Za-z0-9]?(?:file|video_url)["\']?:\s*["\'](http(?![^\'"]+\.[0-9]+[\'"])[^\'"]+)["\']', webpage))
         if not found:
             # Flow player
             found = filter_video(re.findall(r'''(?xs)
@@ -1689,7 +1813,7 @@ class GenericIE(InfoExtractor):
                 found = filter_video(re.findall(r'<meta.*?property="og:video".*?content="(.*?)"', webpage))
         if not found:
             # HTML5 video
-            found = re.findall(r'(?s)<video[^<]*(?:>.*?<source[^>]*)?\s+src=["\'](.*?)["\']', webpage)
+            found = re.findall(r'(?s)<(?:video|audio)[^<]*(?:>.*?<source[^>]*)?\s+src=["\'](.*?)["\']', webpage)
         if not found:
             REDIRECT_REGEX = r'[0-9]{,2};\s*(?:URL|url)=\'?([^\'"]+)'
             found = re.search(
@@ -1700,9 +1824,12 @@ class GenericIE(InfoExtractor):
                 # Look also in Refresh HTTP header
                 refresh_header = head_response.headers.get('Refresh')
                 if refresh_header:
+                    # In python 2 response HTTP headers are bytestrings
+                    if sys.version_info < (3, 0) and isinstance(refresh_header, str):
+                        refresh_header = refresh_header.decode('iso-8859-1')
                     found = re.search(REDIRECT_REGEX, refresh_header)
             if found:
-                new_url = compat_urlparse.urljoin(url, found.group(1))
+                new_url = compat_urlparse.urljoin(url, unescapeHTML(found.group(1)))
                 self.report_following_redirect(new_url)
                 return {
                     '_type': 'url',
@@ -1724,7 +1851,8 @@ class GenericIE(InfoExtractor):
             # here's a fun little line of code for you:
             video_id = os.path.splitext(video_id)[0]
 
-            if determine_ext(video_url) == 'smil':
+            ext = determine_ext(video_url)
+            if ext == 'smil':
                 entries.append({
                     'id': video_id,
                     'formats': self._extract_smil_formats(video_url, video_id),
@@ -1732,6 +1860,8 @@ class GenericIE(InfoExtractor):
                     'title': video_title,
                     'age_limit': age_limit,
                 })
+            elif ext == 'xspf':
+                return self.playlist_result(self._extract_xspf_playlist(video_url, video_id), video_id)
             else:
                 entries.append({
                     'id': video_id,

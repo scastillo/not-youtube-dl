@@ -78,7 +78,8 @@ class CanalplusIE(InfoExtractor):
         if video_id is None:
             webpage = self._download_webpage(url, display_id)
             video_id = self._search_regex(
-                r'<canal:player[^>]+?videoId="(\d+)"', webpage, 'video id')
+                [r'<canal:player[^>]+?videoId=(["\'])(?P<id>\d+)', r'id=["\']canal_video_player(?P<id>\d+)'],
+                webpage, 'video id', group='id')
 
         info_url = self._VIDEO_INFO_TEMPLATE % (site_id, video_id)
         doc = self._download_xml(info_url, video_id, 'Downloading video XML')
@@ -106,15 +107,11 @@ class CanalplusIE(InfoExtractor):
                 continue
             format_id = fmt.tag
             if format_id == 'HLS':
-                hls_formats = self._extract_m3u8_formats(format_url, video_id, 'flv')
-                for fmt in hls_formats:
-                    fmt['preference'] = preference(format_id)
-                formats.extend(hls_formats)
+                formats.extend(self._extract_m3u8_formats(
+                    format_url, video_id, 'mp4', preference=preference(format_id)))
             elif format_id == 'HDS':
-                hds_formats = self._extract_f4m_formats(format_url + '?hdcore=2.11.3', video_id)
-                for fmt in hds_formats:
-                    fmt['preference'] = preference(format_id)
-                formats.extend(hds_formats)
+                formats.extend(self._extract_f4m_formats(
+                    format_url + '?hdcore=2.11.3', video_id, preference=preference(format_id)))
             else:
                 formats.append({
                     'url': format_url,

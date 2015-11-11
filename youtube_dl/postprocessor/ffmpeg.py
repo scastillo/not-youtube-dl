@@ -135,7 +135,10 @@ class FFmpegPostProcessor(PostProcessor):
 
         files_cmd = []
         for path in input_paths:
-            files_cmd.extend([encodeArgument('-i'), encodeFilename(path, True)])
+            files_cmd.extend([
+                encodeArgument('-i'),
+                encodeFilename(self._ffmpeg_filename_argument(path), True)
+            ])
         cmd = ([encodeFilename(self.executable, True), encodeArgument('-y')] +
                files_cmd +
                [encodeArgument(o) for o in opts] +
@@ -155,10 +158,10 @@ class FFmpegPostProcessor(PostProcessor):
         self.run_ffmpeg_multiple_files([path], out_path, opts)
 
     def _ffmpeg_filename_argument(self, fn):
-        # ffmpeg broke --, see https://ffmpeg.org/trac/ffmpeg/ticket/2127 for details
-        if fn.startswith('-'):
-            return './' + fn
-        return fn
+        # Always use 'file:' because the filename may contain ':' (ffmpeg
+        # interprets that as a protocol) or can start with '-' (-- is broken in
+        # ffmpeg, see https://ffmpeg.org/trac/ffmpeg/ticket/2127 for details)
+        return 'file:' + fn
 
 
 class FFmpegExtractAudioPP(FFmpegPostProcessor):
@@ -269,7 +272,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
             return [], information
 
         try:
-            self._downloader.to_screen('[' + self.basename + '] Destination: ' + new_path)
+            self._downloader.to_screen('[ffmpeg] Destination: ' + new_path)
             self.run_ffmpeg(path, new_path, acodec, more_opts)
         except AudioConversionError as e:
             raise PostProcessingError(
