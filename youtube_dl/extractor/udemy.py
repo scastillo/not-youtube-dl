@@ -70,14 +70,16 @@ class UdemyIE(InfoExtractor):
     def _login(self):
         (username, password) = self._get_login_info()
         if username is None:
-            raise ExtractorError(
-                'Udemy account is required, use --username and --password options to provide account credentials.',
-                expected=True)
+            self.raise_login_required('Udemy account is required')
 
         login_popup = self._download_webpage(
             self._LOGIN_URL, None, 'Downloading login popup')
 
-        if login_popup == '<div class="run-command close-popup redirect" data-url="https://www.udemy.com/"></div>':
+        def is_logged(webpage):
+            return any(p in webpage for p in ['href="https://www.udemy.com/user/logout/', '>Logout<'])
+
+        # already logged in
+        if is_logged(login_popup):
             return
 
         login_form = self._form_hidden_inputs('login-form', login_popup)
@@ -95,8 +97,7 @@ class UdemyIE(InfoExtractor):
         response = self._download_webpage(
             request, None, 'Logging in as %s' % username)
 
-        if all(logout_pattern not in response
-               for logout_pattern in ['href="https://www.udemy.com/user/logout/', '>Logout<']):
+        if not is_logged(response):
             error = self._html_search_regex(
                 r'(?s)<div[^>]+class="form-errors[^"]*">(.+?)</div>',
                 response, 'error message', default=None)

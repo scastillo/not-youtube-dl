@@ -14,9 +14,10 @@ from ..compat import (
 )
 from ..utils import (
     ExtractorError,
-    int_or_none,
     limit_length,
     urlencode_postdata,
+    get_element_by_id,
+    clean_html,
 )
 
 
@@ -42,6 +43,7 @@ class FacebookIE(InfoExtractor):
             'id': '637842556329505',
             'ext': 'mp4',
             'title': 're:Did you know Kei Nishikori is the first Asian man to ever reach a Grand Slam',
+            'uploader': 'Tennis on Facebook',
         }
     }, {
         'note': 'Video without discernible title',
@@ -50,6 +52,7 @@ class FacebookIE(InfoExtractor):
             'id': '274175099429670',
             'ext': 'mp4',
             'title': 'Facebook video #274175099429670',
+            'uploader': 'Asif Nawab Butt',
         },
         'expected_warnings': [
             'title'
@@ -138,16 +141,20 @@ class FacebookIE(InfoExtractor):
         data = dict(json.loads(m.group(1)))
         params_raw = compat_urllib_parse_unquote(data['params'])
         params = json.loads(params_raw)
-        video_data = params['video_data'][0]
 
         formats = []
-        for quality in ['sd', 'hd']:
-            src = video_data.get('%s_src' % quality)
-            if src is not None:
-                formats.append({
-                    'format_id': quality,
-                    'url': src,
-                })
+        for format_id, f in params['video_data'].items():
+            if not f or not isinstance(f, list):
+                continue
+            for quality in ('sd', 'hd'):
+                for src_type in ('src', 'src_no_ratelimit'):
+                    src = f[0].get('%s_%s' % (quality, src_type))
+                    if src:
+                        formats.append({
+                            'format_id': '%s_%s_%s' % (format_id, quality, src_type),
+                            'url': src,
+                            'preference': -10 if format_id == 'progressive' else 0,
+                        })
         if not formats:
             raise ExtractorError('Cannot find video formats')
 
@@ -161,11 +168,11 @@ class FacebookIE(InfoExtractor):
             video_title = limit_length(video_title, 80)
         if not video_title:
             video_title = 'Facebook video #%s' % video_id
+        uploader = clean_html(get_element_by_id('fbPhotoPageAuthorName', webpage))
 
         return {
             'id': video_id,
             'title': video_title,
             'formats': formats,
-            'duration': int_or_none(video_data.get('video_duration')),
-            'thumbnail': video_data.get('thumbnail_src'),
+            'uploader': uploader,
         }

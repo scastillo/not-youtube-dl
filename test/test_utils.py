@@ -57,11 +57,19 @@ from youtube_dl.utils import (
     urlencode_postdata,
     version_tuple,
     xpath_with_ns,
+    xpath_element,
     xpath_text,
+    xpath_attr,
     render_table,
     match_str,
     parse_dfxp_time_expr,
     dfxp2srt,
+    cli_option,
+    cli_valueless_option,
+    cli_bool_option,
+)
+from youtube_dl.compat import (
+    compat_etree_fromstring,
 )
 
 
@@ -228,6 +236,7 @@ class TestUtil(unittest.TestCase):
             unified_strdate('2/2/2015 6:47:40 PM', day_first=False),
             '20150202')
         self.assertEqual(unified_strdate('25-09-2014'), '20140925')
+        self.assertEqual(unified_strdate('UNKNOWN DATE FORMAT'), None)
 
     def test_find_xpath_attr(self):
         testxml = '''<root>
@@ -235,12 +244,21 @@ class TestUtil(unittest.TestCase):
             <node x="a"/>
             <node x="a" y="c" />
             <node x="b" y="d" />
+            <node x="" />
         </root>'''
-        doc = xml.etree.ElementTree.fromstring(testxml)
+        doc = compat_etree_fromstring(testxml)
 
+        self.assertEqual(find_xpath_attr(doc, './/fourohfour', 'n'), None)
         self.assertEqual(find_xpath_attr(doc, './/fourohfour', 'n', 'v'), None)
+        self.assertEqual(find_xpath_attr(doc, './/node', 'n'), None)
+        self.assertEqual(find_xpath_attr(doc, './/node', 'n', 'v'), None)
+        self.assertEqual(find_xpath_attr(doc, './/node', 'x'), doc[1])
         self.assertEqual(find_xpath_attr(doc, './/node', 'x', 'a'), doc[1])
+        self.assertEqual(find_xpath_attr(doc, './/node', 'x', 'b'), doc[3])
+        self.assertEqual(find_xpath_attr(doc, './/node', 'y'), doc[2])
         self.assertEqual(find_xpath_attr(doc, './/node', 'y', 'c'), doc[2])
+        self.assertEqual(find_xpath_attr(doc, './/node', 'y', 'd'), doc[3])
+        self.assertEqual(find_xpath_attr(doc, './/node', 'x', ''), doc[4])
 
     def test_xpath_with_ns(self):
         testxml = '''<root xmlns:media="http://example.com/">
@@ -249,11 +267,28 @@ class TestUtil(unittest.TestCase):
                 <url>http://server.com/download.mp3</url>
             </media:song>
         </root>'''
-        doc = xml.etree.ElementTree.fromstring(testxml)
+        doc = compat_etree_fromstring(testxml)
         find = lambda p: doc.find(xpath_with_ns(p, {'media': 'http://example.com/'}))
         self.assertTrue(find('media:song') is not None)
         self.assertEqual(find('media:song/media:author').text, 'The Author')
         self.assertEqual(find('media:song/url').text, 'http://server.com/download.mp3')
+
+    def test_xpath_element(self):
+        doc = xml.etree.ElementTree.Element('root')
+        div = xml.etree.ElementTree.SubElement(doc, 'div')
+        p = xml.etree.ElementTree.SubElement(div, 'p')
+        p.text = 'Foo'
+        self.assertEqual(xpath_element(doc, 'div/p'), p)
+        self.assertEqual(xpath_element(doc, ['div/p']), p)
+        self.assertEqual(xpath_element(doc, ['div/bar', 'div/p']), p)
+        self.assertEqual(xpath_element(doc, 'div/bar', default='default'), 'default')
+        self.assertEqual(xpath_element(doc, ['div/bar'], default='default'), 'default')
+        self.assertTrue(xpath_element(doc, 'div/bar') is None)
+        self.assertTrue(xpath_element(doc, ['div/bar']) is None)
+        self.assertTrue(xpath_element(doc, ['div/bar'], 'div/baz') is None)
+        self.assertRaises(ExtractorError, xpath_element, doc, 'div/bar', fatal=True)
+        self.assertRaises(ExtractorError, xpath_element, doc, ['div/bar'], fatal=True)
+        self.assertRaises(ExtractorError, xpath_element, doc, ['div/bar', 'div/baz'], fatal=True)
 
     def test_xpath_text(self):
         testxml = '''<root>
@@ -261,10 +296,26 @@ class TestUtil(unittest.TestCase):
                 <p>Foo</p>
             </div>
         </root>'''
-        doc = xml.etree.ElementTree.fromstring(testxml)
+        doc = compat_etree_fromstring(testxml)
         self.assertEqual(xpath_text(doc, 'div/p'), 'Foo')
+        self.assertEqual(xpath_text(doc, 'div/bar', default='default'), 'default')
         self.assertTrue(xpath_text(doc, 'div/bar') is None)
         self.assertRaises(ExtractorError, xpath_text, doc, 'div/bar', fatal=True)
+
+    def test_xpath_attr(self):
+        testxml = '''<root>
+            <div>
+                <p x="a">Foo</p>
+            </div>
+        </root>'''
+        doc = compat_etree_fromstring(testxml)
+        self.assertEqual(xpath_attr(doc, 'div/p', 'x'), 'a')
+        self.assertEqual(xpath_attr(doc, 'div/bar', 'x'), None)
+        self.assertEqual(xpath_attr(doc, 'div/p', 'y'), None)
+        self.assertEqual(xpath_attr(doc, 'div/bar', 'x', default='default'), 'default')
+        self.assertEqual(xpath_attr(doc, 'div/p', 'y', default='default'), 'default')
+        self.assertRaises(ExtractorError, xpath_attr, doc, 'div/bar', 'x', fatal=True)
+        self.assertRaises(ExtractorError, xpath_attr, doc, 'div/p', 'y', fatal=True)
 
     def test_smuggle_url(self):
         data = {"ö": "ö", "abc": [3]}
@@ -324,6 +375,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('02:03:04'), 7384)
         self.assertEqual(parse_duration('01:02:03:04'), 93784)
         self.assertEqual(parse_duration('1 hour 3 minutes'), 3780)
+        self.assertEqual(parse_duration('87 Min.'), 5220)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -384,6 +436,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_iso8601('2014-03-23T22:04:26+0000'), 1395612266)
         self.assertEqual(parse_iso8601('2014-03-23T22:04:26Z'), 1395612266)
         self.assertEqual(parse_iso8601('2014-03-23T22:04:26.1234Z'), 1395612266)
+        self.assertEqual(parse_iso8601('2015-09-29T08:27:31.727'), 1443515251)
+        self.assertEqual(parse_iso8601('2015-09-29T08-27-31.727'), None)
 
     def test_strip_jsonp(self):
         stripped = strip_jsonp('cb ([ {"id":"532cb",\n\n\n"x":\n3}\n]\n);')
@@ -453,6 +507,9 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(js_to_json(inp), '''{
             "playlist":[{"controls":{"all":null}}]
         }''')
+
+        inp = '''"The CW\\'s \\'Crazy Ex-Girlfriend\\'"'''
+        self.assertEqual(js_to_json(inp), '''"The CW's 'Crazy Ex-Girlfriend'"''')
 
         inp = '"SAND Number: SAND 2013-7800P\\nPresenter: Tom Russo\\nHabanero Software Training - Xyce Software\\nXyce, Sandia\\u0027s"'
         json_code = js_to_json(inp)
@@ -635,6 +692,51 @@ The first line
 
 '''
         self.assertEqual(dfxp2srt(dfxp_data_no_default_namespace), srt_data)
+
+    def test_cli_option(self):
+        self.assertEqual(cli_option({'proxy': '127.0.0.1:3128'}, '--proxy', 'proxy'), ['--proxy', '127.0.0.1:3128'])
+        self.assertEqual(cli_option({'proxy': None}, '--proxy', 'proxy'), [])
+        self.assertEqual(cli_option({}, '--proxy', 'proxy'), [])
+
+    def test_cli_valueless_option(self):
+        self.assertEqual(cli_valueless_option(
+            {'downloader': 'external'}, '--external-downloader', 'downloader', 'external'), ['--external-downloader'])
+        self.assertEqual(cli_valueless_option(
+            {'downloader': 'internal'}, '--external-downloader', 'downloader', 'external'), [])
+        self.assertEqual(cli_valueless_option(
+            {'nocheckcertificate': True}, '--no-check-certificate', 'nocheckcertificate'), ['--no-check-certificate'])
+        self.assertEqual(cli_valueless_option(
+            {'nocheckcertificate': False}, '--no-check-certificate', 'nocheckcertificate'), [])
+        self.assertEqual(cli_valueless_option(
+            {'checkcertificate': True}, '--no-check-certificate', 'checkcertificate', False), [])
+        self.assertEqual(cli_valueless_option(
+            {'checkcertificate': False}, '--no-check-certificate', 'checkcertificate', False), ['--no-check-certificate'])
+
+    def test_cli_bool_option(self):
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': True}, '--no-check-certificate', 'nocheckcertificate'),
+            ['--no-check-certificate', 'true'])
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': True}, '--no-check-certificate', 'nocheckcertificate', separator='='),
+            ['--no-check-certificate=true'])
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': True}, '--check-certificate', 'nocheckcertificate', 'false', 'true'),
+            ['--check-certificate', 'false'])
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': True}, '--check-certificate', 'nocheckcertificate', 'false', 'true', '='),
+            ['--check-certificate=false'])
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': False}, '--check-certificate', 'nocheckcertificate', 'false', 'true'),
+            ['--check-certificate', 'true'])
+        self.assertEqual(
+            cli_bool_option(
+                {'nocheckcertificate': False}, '--check-certificate', 'nocheckcertificate', 'false', 'true', '='),
+            ['--check-certificate=true'])
 
 
 if __name__ == '__main__':

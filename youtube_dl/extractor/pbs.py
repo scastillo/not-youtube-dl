@@ -8,6 +8,7 @@ from ..utils import (
     ExtractorError,
     determine_ext,
     int_or_none,
+    strip_jsonp,
     unified_strdate,
     US_RATINGS,
 )
@@ -32,7 +33,7 @@ class PBSIE(InfoExtractor):
             'info_dict': {
                 'id': '2365006249',
                 'ext': 'mp4',
-                'title': 'A More Perfect Union',
+                'title': 'Constitution USA with Peter Sagal - A More Perfect Union',
                 'description': 'md5:ba0c207295339c8d6eced00b7c363c6a',
                 'duration': 3190,
             },
@@ -46,7 +47,7 @@ class PBSIE(InfoExtractor):
             'info_dict': {
                 'id': '2365297690',
                 'ext': 'mp4',
-                'title': 'Losing Iraq',
+                'title': 'FRONTLINE - Losing Iraq',
                 'description': 'md5:f5bfbefadf421e8bb8647602011caf8e',
                 'duration': 5050,
             },
@@ -60,7 +61,7 @@ class PBSIE(InfoExtractor):
             'info_dict': {
                 'id': '2201174722',
                 'ext': 'mp4',
-                'title': 'Cyber Schools Gain Popularity, but Quality Questions Persist',
+                'title': 'PBS NewsHour - Cyber Schools Gain Popularity, but Quality Questions Persist',
                 'description': 'md5:5871c15cba347c1b3d28ac47a73c7c28',
                 'duration': 801,
             },
@@ -72,7 +73,7 @@ class PBSIE(InfoExtractor):
                 'id': '2365297708',
                 'ext': 'mp4',
                 'description': 'md5:68d87ef760660eb564455eb30ca464fe',
-                'title': 'Dudamel Conducts Verdi Requiem at the Hollywood Bowl - Full',
+                'title': 'Great Performances - Dudamel Conducts Verdi Requiem at the Hollywood Bowl - Full',
                 'duration': 6559,
                 'thumbnail': 're:^https?://.*\.jpg$',
             },
@@ -88,10 +89,11 @@ class PBSIE(InfoExtractor):
                 'display_id': 'killer-typhoon',
                 'ext': 'mp4',
                 'description': 'md5:c741d14e979fc53228c575894094f157',
-                'title': 'Killer Typhoon',
+                'title': 'NOVA - Killer Typhoon',
                 'duration': 3172,
                 'thumbnail': 're:^https?://.*\.jpg$',
                 'upload_date': '20140122',
+                'age_limit': 10,
             },
             'params': {
                 'skip_download': True,  # requires ffmpeg
@@ -107,12 +109,62 @@ class PBSIE(InfoExtractor):
         {
             'url': 'http://www.pbs.org/wgbh/americanexperience/films/death/player/',
             'info_dict': {
-                'id': '2280706814',
+                'id': '2276541483',
                 'display_id': 'player',
                 'ext': 'mp4',
-                'title': 'Death and the Civil War',
+                'title': 'American Experience - Death and the Civil War, Chapter 1',
                 'description': 'American Experience, TV’s most-watched history series, brings to life the compelling stories from our past that inform our understanding of the world today.',
-                'duration': 6705,
+                'duration': 682,
+                'thumbnail': 're:^https?://.*\.jpg$',
+            },
+            'params': {
+                'skip_download': True,  # requires ffmpeg
+            },
+        },
+        {
+            'url': 'http://video.pbs.org/video/2365367186/',
+            'info_dict': {
+                'id': '2365367186',
+                'display_id': '2365367186',
+                'ext': 'mp4',
+                'title': 'To Catch A Comet - Full Episode',
+                'description': 'On November 12, 2014, billions of kilometers from Earth, spacecraft orbiter Rosetta and lander Philae did what no other had dared to attempt \u2014 land on the volatile surface of a comet as it zooms around the sun at 67,000 km/hr. The European Space Agency hopes this mission can help peer into our past and unlock secrets of our origins.',
+                'duration': 3342,
+                'thumbnail': 're:^https?://.*\.jpg$',
+            },
+            'params': {
+                'skip_download': True,  # requires ffmpeg
+            },
+            'skip': 'Expired',
+        },
+        {
+            # Video embedded in iframe containing angle brackets as attribute's value (e.g.
+            # "<iframe style='position: absolute;<br />\ntop: 0; left: 0;' ...", see
+            # https://github.com/rg3/youtube-dl/issues/7059)
+            'url': 'http://www.pbs.org/food/features/a-chefs-life-season-3-episode-5-prickly-business/',
+            'info_dict': {
+                'id': '2365546844',
+                'display_id': 'a-chefs-life-season-3-episode-5-prickly-business',
+                'ext': 'mp4',
+                'title': "A Chef's Life - Season 3, Ep. 5: Prickly Business",
+                'description': 'md5:61db2ddf27c9912f09c241014b118ed1',
+                'duration': 1480,
+                'thumbnail': 're:^https?://.*\.jpg$',
+            },
+            'params': {
+                'skip_download': True,  # requires ffmpeg
+            },
+        },
+        {
+            # Frontline video embedded via flp2012.js
+            'url': 'http://www.pbs.org/wgbh/pages/frontline/the-atomic-artists',
+            'info_dict': {
+                'id': '2070868960',
+                'display_id': 'the-atomic-artists',
+                'ext': 'mp4',
+                'title': 'FRONTLINE - The Atomic Artists',
+                'description': 'md5:f5bfbefadf421e8bb8647602011caf8e',
+                'duration': 723,
                 'thumbnail': 're:^https?://.*\.jpg$',
             },
             'params': {
@@ -120,6 +172,12 @@ class PBSIE(InfoExtractor):
             },
         }
     ]
+    _ERRORS = {
+        101: 'We\'re sorry, but this video is not yet available.',
+        403: 'We\'re sorry, but this video is not available in your region due to right restrictions.',
+        404: 'We are experiencing technical difficulties that are preventing us from playing the video at this time. Please check back again soon.',
+        410: 'This video has expired and is no longer available for online streaming.',
+    }
 
     def _extract_webpage(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -150,9 +208,30 @@ class PBSIE(InfoExtractor):
             if media_id:
                 return media_id, presumptive_id, upload_date
 
-            url = self._search_regex(
-                r'<iframe\s+[^>]*\s+src=["\']([^\'"]+partnerplayer[^\'"]+)["\']',
-                webpage, 'player URL')
+            # Fronline video embedded via flp
+            video_id = self._search_regex(
+                r'videoid\s*:\s*"([\d+a-z]{7,})"', webpage, 'videoid', default=None)
+            if video_id:
+                # pkg_id calculation is reverse engineered from
+                # http://www.pbs.org/wgbh/pages/frontline/js/flp2012.js
+                prg_id = self._search_regex(
+                    r'videoid\s*:\s*"([\d+a-z]{7,})"', webpage, 'videoid')[7:]
+                if 'q' in prg_id:
+                    prg_id = prg_id.split('q')[1]
+                prg_id = int(prg_id, 16)
+                getdir = self._download_json(
+                    'http://www.pbs.org/wgbh/pages/frontline/.json/getdir/getdir%d.json' % prg_id,
+                    presumptive_id, 'Downloading getdir JSON',
+                    transform_source=strip_jsonp)
+                return getdir['mid'], presumptive_id, upload_date
+
+            for iframe in re.findall(r'(?s)<iframe(.+?)></iframe>', webpage):
+                url = self._search_regex(
+                    r'src=(["\'])(?P<url>.+?partnerplayer.+?)\1', iframe,
+                    'player URL', default=None, group='url')
+                if url:
+                    break
+
             mobj = re.match(self._VALID_URL, url)
 
         player_id = mobj.group('player_id')
@@ -197,13 +276,11 @@ class PBSIE(InfoExtractor):
                 'Downloading %s video url info' % encoding_name)
 
             if redirect_info['status'] == 'error':
-                if redirect_info['http_code'] == 403:
-                    message = (
-                        'The video is not available in your region due to '
-                        'right restrictions')
-                else:
-                    message = redirect_info['message']
-                raise ExtractorError(message, expected=True)
+                raise ExtractorError(
+                    '%s said: %s' % (
+                        self.IE_NAME,
+                        self._ERRORS.get(redirect_info['http_code'], redirect_info['message'])),
+                    expected=True)
 
             format_url = redirect_info.get('url')
             if not format_url:
@@ -231,6 +308,12 @@ class PBSIE(InfoExtractor):
                 'ext': 'ttml',
                 'url': closed_captions_url,
             }]
+
+        # info['title'] is often incomplete (e.g. 'Full Episode', 'Episode 5', etc)
+        # Try turning it to 'program - title' naming scheme if possible
+        alt_title = info.get('program', {}).get('title')
+        if alt_title:
+            info['title'] = alt_title + ' - ' + re.sub(r'^' + alt_title + '[\s\-:]+', '', info['title'])
 
         return {
             'id': video_id,

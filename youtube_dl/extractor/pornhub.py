@@ -20,7 +20,7 @@ from ..aes import (
 
 
 class PornHubIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?pornhub\.com/(?:view_video\.php\?viewkey=|embed/)(?P<id>[0-9a-z]+)'
+    _VALID_URL = r'https?://(?:[a-z]+\.)?pornhub\.com/(?:view_video\.php\?viewkey=|embed/)(?P<id>[0-9a-z]+)'
     _TESTS = [{
         'url': 'http://www.pornhub.com/view_video.php?viewkey=648719015',
         'md5': '882f488fa1f0026f023f33576004a2ed',
@@ -33,6 +33,9 @@ class PornHubIE(InfoExtractor):
         }
     }, {
         'url': 'http://www.pornhub.com/view_video.php?viewkey=ph557bbb6676d2d',
+        'only_matching': True,
+    }, {
+        'url': 'http://fr.pornhub.com/view_video.php?viewkey=ph55ca2f9760862',
         'only_matching': True,
     }]
 
@@ -81,7 +84,7 @@ class PornHubIE(InfoExtractor):
         comment_count = self._extract_count(
             r'All Comments\s*<span>\(([\d,.]+)\)', webpage, 'comment')
 
-        video_urls = list(map(compat_urllib_parse_unquote, re.findall(r'"quality_[0-9]{3}p":"([^"]+)', webpage)))
+        video_urls = list(map(compat_urllib_parse_unquote, re.findall(r"player_quality_[0-9]{3}p\s*=\s*'([^']+)'", webpage)))
         if webpage.find('"encrypted":true') != -1:
             password = compat_urllib_parse_unquote_plus(
                 self._search_regex(r'"video_title":"([^"]+)', webpage, 'password'))
@@ -94,7 +97,7 @@ class PornHubIE(InfoExtractor):
             format = path.split('/')[5].split('_')[:2]
             format = "-".join(format)
 
-            m = re.match(r'^(?P<height>[0-9]+)P-(?P<tbr>[0-9]+)K$', format)
+            m = re.match(r'^(?P<height>[0-9]+)[pP]-(?P<tbr>[0-9]+)[kK]$', format)
             if m is None:
                 height = None
                 tbr = None

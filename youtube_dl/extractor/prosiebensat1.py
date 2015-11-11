@@ -9,7 +9,9 @@ from ..compat import (
     compat_urllib_parse,
 )
 from ..utils import (
+    ExtractorError,
     determine_ext,
+    float_or_none,
     int_or_none,
     unified_strdate,
 )
@@ -18,7 +20,7 @@ from ..utils import (
 class ProSiebenSat1IE(InfoExtractor):
     IE_NAME = 'prosiebensat1'
     IE_DESC = 'ProSiebenSat.1 Digital'
-    _VALID_URL = r'https?://(?:www\.)?(?:(?:prosieben|prosiebenmaxx|sixx|sat1|kabeleins|the-voice-of-germany)\.(?:de|at)|ran\.de|fem\.com)/(?P<id>.+)'
+    _VALID_URL = r'https?://(?:www\.)?(?:(?:prosieben|prosiebenmaxx|sixx|sat1|kabeleins|the-voice-of-germany)\.(?:de|at|ch)|ran\.de|fem\.com)/(?P<id>.+)'
 
     _TESTS = [
         {
@@ -224,10 +226,13 @@ class ProSiebenSat1IE(InfoExtractor):
             'ids': clip_id,
         })
 
-        videos = self._download_json(videos_api_url, clip_id, 'Downloading videos JSON')
+        video = self._download_json(videos_api_url, clip_id, 'Downloading videos JSON')[0]
 
-        duration = float(videos[0]['duration'])
-        source_ids = [source['id'] for source in videos[0]['sources']]
+        if video.get('is_protected') is True:
+            raise ExtractorError('This video is DRM protected.', expected=True)
+
+        duration = float_or_none(video.get('duration'))
+        source_ids = [source['id'] for source in video['sources']]
         source_ids_str = ','.join(map(str, source_ids))
 
         g = '01!8d8F_)r9]4s[qeuXfP%'

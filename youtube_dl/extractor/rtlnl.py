@@ -82,16 +82,21 @@ class RtlNlIE(InfoExtractor):
 
         meta = info.get('meta', {})
 
-        # Use unencrypted m3u8 streams (See https://github.com/rg3/youtube-dl/issues/4118)
-        # NB: nowadays, recent ffmpeg and avconv can handle these encrypted streams, so
-        # this adaptive -> flash workaround is not required in general, but it also
-        # allows bypassing georestriction therefore is retained for now.
-        videopath = material['videopath'].replace('/adaptive/', '/flash/')
+        # m3u8 streams are encrypted and may not be handled properly by older ffmpeg/avconv.
+        # To workaround this previously adaptive -> flash trick was used to obtain
+        # unencrypted m3u8 streams (see https://github.com/rg3/youtube-dl/issues/4118)
+        # and bypass georestrictions as well.
+        # Currently, unencrypted m3u8 playlists are (intentionally?) invalid and therefore
+        # unusable albeit can be fixed by simple string replacement (see
+        # https://github.com/rg3/youtube-dl/pull/6337)
+        # Since recent ffmpeg and avconv handle encrypted streams just fine encrypted
+        # streams are used now.
+        videopath = material['videopath']
         m3u8_url = meta.get('videohost', 'http://manifest.us.rtl.nl') + videopath
 
         formats = self._extract_m3u8_formats(m3u8_url, uuid, ext='mp4')
 
-        video_urlpart = videopath.split('/flash/')[1][:-5]
+        video_urlpart = videopath.split('/adaptive/')[1][:-5]
         PG_URL_TEMPLATE = 'http://pg.us.rtl.nl/rtlxl/network/%s/progressive/%s.mp4'
 
         formats.extend([
