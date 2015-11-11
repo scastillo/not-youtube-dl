@@ -7,6 +7,7 @@ youtube-dl (2015.07.21-1~2.gbp3477c6) UNRELEASED; urgency=medium
   * debian/control: Prefer ffmpeg to libav-tools in Recommends.
   * debian/control: Prefer mplayer to mplayer2 in Recommends.
   * debian/control: Prefer mpv to mplayer in Recommends.
+  * Imported Upstream version 2015.11.10
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 22 Jul 2015 01:05:38 -0300
 
