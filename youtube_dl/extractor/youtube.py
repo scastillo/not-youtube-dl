@@ -20,7 +20,6 @@ from ..compat import (
     compat_urllib_parse_unquote,
     compat_urllib_parse_unquote_plus,
     compat_urllib_parse_urlparse,
-    compat_urllib_request,
     compat_urlparse,
     compat_str,
 )
@@ -35,6 +34,7 @@ from ..utils import (
     orderedSet,
     parse_duration,
     remove_start,
+    sanitized_Request,
     smuggle_url,
     str_to_int,
     unescapeHTML,
@@ -114,7 +114,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
         login_data = compat_urllib_parse.urlencode(encode_dict(login_form_strs)).encode('ascii')
 
-        req = compat_urllib_request.Request(self._LOGIN_URL, login_data)
+        req = sanitized_Request(self._LOGIN_URL, login_data)
         login_results = self._download_webpage(
             req, None,
             note='Logging in', errnote='unable to log in', fatal=False)
@@ -147,7 +147,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
             tfa_data = compat_urllib_parse.urlencode(encode_dict(tfa_form_strs)).encode('ascii')
 
-            tfa_req = compat_urllib_request.Request(self._TWOFACTOR_URL, tfa_data)
+            tfa_req = sanitized_Request(self._TWOFACTOR_URL, tfa_data)
             tfa_results = self._download_webpage(
                 tfa_req, None,
                 note='Submitting TFA code', errnote='unable to submit tfa', fatal=False)
@@ -178,15 +178,13 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             return
 
 
-class YoutubePlaylistBaseInfoExtractor(InfoExtractor):
-    # Extract the video ids from the playlist pages
+class YoutubeEntryListBaseInfoExtractor(InfoExtractor):
+    # Extract entries from page with "Load more" button
     def _entries(self, page, playlist_id):
         more_widget_html = content_html = page
         for page_num in itertools.count(1):
-            for video_id, video_title in self.extract_videos_from_page(content_html):
-                yield self.url_result(
-                    video_id, 'Youtube', video_id=video_id,
-                    video_title=video_title)
+            for entry in self._process_page(content_html):
+                yield entry
 
             mobj = re.search(r'data-uix-load-more-href="/?(?P<more>[^"]+)"', more_widget_html)
             if not mobj:
@@ -202,6 +200,12 @@ class YoutubePlaylistBaseInfoExtractor(InfoExtractor):
                 # have more videos
                 break
             more_widget_html = more['load_more_widget_html']
+
+
+class YoutubePlaylistBaseInfoExtractor(YoutubeEntryListBaseInfoExtractor):
+    def _process_page(self, content):
+        for video_id, video_title in self.extract_videos_from_page(content):
+            yield self.url_result(video_id, 'Youtube', video_id, video_title)
 
     def extract_videos_from_page(self, page):
         ids_in_page = []
@@ -222,6 +226,19 @@ class YoutubePlaylistBaseInfoExtractor(InfoExtractor):
                 ids_in_page.append(video_id)
                 titles_in_page.append(video_title)
         return zip(ids_in_page, titles_in_page)
+
+
+class YoutubePlaylistsBaseInfoExtractor(YoutubeEntryListBaseInfoExtractor):
+    def _process_page(self, content):
+        for playlist_id in re.findall(r'href="/?playlist\?list=(.+?)"', content):
+            yield self.url_result(
+                'https://www.youtube.com/playlist?list=%s' % playlist_id, 'YoutubePlaylist')
+
+    def _real_extract(self, url):
+        playlist_id = self._match_id(url)
+        webpage = self._download_webpage(url, playlist_id)
+        title = self._og_search_title(webpage, fatal=False)
+        return self.playlist_result(self._entries(webpage, playlist_id), playlist_id, title)
 
 
 class YoutubeIE(YoutubeBaseInfoExtractor):
@@ -409,7 +426,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'title': 'Principal Sexually Assaults A Teacher - Episode 117 - 8th June 2012',
                 'description': 'md5:09b78bd971f1e3e289601dfba15ca4f7',
                 'uploader': 'SET India',
-                'uploader_id': 'setindia'
+                'uploader_id': 'setindia',
+                'age_limit': 18,
             }
         },
         {
@@ -546,7 +564,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'info_dict': {
                 'id': 'lqQg6PlCWgI',
                 'ext': 'mp4',
-                'upload_date': '20120724',
+                'upload_date': '20150827',
                 'uploader_id': 'olympic',
                 'description': 'HO09  - Women -  GER-AUS - Hockey - 31 July 2012 - London 2012 Olympic Games',
                 'uploader': 'Olympics',
@@ -674,7 +692,28 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         {
             'url': 'http://vid.plus/FlRa-iH7PGw',
             'only_matching': True,
-        }
+        },
+        {
+            # Title with JS-like syntax "};" (see https://github.com/rg3/youtube-dl/issues/7468)
+            'url': 'https://www.youtube.com/watch?v=lsguqyKfVQg',
+            'info_dict': {
+                'id': 'lsguqyKfVQg',
+                'ext': 'mp4',
+                'title': '{dark walk}; Loki/AC/Dishonored; collab w/Elflover21',
+                'description': 'md5:8085699c11dc3f597ce0410b0dcbb34a',
+                'upload_date': '20151119',
+                'uploader_id': 'IronSoulElf',
+                'uploader': 'IronSoulElf',
+            },
+            'params': {
+                'skip_download': True,
+            },
+        },
+        {
+            # Tags with '};' (see https://github.com/rg3/youtube-dl/issues/7468)
+            'url': 'https://www.youtube.com/watch?v=Ms7iBXnlUO8',
+            'only_matching': True,
+        },
     ]
 
     def __init__(self, *args, **kwargs):
@@ -858,16 +897,33 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             return {}
         return sub_lang_list
 
+    def _get_ytplayer_config(self, video_id, webpage):
+        patterns = (
+            # User data may contain arbitrary character sequences that may affect
+            # JSON extraction with regex, e.g. when '};' is contained the second
+            # regex won't capture the whole JSON. Yet working around by trying more
+            # concrete regex first keeping in mind proper quoted string handling
+            # to be implemented in future that will replace this workaround (see
+            # https://github.com/rg3/youtube-dl/issues/7468,
+            # https://github.com/rg3/youtube-dl/pull/7599)
+            r';ytplayer\.config\s*=\s*({.+?});ytplayer',
+            r';ytplayer\.config\s*=\s*({.+?});',
+        )
+        config = self._search_regex(
+            patterns, webpage, 'ytplayer.config', default=None)
+        if config:
+            return self._parse_json(
+                uppercase_escape(config), video_id, fatal=False)
+
     def _get_automatic_captions(self, video_id, webpage):
         """We need the webpage for getting the captions url, pass it as an
            argument to speed up the process."""
         self.to_screen('%s: Looking for automatic captions' % video_id)
-        mobj = re.search(r';ytplayer.config = ({.*?});', webpage)
+        player_config = self._get_ytplayer_config(video_id, webpage)
         err_msg = 'Couldn\'t find automatic captions for %s' % video_id
-        if mobj is None:
+        if not player_config:
             self._downloader.report_warning(err_msg)
             return {}
-        player_config = json.loads(mobj.group(1))
         try:
             args = player_config['args']
             caption_url = args['ttsurl']
@@ -1074,10 +1130,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             age_gate = False
             video_info = None
             # Try looking directly into the video webpage
-            mobj = re.search(r';ytplayer\.config\s*=\s*({.*?});', video_webpage)
-            if mobj:
-                json_code = uppercase_escape(mobj.group(1))
-                ytplayer_config = json.loads(json_code)
+            ytplayer_config = self._get_ytplayer_config(video_id, video_webpage)
+            if ytplayer_config:
                 args = ytplayer_config['args']
                 if args.get('url_encoded_fmt_stream_map'):
                     # Convert to the same format returned by compat_parse_qs
@@ -1615,7 +1669,7 @@ class YoutubePlaylistIE(YoutubeBaseInfoExtractor, YoutubePlaylistBaseInfoExtract
                 self.report_warning('Youtube gives an alert message: ' + match)
 
         playlist_title = self._html_search_regex(
-            r'(?s)<h1 class="pl-header-title[^"]*">\s*(.*?)\s*</h1>',
+            r'(?s)<h1 class="pl-header-title[^"]*"[^>]*>\s*(.*?)\s*</h1>',
             page, 'title')
 
         return self.playlist_result(self._entries(page, playlist_id), playlist_id, playlist_title)
@@ -1742,6 +1796,29 @@ class YoutubeUserIE(YoutubeChannelIE):
             return super(YoutubeUserIE, cls).suitable(url)
 
 
+class YoutubeUserPlaylistsIE(YoutubePlaylistsBaseInfoExtractor):
+    IE_DESC = 'YouTube.com user playlists'
+    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/user/(?P<id>[^/]+)/playlists'
+    IE_NAME = 'youtube:user:playlists'
+
+    _TESTS = [{
+        'url': 'http://www.youtube.com/user/ThirstForScience/playlists',
+        'playlist_mincount': 4,
+        'info_dict': {
+            'id': 'ThirstForScience',
+            'title': 'Thirst for Science',
+        },
+    }, {
+        # with "Load more" button
+        'url': 'http://www.youtube.com/user/igorkle1/playlists?view=1&sort=dd',
+        'playlist_mincount': 70,
+        'info_dict': {
+            'id': 'igorkle1',
+            'title': 'Игорь Клейнер',
+        },
+    }]
+
+
 class YoutubeSearchIE(SearchInfoExtractor, YoutubePlaylistIE):
     IE_DESC = 'YouTube.com searches'
     # there doesn't appear to be a real limit, for example if you search for
@@ -1837,7 +1914,7 @@ class YoutubeSearchURLIE(InfoExtractor):
         }
 
 
-class YoutubeShowIE(InfoExtractor):
+class YoutubeShowIE(YoutubePlaylistsBaseInfoExtractor):
     IE_DESC = 'YouTube.com (multi-season) shows'
     _VALID_URL = r'https?://www\.youtube\.com/show/(?P<id>[^?#]*)'
     IE_NAME = 'youtube:show'
@@ -1851,26 +1928,9 @@ class YoutubeShowIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        playlist_id = mobj.group('id')
-        webpage = self._download_webpage(
-            'https://www.youtube.com/show/%s/playlists' % playlist_id, playlist_id, 'Downloading show webpage')
-        # There's one playlist for each season of the show
-        m_seasons = list(re.finditer(r'href="(/playlist\?list=.*?)"', webpage))
-        self.to_screen('%s: Found %s seasons' % (playlist_id, len(m_seasons)))
-        entries = [
-            self.url_result(
-                'https://www.youtube.com' + season.group(1), 'YoutubePlaylist')
-            for season in m_seasons
-        ]
-        title = self._og_search_title(webpage, fatal=False)
-
-        return {
-            '_type': 'playlist',
-            'id': playlist_id,
-            'title': title,
-            'entries': entries,
-        }
+        playlist_id = self._match_id(url)
+        return super(YoutubeShowIE, self)._real_extract(
+            'https://www.youtube.com/show/%s/playlists' % playlist_id)
 
 
 class YoutubeFeedsInfoExtractor(YoutubeBaseInfoExtractor):

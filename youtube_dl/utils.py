@@ -373,6 +373,13 @@ def sanitize_path(s):
     return os.path.join(*sanitized_path)
 
 
+# Prepend protocol-less URLs with `http:` scheme in order to mitigate the number of
+# unwanted failures due to missing protocol
+def sanitized_Request(url, *args, **kwargs):
+    return compat_urllib_request.Request(
+        'http:%s' % url if url.startswith('//') else url, *args, **kwargs)
+
+
 def orderedSet(iterable):
     """ Remove all duplicates from the input iterable """
     res = []
@@ -396,10 +403,14 @@ def _htmlentity_transform(entity):
             numstr = '0%s' % numstr
         else:
             base = 10
-        return compat_chr(int(numstr, base))
+        # See https://github.com/rg3/youtube-dl/issues/7518
+        try:
+            return compat_chr(int(numstr, base))
+        except ValueError:
+            pass
 
     # Unknown entity in name, return its literal representation
-    return ('&%s;' % entity)
+    return '&%s;' % entity
 
 
 def unescapeHTML(s):
@@ -921,6 +932,21 @@ def determine_ext(url, default_ext='unknown_video'):
     guess = url.partition('?')[0].rpartition('.')[2]
     if re.match(r'^[A-Za-z0-9]+$', guess):
         return guess
+    elif guess.rstrip('/') in (
+            'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'aac',
+            'flv', 'f4v', 'f4a', 'f4b',
+            'webm', 'ogg', 'ogv', 'oga', 'ogx', 'spx', 'opus',
+            'mkv', 'mka', 'mk3d',
+            'avi', 'divx',
+            'mov',
+            'asf', 'wmv', 'wma',
+            '3gp', '3g2',
+            'mp3',
+            'flac',
+            'ape',
+            'wav',
+            'f4f', 'f4m', 'm3u8', 'smil'):
+        return guess.rstrip('/')
     else:
         return default_ext
 
@@ -1664,7 +1690,9 @@ def urlencode_postdata(*args, **kargs):
 
 
 def encode_dict(d, encoding='utf-8'):
-    return dict((k.encode(encoding), v.encode(encoding)) for k, v in d.items())
+    def encode(v):
+        return v.encode(encoding) if isinstance(v, compat_basestring) else v
+    return dict((encode(k), encode(v)) for k, v in d.items())
 
 
 US_RATINGS = {

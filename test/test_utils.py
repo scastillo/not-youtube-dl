@@ -21,6 +21,7 @@ from youtube_dl.utils import (
     clean_html,
     DateRange,
     detect_exe_version,
+    determine_ext,
     encodeFilename,
     escape_rfc3986,
     escape_url,
@@ -210,8 +211,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(unescapeHTML('%20;'), '%20;')
         self.assertEqual(unescapeHTML('&#x2F;'), '/')
         self.assertEqual(unescapeHTML('&#47;'), '/')
-        self.assertEqual(
-            unescapeHTML('&eacute;'), 'é')
+        self.assertEqual(unescapeHTML('&eacute;'), 'é')
+        self.assertEqual(unescapeHTML('&#2013266066;'), '&#2013266066;')
 
     def test_daterange(self):
         _20century = DateRange("19000101", "20000101")
@@ -237,6 +238,13 @@ class TestUtil(unittest.TestCase):
             '20150202')
         self.assertEqual(unified_strdate('25-09-2014'), '20140925')
         self.assertEqual(unified_strdate('UNKNOWN DATE FORMAT'), None)
+
+    def test_determine_ext(self):
+        self.assertEqual(determine_ext('http://example.com/foo/bar.mp4/?download'), 'mp4')
+        self.assertEqual(determine_ext('http://example.com/foo/bar/?download', None), None)
+        self.assertEqual(determine_ext('http://example.com/foo/bar.nonext/?download', None), None)
+        self.assertEqual(determine_ext('http://example.com/foo/bar/mp4?download', None), None)
+        self.assertEqual(determine_ext('http://example.com/foo/bar.m3u8//?download'), 'm3u8')
 
     def test_find_xpath_attr(self):
         testxml = '''<root>

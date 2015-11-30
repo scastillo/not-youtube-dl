@@ -19,7 +19,6 @@ from ..compat import (
     compat_urllib_error,
     compat_urllib_parse,
     compat_urllib_parse_urlparse,
-    compat_urllib_request,
     compat_urlparse,
     compat_str,
     compat_etree_fromstring,
@@ -37,6 +36,7 @@ from ..utils import (
     int_or_none,
     RegexNotFoundError,
     sanitize_filename,
+    sanitized_Request,
     unescapeHTML,
     unified_strdate,
     url_basename,
@@ -891,6 +891,11 @@ class InfoExtractor(object):
         if not media_nodes:
             manifest_version = '2.0'
             media_nodes = manifest.findall('{http://ns.adobe.com/f4m/2.0}media')
+        base_url = xpath_text(
+            manifest, ['{http://ns.adobe.com/f4m/1.0}baseURL', '{http://ns.adobe.com/f4m/2.0}baseURL'],
+            'base URL', default=None)
+        if base_url:
+            base_url = base_url.strip()
         for i, media_el in enumerate(media_nodes):
             if manifest_version == '2.0':
                 media_url = media_el.attrib.get('href') or media_el.attrib.get('url')
@@ -898,7 +903,7 @@ class InfoExtractor(object):
                     continue
                 manifest_url = (
                     media_url if media_url.startswith('http://') or media_url.startswith('https://')
-                    else ('/'.join(manifest_url.split('/')[:-1]) + '/' + media_url))
+                    else ((base_url or '/'.join(manifest_url.split('/')[:-1])) + '/' + media_url))
                 # If media_url is itself a f4m manifest do the recursive extraction
                 # since bitrates in parent manifest (this one) and media_url manifest
                 # may differ leading to inability to resolve the format by requested
@@ -1280,7 +1285,7 @@ class InfoExtractor(object):
 
     def _get_cookies(self, url):
         """ Return a compat_cookies.SimpleCookie with the cookies for the url """
-        req = compat_urllib_request.Request(url)
+        req = sanitized_Request(url)
         self._downloader.cookiejar.add_cookie_header(req)
         return compat_cookies.SimpleCookie(req.get_header('Cookie'))
 

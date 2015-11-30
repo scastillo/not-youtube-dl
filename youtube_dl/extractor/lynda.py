@@ -7,12 +7,12 @@ from .common import InfoExtractor
 from ..compat import (
     compat_str,
     compat_urllib_parse,
-    compat_urllib_request,
 )
 from ..utils import (
     ExtractorError,
     clean_html,
     int_or_none,
+    sanitized_Request,
 )
 
 
@@ -25,7 +25,7 @@ class LyndaBaseIE(InfoExtractor):
         self._login()
 
     def _login(self):
-        (username, password) = self._get_login_info()
+        username, password = self._get_login_info()
         if username is None:
             return
 
@@ -35,7 +35,7 @@ class LyndaBaseIE(InfoExtractor):
             'remember': 'false',
             'stayPut': 'false'
         }
-        request = compat_urllib_request.Request(
+        request = sanitized_Request(
             self._LOGIN_URL, compat_urllib_parse.urlencode(login_form).encode('utf-8'))
         login_page = self._download_webpage(
             request, None, 'Logging in as %s' % username)
@@ -64,7 +64,7 @@ class LyndaBaseIE(InfoExtractor):
                     'remember': 'false',
                     'stayPut': 'false',
                 }
-                request = compat_urllib_request.Request(
+                request = sanitized_Request(
                     self._LOGIN_URL, compat_urllib_parse.urlencode(confirm_form).encode('utf-8'))
                 login_page = self._download_webpage(
                     request, None,
@@ -83,6 +83,10 @@ class LyndaBaseIE(InfoExtractor):
             raise ExtractorError('Unable to log in')
 
     def _logout(self):
+        username, _ = self._get_login_info()
+        if username is None:
+            return
+
         self._download_webpage(
             'http://www.lynda.com/ajax/logout.aspx', None,
             'Logging out', 'Unable to log out', fatal=False)
