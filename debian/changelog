@@ -1,10 +1,8 @@
-youtube-dl (2015.11.27.1-1~1.gbpf19349) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @f19349c26118065acbe21509383c63465df794fe **
+youtube-dl (2015.11.27.1-1) unstable; urgency=medium
 
   * Imported Upstream version 2015.11.27.1 (Closes: #806559).
 
- -- Rogério Brito <rbrito@ime.usp.br>  Mon, 30 Nov 2015 00:54:42 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 30 Nov 2015 01:39:56 -0200
 
 youtube-dl (2015.11.10-1) unstable; urgency=medium
 
