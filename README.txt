@@ -350,7 +350,8 @@ Video Format Options:
     --all-formats                    Download all available video formats
     --prefer-free-formats            Prefer free video formats unless a specific
                                      one is requested
-    -F, --list-formats               List all available formats
+    -F, --list-formats               List all available formats of specified
+                                     videos
     --youtube-skip-dash-manifest     Do not download the DASH manifests and
                                      related data on YouTube videos
     --merge-output-format FORMAT     If a merge is required (e.g.
@@ -362,8 +363,8 @@ Video Format Options:
 Subtitle Options:
 
     --write-sub                      Write subtitle file
-    --write-auto-sub                 Write automatic subtitle file (YouTube
-                                     only)
+    --write-auto-sub                 Write automatically generated subtitle file
+                                     (YouTube only)
     --all-subs                       Download all the available subtitles of the
                                      video
     --list-subs                      List all available subtitles for the video
@@ -696,6 +697,18 @@ too much. We're considering to provide a way to let you solve the
 CAPTCHA, but at the moment, your best course of action is pointing a
 webbrowser to the youtube URL, solving the CAPTCHA, and restart
 youtube-dl.
+
+Do I need any other programs?
+
+youtube-dl works fine on its own on most sites. However, if you want to
+convert video/audio, you'll need avconv or ffmpeg. On some sites - most
+notably YouTube - videos can be retrieved in a higher quality format
+without sound. youtube-dl will detect whether avconv/ffmpeg is present
+and automatically pick the best option.
+
+Videos or video formats streamed via RTMP protocol can only be
+downloaded when rtmpdump is installed. Downloading MMS and RTSP videos
+requires either mplayer or mpv to be installed.
 
 I have downloaded a video but how can I play it?
 
