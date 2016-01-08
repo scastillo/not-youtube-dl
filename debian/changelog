@@ -1,3 +1,10 @@
+youtube-dl (2015.11.27.1-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix for youtube failure #809454
+
+ -- Wookey <wookey@debian.org>  Fri, 08 Jan 2016 01:48:02 +0000
+
 youtube-dl (2015.11.27.1-1) unstable; urgency=medium
 
   * Imported Upstream version 2015.11.27.1 (Closes: #806559).
