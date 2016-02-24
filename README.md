@@ -35,7 +35,7 @@ You can also use pip:
 
     sudo pip install youtube-dl
 
-Alternatively, refer to the [developer instructions](#developer-instructions) for how to check out and work with the git repository. For further options, including PGP signatures, see https://rg3.github.io/youtube-dl/download.html .
+Alternatively, refer to the [developer instructions](#developer-instructions) for how to check out and work with the git repository. For further options, including PGP signatures, see the [youtube-dl Download Page](https://rg3.github.io/youtube-dl/download.html).
 
 # DESCRIPTION
 **youtube-dl** is a small command-line program to download videos from
@@ -173,6 +173,10 @@ which means you can modify it, redistribute it or use it however you like.
                                      expected filesize (experimental)
     --hls-prefer-native              Use the native HLS downloader instead of
                                      ffmpeg (experimental)
+    --hls-use-mpegts                 Use the mpegts container for HLS videos,
+                                     allowing to play the video while
+                                     downloading (some players may not be able
+                                     to play it)
     --external-downloader COMMAND    Use the specified external downloader.
                                      Currently supports
                                      aria2c,axel,curl,httpie,wget
@@ -319,7 +323,7 @@ which means you can modify it, redistribute it or use it however you like.
     --all-formats                    Download all available video formats
     --prefer-free-formats            Prefer free video formats unless a specific
                                      one is requested
-    -F, --list-formats               List all available formats of specified
+    -F, --list-formats               List all available formats of requested
                                      videos
     --youtube-skip-dash-manifest     Do not download the DASH manifests and
                                      related data on YouTube videos
@@ -339,8 +343,8 @@ which means you can modify it, redistribute it or use it however you like.
                                      preference, for example: "srt" or
                                      "ass/srt/best"
     --sub-lang LANGS                 Languages of the subtitles to download
-                                     (optional) separated by commas, use IETF
-                                     language tags like 'en,pt'
+                                     (optional) separated by commas, use --list-
+                                     subs for available language tags
 
 ## Authentication Options:
     -u, --username USERNAME          Login with this account ID
@@ -400,7 +404,7 @@ which means you can modify it, redistribute it or use it however you like.
                                      downloading, similar to find's -exec
                                      syntax. Example: --exec 'adb push {}
                                      /sdcard/Music/ && rm {}'
-    --convert-subtitles FORMAT       Convert the subtitles to other format
+    --convert-subs FORMAT            Convert the subtitles to other format
                                      (currently supported: srt|ass|vtt)
 
 # CONFIGURATION
@@ -414,7 +418,7 @@ You can configure youtube-dl by placing any supported command line option to a c
 
 You can use `--ignore-config` if you want to disable the configuration file for a particular youtube-dl run.
 
-### Authentication with `.netrc` file ###
+### Authentication with `.netrc` file
 
 You may also want to configure automatic credentials storage for extractors that support authentication (by providing login and password with `--username` and `--password`) in order not to pass credentials as command line arguments on every youtube-dl execution and prevent tracking plain text passwords in the shell command history. You can achieve this using a [`.netrc` file](http://stackoverflow.com/tags/.netrc/info) on per extractor basis. For that you will need to create a`.netrc` file in your `$HOME` and restrict permissions to read/write by you only:
 ```
@@ -438,40 +442,171 @@ On Windows you may also need to setup the `%HOME%` environment variable manually
 
 The `-o` option allows users to indicate a template for the output file names. The basic usage is not to set any template arguments when downloading a single file, like in `youtube-dl -o funny_video.flv "http://some/video"`. However, it may contain special sequences that will be replaced when downloading each video. The special sequences have the format `%(NAME)s`. To clarify, that is a percent symbol followed by a name in parentheses, followed by a lowercase S. Allowed names are:
 
- - `id`: The sequence will be replaced by the video identifier.
- - `url`: The sequence will be replaced by the video URL.
- - `uploader`: The sequence will be replaced by the nickname of the person who uploaded the video.
- - `upload_date`: The sequence will be replaced by the upload date in YYYYMMDD format.
- - `title`: The sequence will be replaced by the video title.
- - `ext`: The sequence will be replaced by the appropriate extension (like flv or mp4).
- - `epoch`: The sequence will be replaced by the Unix epoch when creating the file.
- - `autonumber`: The sequence will be replaced by a five-digit number that will be increased with each download, starting at zero.
- - `playlist`: The sequence will be replaced by the name or the id of the playlist that contains the video.
- - `playlist_index`: The sequence will be replaced by the index of the video in the playlist padded with leading zeros according to the total length of the playlist.
- - `format_id`: The sequence will be replaced by the format code specified by `--format`.
- - `duration`: The sequence will be replaced by the length of the video in seconds.
+ - `id`: Video identifier
+ - `title`: Video title
+ - `url`: Video URL
+ - `ext`: Video filename extension
+ - `alt_title`: A secondary title of the video
+ - `display_id`: An alternative identifier for the video
+ - `uploader`: Full name of the video uploader
+ - `creator`: The main artist who created the video
+ - `release_date`: The date (YYYYMMDD) when the video was released
+ - `timestamp`: UNIX timestamp of the moment the video became available
+ - `upload_date`: Video upload date (YYYYMMDD)
+ - `uploader_id`: Nickname or id of the video uploader
+ - `location`: Physical location where the video was filmed
+ - `duration`: Length of the video in seconds
+ - `view_count`: How many users have watched the video on the platform
+ - `like_count`: Number of positive ratings of the video
+ - `dislike_count`: Number of negative ratings of the video
+ - `repost_count`: Number of reposts of the video
+ - `average_rating`: Average rating give by users, the scale used depends on the webpage
+ - `comment_count`: Number of comments on the video
+ - `age_limit`: Age restriction for the video (years)
+ - `format`: A human-readable description of the format 
+ - `format_id`: Format code specified by `--format`
+ - `format_note`: Additional info about the format
+ - `width`: Width of the video
+ - `height`: Height of the video
+ - `resolution`: Textual description of width and height
+ - `tbr`: Average bitrate of audio and video in KBit/s
+ - `abr`: Average audio bitrate in KBit/s
+ - `acodec`: Name of the audio codec in use
+ - `asr`: Audio sampling rate in Hertz
+ - `vbr`: Average video bitrate in KBit/s
+ - `fps`: Frame rate
+ - `vcodec`: Name of the video codec in use
+ - `container`: Name of the container format
+ - `filesize`: The number of bytes, if known in advance
+ - `filesize_approx`: An estimate for the number of bytes
+ - `protocol`: The protocol that will be used for the actual download
+ - `extractor`: Name of the extractor
+ - `extractor_key`: Key name of the extractor
+ - `epoch`: Unix epoch when creating the file
+ - `autonumber`: Five-digit number that will be increased with each download, starting at zero
+ - `playlist`: Name or id of the playlist that contains the video
+ - `playlist_index`: Index of the video in the playlist padded with leading zeros according to the total length of the playlist
+
+Available for the video that belongs to some logical chapter or section:
+ - `chapter`: Name or title of the chapter the video belongs to
+ - `chapter_number`: Number of the chapter the video belongs to
+ - `chapter_id`: Id of the chapter the video belongs to
+
+Available for the video that is an episode of some series or programme:
+ - `series`: Title of the series or programme the video episode belongs to
+ - `season`: Title of the season the video episode belongs to
+ - `season_number`: Number of the season the video episode belongs to
+ - `season_id`: Id of the season the video episode belongs to
+ - `episode`: Title of the video episode
+ - `episode_number`: Number of the video episode within a season
+ - `episode_id`: Id of the video episode
+
+Each aforementioned sequence when referenced in output template will be replaced by the actual value corresponding to the sequence name. Note that some of the sequences are not guaranteed to be present since they depend on the metadata obtained by particular extractor, such sequences will be replaced with `NA`.
+
+For example for `-o %(title)s-%(id)s.%(ext)s` and mp4 video with title `youtube-dl test video` and id `BaW_jenozKcj` this will result in a `youtube-dl test video-BaW_jenozKcj.mp4` file created in the current directory.
+
+Output template can also contain arbitrary hierarchical path, e.g. `-o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s'` that will result in downloading each video in a directory corresponding to this path template. Any missing directory will be automatically created for you.
+
+To specify percent literal in output template use `%%`. To output to stdout use `-o -`.
 
 The current default template is `%(title)s-%(id)s.%(ext)s`.
 
 In some cases, you don't want special characters such as 中, spaces, or &, such as when transferring the downloaded filename to a Windows system or the filename through an 8bit-unsafe channel. In these cases, add the `--restrict-filenames` flag to get a shorter title:
 
+Examples (note on Windows you may need to use double quotes instead of single):
+
 ```bash
-$ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc
+$ youtube-dl --get-filename -o '%(title)s.%(ext)s' BaW_jenozKc
 youtube-dl test video ''_ä↭𝕐.mp4    # All kinds of weird characters
-$ youtube-dl --get-filename -o "%(title)s.%(ext)s" BaW_jenozKc --restrict-filenames
+
+$ youtube-dl --get-filename -o '%(title)s.%(ext)s' BaW_jenozKc --restrict-filenames
 youtube-dl_test_video_.mp4          # A simple file name
+
+# Download YouTube playlist videos in separate directory indexed by video order in a playlist
+$ youtube-dl -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' https://www.youtube.com/playlist?list=PLwiyx1dc3P2JR9N8gQaQN_BCvlSlap7re
+
+# Download Udemy course keeping each chapter in separate directory under MyVideos directory in your home
+$ youtube-dl -u user -p password -o '~/MyVideos/%(playlist)s/%(chapter_number)s - %(chapter)s/%(title)s.%(ext)s' https://www.udemy.com/java-tutorial/
+
+# Download entire series season keeping each series and each season in separate directory under C:/MyVideos
+$ youtube-dl -o "C:/MyVideos/%(series)s/%(season_number)s - %(season)s/%(episode_number)s - %(episode)s.%(ext)s" http://videomore.ru/kino_v_detalayah/5_sezon/367617
+
+# Stream the video being downloaded to stdout
+$ youtube-dl -o - BaW_jenozKc
 ```
 
 # FORMAT SELECTION
 
-By default youtube-dl tries to download the best quality, but sometimes you may want to download in a different format.
-The simplest case is requesting a specific format, for example `-f 22`. You can get the list of available formats using `--list-formats`, you can also use a file extension (currently it supports aac, m4a, mp3, mp4, ogg, wav, webm) or the special names `best`, `bestvideo`, `bestaudio` and `worst`.
+By default youtube-dl tries to download the best available quality, i.e. if you want the best quality you **don't need** to pass any special options, youtube-dl will guess it for you by **default**.
 
-If you want to download multiple videos and they don't have the same formats available, you can specify the order of preference using slashes, as in `-f 22/17/18`. You can also filter the video results by putting a condition in brackets, as in `-f "best[height=720]"` (or `-f "[filesize>10M]"`).  This works for filesize, height, width, tbr, abr, vbr, asr, and fps and the comparisons <, <=, >, >=, =, != and for ext, acodec, vcodec, container, and protocol and the comparisons =, != . Formats for which the value is not known are excluded unless you put a question mark (?) after the operator. You can combine format filters, so  `-f "[height <=? 720][tbr>500]"` selects up to 720p videos (or videos where the height is not known) with a bitrate of at least 500 KBit/s. Use commas to download multiple formats, such as `-f 136/137/mp4/bestvideo,140/m4a/bestaudio`. You can merge the video and audio of two formats into a single file using `-f <video-format>+<audio-format>` (requires ffmpeg or avconv), for example `-f bestvideo+bestaudio`. Format selectors can also be grouped using parentheses, for example if you want to download the best mp4 and webm formats with a height lower than 480 you can use `-f '(mp4,webm)[height<480]'`.
+But sometimes you may want to download in a different format, for example when you are on a slow or intermittent connection. The key mechanism for achieving this is so called *format selection* based on which you can explicitly specify desired format, select formats based on some criterion or criteria, setup precedence and much more.
 
-Since the end of April 2015 and version 2015.04.26 youtube-dl uses `-f bestvideo+bestaudio/best` as default format selection (see #5447, #5456). If ffmpeg or avconv are installed this results in downloading `bestvideo` and `bestaudio` separately and muxing them together into a single file giving the best overall quality available. Otherwise it falls back to `best` and results in downloading the best available quality served as a single file. `best` is also needed for videos that don't come from YouTube because they don't provide the audio and video in two different files. If you want to only download some dash formats (for example if you are not interested in getting videos with a resolution higher than 1080p), you can add `-f bestvideo[height<=?1080]+bestaudio/best` to your configuration file. Note that if you use youtube-dl to stream to `stdout` (and most likely to pipe it to your media player then), i.e. you explicitly specify output template as `-o -`, youtube-dl still uses `-f best` format selection in order to start content delivery immediately to your player and not to wait until `bestvideo` and `bestaudio` are downloaded and muxed.
+The general syntax for format selection is `--format FORMAT` or shorter `-f FORMAT` where `FORMAT` is a *selector expression*, i.e. an expression that describes format or formats you would like to download.
+
+The simplest case is requesting a specific format, for example with `-f 22` you can download the format with format code equal to 22. You can get the list of available format codes for particular video using `--list-formats` or `-F`. Note that these format codes are extractor specific. 
+
+You can also use a file extension (currently `3gp`, `aac`, `flv`, `m4a`, `mp3`, `mp4`, `ogg`, `wav`, `webm` are supported) to download best quality format of particular file extension served as a single file, e.g. `-f webm` will download best quality format with `webm` extension served as a single file.
+
+You can also use special names to select particular edge case format:
+ - `best`: Select best quality format represented by single file with video and audio
+ - `worst`: Select worst quality format represented by single file with video and audio
+ - `bestvideo`: Select best quality video only format (e.g. DASH video), may not be available
+ - `worstvideo`: Select worst quality video only format, may not be available
+ - `bestaudio`: Select best quality audio only format, may not be available
+ - `worstaudio`: Select worst quality audio only format, may not be available
+
+For example, to download worst quality video only format you can use `-f worstvideo`.
+
+If you want to download multiple videos and they don't have the same formats available, you can specify the order of preference using slashes. Note that slash is left-associative, i.e. formats on the left hand side are preferred, for example `-f 22/17/18` will download format 22 if it's available, otherwise it will download format 17 if it's available, otherwise it will download format 18 if it's available, otherwise it will complain that no suitable formats are available for download.
+
+If you want to download several formats of the same video use comma as a separator, e.g. `-f 22,17,18` will download all these three formats, of course if they are available. Or more sophisticated example combined with precedence feature `-f 136/137/mp4/bestvideo,140/m4a/bestaudio`.
+
+You can also filter the video formats by putting a condition in brackets, as in `-f "best[height=720]"` (or `-f "[filesize>10M]"`).
+
+The following numeric meta fields can be used with comparisons `<`, `<=`, `>`, `>=`, `=` (equals), `!=` (not equals):
+ - `filesize`: The number of bytes, if known in advance
+ - `width`: Width of the video, if known
+ - `height`: Height of the video, if known
+ - `tbr`: Average bitrate of audio and video in KBit/s
+ - `abr`: Average audio bitrate in KBit/s
+ - `vbr`: Average video bitrate in KBit/s
+ - `asr`: Audio sampling rate in Hertz
+ - `fps`: Frame rate
+
+Also filtering work for comparisons `=` (equals), `!=` (not equals), `^=` (begins with), `$=` (ends with), `*=` (contains) and following string meta fields:
+ - `ext`: File extension
+ - `acodec`: Name of the audio codec in use
+ - `vcodec`: Name of the video codec in use
+ - `container`: Name of the container format
+ - `protocol`: The protocol that will be used for the actual download, lower-case. `http`, `https`, `rtsp`, `rtmp`, `rtmpe`, `m3u8`, or `m3u8_native`
+
+Note that none of the aforementioned meta fields are guaranteed to be present since this solely depends on the metadata obtained by particular extractor, i.e. the metadata offered by video hoster.
+
+Formats for which the value is not known are excluded unless you put a question mark (`?`) after the operator. You can combine format filters, so `-f "[height <=? 720][tbr>500]"` selects up to 720p videos (or videos where the height is not known) with a bitrate of at least 500 KBit/s.
+
+You can merge the video and audio of two formats into a single file using `-f <video-format>+<audio-format>` (requires ffmpeg or avconv installed), for example `-f bestvideo+bestaudio` will download best video only format, best audio only format and mux them together with ffmpeg/avconv.
+
+Format selectors can also be grouped using parentheses, for example if you want to download the best mp4 and webm formats with a height lower than 480 you can use `-f '(mp4,webm)[height<480]'`.
+
+Since the end of April 2015 and version 2015.04.26 youtube-dl uses `-f bestvideo+bestaudio/best` as default format selection (see #5447, #5456). If ffmpeg or avconv are installed this results in downloading `bestvideo` and `bestaudio` separately and muxing them together into a single file giving the best overall quality available. Otherwise it falls back to `best` and results in downloading the best available quality served as a single file. `best` is also needed for videos that don't come from YouTube because they don't provide the audio and video in two different files. If you want to only download some DASH formats (for example if you are not interested in getting videos with a resolution higher than 1080p), you can add `-f bestvideo[height<=?1080]+bestaudio/best` to your configuration file. Note that if you use youtube-dl to stream to `stdout` (and most likely to pipe it to your media player then), i.e. you explicitly specify output template as `-o -`, youtube-dl still uses `-f best` format selection in order to start content delivery immediately to your player and not to wait until `bestvideo` and `bestaudio` are downloaded and muxed.
 
 If you want to preserve the old format selection behavior (prior to youtube-dl 2015.04.26), i.e. you want to download the best available quality media served as a single file, you should explicitly specify your choice with `-f best`. You may want to add it to the [configuration file](#configuration) in order not to type it every time you run youtube-dl.
+
+Examples (note on Windows you may need to use double quotes instead of single):
+```bash
+# Download best mp4 format available or any other best if no mp4 available
+$ youtube-dl -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+
+# Download best format available but not better that 480p
+$ youtube-dl -f 'bestvideo[height<=480]+bestaudio/best[height<=480]'
+
+# Download best video only format but no bigger that 50 MB
+$ youtube-dl -f 'best[filesize<50M]'
+
+# Download best format available via direct link over HTTP/HTTPS protocol
+$ youtube-dl -f '(bestvideo+bestaudio/best)[protocol^=http]'
+```
+
 
 # VIDEO SELECTION
 
@@ -559,11 +694,11 @@ If you want to play the video on a machine that is not running youtube-dl, you c
 
 YouTube has switched to a new video info format in July 2011 which is not supported by old versions of youtube-dl. See [above](#how-do-i-update-youtube-dl) for how to update youtube-dl.
 
-### ERROR: unable to download video ###
+### ERROR: unable to download video
 
 YouTube requires an additional signature since September 2012 which is not supported by old versions of youtube-dl. See [above](#how-do-i-update-youtube-dl) for how to update youtube-dl.
 
-### Video URL contains an ampersand and I'm getting some strange output `[1] 2839` or `'v' is not recognized as an internal or external command` ###
+### Video URL contains an ampersand and I'm getting some strange output `[1] 2839` or `'v' is not recognized as an internal or external command`
 
 That's actually the output from your shell. Since ampersand is one of the special shell characters it's interpreted by the shell preventing you from passing the whole URL to youtube-dl. To disable your shell from interpreting the ampersands (or any other special characters) you have to either put the whole URL in quotes or escape them with a backslash (which approach will work depends on your shell).
 
@@ -587,7 +722,7 @@ In February 2015, the new YouTube player contained a character sequence in a str
 
 These two error codes indicate that the service is blocking your IP address because of overuse. Contact the service and ask them to unblock your IP address, or - if you have acquired a whitelisted IP address already - use the [`--proxy` or `--source-address` options](#network-options) to select another IP address.
 
-### SyntaxError: Non-ASCII character ###
+### SyntaxError: Non-ASCII character
 
 The error
 
@@ -616,7 +751,7 @@ From then on, after restarting your shell, you will be able to access both youtu
 
 Use the `-o` to specify an [output template](#output-template), for example `-o "/home/user/videos/%(title)s-%(id)s.%(ext)s"`. If you want this for all of your downloads, put the option into your [configuration file](#configuration).
 
-### How do I download a video starting with a `-` ?
+### How do I download a video starting with a `-`?
 
 Either prepend `http://www.youtube.com/watch?v=` or separate the ID from the options with `--`:
 
@@ -627,7 +762,7 @@ Either prepend `http://www.youtube.com/watch?v=` or separate the ID from the opt
 
 Use the `--cookies` option, for example `--cookies /path/to/cookies/file.txt`. Note that the cookies file must be in Mozilla/Netscape format and the first line of the cookies file must be either `# HTTP Cookie File` or `# Netscape HTTP Cookie File`. Make sure you have correct [newline format](https://en.wikipedia.org/wiki/Newline) in the cookies file and convert newlines if necessary to correspond with your OS, namely `CRLF` (`\r\n`) for Windows, `LF` (`\n`) for Linux and `CR` (`\r`) for Mac OS. `HTTP Error 400: Bad Request` when using `--cookies` is a good sign of invalid newline format.
 
-Passing cookies to youtube-dl is a good way to workaround login when a particular extractor does not implement it explicitly.
+Passing cookies to youtube-dl is a good way to workaround login when a particular extractor does not implement it explicitly. Another use case is working around [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA) some websites require you to solve in particular cases in order to get access (e.g. YouTube, CloudFlare).
 
 ### Can you add support for this anime video site, or site which shows current movies for free?
 
@@ -757,7 +892,7 @@ with youtube_dl.YoutubeDL(ydl_opts) as ydl:
     ydl.download(['http://www.youtube.com/watch?v=BaW_jenozKc'])
 ```
 
-Most likely, you'll want to use various options. For a list of what can be done, have a look at [youtube_dl/YoutubeDL.py](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/YoutubeDL.py#L117-L265). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
+Most likely, you'll want to use various options. For a list of what can be done, have a look at [`youtube_dl/YoutubeDL.py`](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/YoutubeDL.py#L121-L269). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
 
 Here's a more complete example of a program that outputs only errors (and a short message after the download is finished), and downloads/converts the video to an mp3 file:
 
@@ -798,9 +933,23 @@ with youtube_dl.YoutubeDL(ydl_opts) as ydl:
 
 # BUGS
 
-Bugs and suggestions should be reported at: <https://github.com/rg3/youtube-dl/issues> . Unless you were prompted so or there is another pertinent reason (e.g. GitHub fails to accept the bug report), please do not send bug reports via personal email. For discussions, join us in the irc channel #youtube-dl on freenode.
+Bugs and suggestions should be reported at: <https://github.com/rg3/youtube-dl/issues>. Unless you were prompted so or there is another pertinent reason (e.g. GitHub fails to accept the bug report), please do not send bug reports via personal email. For discussions, join us in the IRC channel [#youtube-dl](irc://chat.freenode.net/#youtube-dl) on freenode ([webchat](http://webchat.freenode.net/?randomnick=1&channels=youtube-dl)).
 
-**Please include the full output of youtube-dl when run with `-v`**.
+**Please include the full output of youtube-dl when run with `-v`**, i.e. **add** `-v` flag to **your command line**, copy the **whole** output and post it in the issue body wrapped in \`\`\` for better formatting. It should look similar to this:
+```
+$ youtube-dl -v <your command line>
+[debug] System config: []
+[debug] User config: []
+[debug] Command-line args: [u'-v', u'http://www.youtube.com/watch?v=BaW_jenozKcj']
+[debug] Encodings: locale cp1251, fs mbcs, out cp866, pref cp1251
+[debug] youtube-dl version 2015.12.06
+[debug] Git HEAD: 135392e
+[debug] Python version 2.6.6 - Windows-2003Server-5.2.3790-SP2
+[debug] exe versions: ffmpeg N-75573-g1d0487f, ffprobe N-75573-g1d0487f, rtmpdump 2.4
+[debug] Proxy map: {}
+...
+```
+**Do not post screenshots of verbose log only plain text is acceptable.**
 
 The output (including the first lines) contains important debugging information. Issues without the full output are often not reproducible and therefore do not get solved in short order, if ever.
 
@@ -816,13 +965,13 @@ So please elaborate on what feature you are requesting, or what bug you want to 
 - How it could be fixed
 - How your proposed solution would look like
 
-If your report is shorter than two lines, it is almost certainly missing some of these, which makes it hard for us to respond to it. We're often too polite to close the issue outright, but the missing info makes misinterpretation likely. As a commiter myself, I often get frustrated by these issues, since the only possible way for me to move forward on them is to ask for clarification over and over.
+If your report is shorter than two lines, it is almost certainly missing some of these, which makes it hard for us to respond to it. We're often too polite to close the issue outright, but the missing info makes misinterpretation likely. As a committer myself, I often get frustrated by these issues, since the only possible way for me to move forward on them is to ask for clarification over and over.
 
 For bug reports, this means that your report should contain the *complete* output of youtube-dl when called with the `-v` flag. The error message you get for (most) bugs even says so, but you would not believe how many of our bug reports do not contain this information.
 
 If your server has multiple IPs or you suspect censorship, adding `--call-home` may be a good idea to get more diagnostics. If the error is `ERROR: Unable to extract ...` and you cannot reproduce it from multiple countries, add `--dump-pages` (warning: this will yield a rather large output, redirect it to the file `log.txt` by adding `>log.txt 2>&1` to your command-line) or upload the `.dump` files you get when you add `--write-pages` [somewhere](https://gist.github.com/).
 
-**Site support requests must contain an example URL**. An example URL is a URL you might want to download, like http://www.youtube.com/watch?v=BaW_jenozKc . There should be an obvious video present. Except under very special circumstances, the main page of a video service (e.g. http://www.youtube.com/ ) is *not* an example URL.
+**Site support requests must contain an example URL**. An example URL is a URL you might want to download, like `http://www.youtube.com/watch?v=BaW_jenozKc`. There should be an obvious video present. Except under very special circumstances, the main page of a video service (e.g. `http://www.youtube.com/`) is *not* an example URL.
 
 ###  Are you using the latest version?
 
@@ -830,7 +979,7 @@ Before reporting any issue, type `youtube-dl -U`. This should report that you're
 
 ###  Is the issue already documented?
 
-Make sure that someone has not already opened the issue you're trying to open. Search at the top of the window or at https://github.com/rg3/youtube-dl/search?type=Issues . If there is an issue, feel free to write something along the lines of "This affects me as well, with version 2015.01.01. Here is some more information on the issue: ...". While some issues may be old, a new post into them often spurs rapid activity.
+Make sure that someone has not already opened the issue you're trying to open. Search at the top of the window or browse the [GitHub Issues](https://github.com/rg3/youtube-dl/search?type=Issues) of this repository. If there is an issue, feel free to write something along the lines of "This affects me as well, with version 2015.01.01. Here is some more information on the issue: ...". While some issues may be old, a new post into them often spurs rapid activity.
 
 ###  Why are existing options not enough?
 
@@ -860,4 +1009,4 @@ It may sound strange, but some bug reports we receive are completely unrelated t
 
 youtube-dl is released into the public domain by the copyright holders.
 
-This README file was originally written by Daniel Bolton (<https://github.com/dbbolton>) and is likewise released into the public domain.
+This README file was originally written by [Daniel Bolton](https://github.com/dbbolton) and is likewise released into the public domain.

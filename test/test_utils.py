@@ -22,6 +22,8 @@ from youtube_dl.utils import (
     DateRange,
     detect_exe_version,
     determine_ext,
+    dict_get,
+    encode_compat_str,
     encodeFilename,
     escape_rfc3986,
     escape_url,
@@ -33,6 +35,7 @@ from youtube_dl.utils import (
     is_html,
     js_to_json,
     limit_length,
+    ohdave_rsa_encrypt,
     OnDemandPagedList,
     orderedSet,
     parse_duration,
@@ -43,6 +46,7 @@ from youtube_dl.utils import (
     sanitize_path,
     prepend_extension,
     replace_extension,
+    remove_quotes,
     shell_quote,
     smuggle_url,
     str_to_int,
@@ -199,6 +203,15 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(replace_extension('abc', 'temp'), 'abc.temp')
         self.assertEqual(replace_extension('.abc', 'temp'), '.abc.temp')
         self.assertEqual(replace_extension('.abc.ext', 'temp'), '.abc.temp')
+
+    def test_remove_quotes(self):
+        self.assertEqual(remove_quotes(None), None)
+        self.assertEqual(remove_quotes('"'), '"')
+        self.assertEqual(remove_quotes("'"), "'")
+        self.assertEqual(remove_quotes(';'), ';')
+        self.assertEqual(remove_quotes('";'), '";')
+        self.assertEqual(remove_quotes('""'), '')
+        self.assertEqual(remove_quotes('";"'), ';')
 
     def test_ordered_set(self):
         self.assertEqual(orderedSet([1, 1, 2, 3, 4, 4, 5, 6, 7, 3, 5]), [1, 2, 3, 4, 5, 6, 7])
@@ -439,6 +452,32 @@ class TestUtil(unittest.TestCase):
         data = urlencode_postdata({'username': 'foo@bar.com', 'password': '1234'})
         self.assertTrue(isinstance(data, bytes))
 
+    def test_dict_get(self):
+        FALSE_VALUES = {
+            'none': None,
+            'false': False,
+            'zero': 0,
+            'empty_string': '',
+            'empty_list': [],
+        }
+        d = FALSE_VALUES.copy()
+        d['a'] = 42
+        self.assertEqual(dict_get(d, 'a'), 42)
+        self.assertEqual(dict_get(d, 'b'), None)
+        self.assertEqual(dict_get(d, 'b', 42), 42)
+        self.assertEqual(dict_get(d, ('a', )), 42)
+        self.assertEqual(dict_get(d, ('b', 'a', )), 42)
+        self.assertEqual(dict_get(d, ('b', 'c', 'a', 'd', )), 42)
+        self.assertEqual(dict_get(d, ('b', 'c', )), None)
+        self.assertEqual(dict_get(d, ('b', 'c', ), 42), 42)
+        for key, false_value in FALSE_VALUES.items():
+            self.assertEqual(dict_get(d, ('b', 'c', key, )), None)
+            self.assertEqual(dict_get(d, ('b', 'c', key, ), skip_false_values=False), false_value)
+
+    def test_encode_compat_str(self):
+        self.assertEqual(encode_compat_str(b'\xd1\x82\xd0\xb5\xd1\x81\xd1\x82', 'utf-8'), 'тест')
+        self.assertEqual(encode_compat_str('тест', 'utf-8'), 'тест')
+
     def test_parse_iso8601(self):
         self.assertEqual(parse_iso8601('2014-03-23T23:04:26+0100'), 1395612266)
         self.assertEqual(parse_iso8601('2014-03-23T22:04:26+0000'), 1395612266)
@@ -455,6 +494,10 @@ class TestUtil(unittest.TestCase):
         stripped = strip_jsonp('parseMetadata({"STATUS":"OK"})\n\n\n//epc')
         d = json.loads(stripped)
         self.assertEqual(d, {'STATUS': 'OK'})
+
+        stripped = strip_jsonp('ps.embedHandler({"status": "success"});')
+        d = json.loads(stripped)
+        self.assertEqual(d, {'status': 'success'})
 
     def test_uppercase_escape(self):
         self.assertEqual(uppercase_escape('aä'), 'aä')
@@ -651,12 +694,13 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
             {'like_count': 190, 'dislike_count': 10}))
 
     def test_parse_dfxp_time_expr(self):
-        self.assertEqual(parse_dfxp_time_expr(None), 0.0)
-        self.assertEqual(parse_dfxp_time_expr(''), 0.0)
+        self.assertEqual(parse_dfxp_time_expr(None), None)
+        self.assertEqual(parse_dfxp_time_expr(''), None)
         self.assertEqual(parse_dfxp_time_expr('0.1'), 0.1)
         self.assertEqual(parse_dfxp_time_expr('0.1s'), 0.1)
         self.assertEqual(parse_dfxp_time_expr('00:00:01'), 1.0)
         self.assertEqual(parse_dfxp_time_expr('00:00:01.100'), 1.1)
+        self.assertEqual(parse_dfxp_time_expr('00:00:01:100'), 1.1)
 
     def test_dfxp2srt(self):
         dfxp_data = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -666,6 +710,9 @@ ffmpeg version 2.4.4 Copyright (c) 2000-2014 the FFmpeg ...'''), '2.4.4')
                     <p begin="0" end="1">The following line contains Chinese characters and special symbols</p>
                     <p begin="1" end="2">第二行<br/>♪♪</p>
                     <p begin="2" dur="1"><span>Third<br/>Line</span></p>
+                    <p begin="3" end="-1">Lines with invalid timestamps are ignored</p>
+                    <p begin="-1" end="-1">Ignore, two</p>
+                    <p begin="3" dur="-1">Ignored, three</p>
                 </div>
             </body>
             </tt>'''
@@ -746,6 +793,13 @@ The first line
                 {'nocheckcertificate': False}, '--check-certificate', 'nocheckcertificate', 'false', 'true', '='),
             ['--check-certificate=true'])
 
+    def test_ohdave_rsa_encrypt(self):
+        N = 0xab86b6371b5318aaa1d3c9e612a9f1264f372323c8c0f19875b5fc3b3fd3afcc1e5bec527aa94bfa85bffc157e4245aebda05389a5357b75115ac94f074aefcd
+        e = 65537
+
+        self.assertEqual(
+            ohdave_rsa_encrypt(b'aa111222', e, N),
+            '726664bd9a23fd0c70f9f1b84aab5e3905ce1e45a584e9cbcf9bcc7510338fc1986d6c599ff990d923aa43c51c0d9013cd572e13bc58f4ae48f2ed8c0b0ba881')
 
 if __name__ == '__main__':
     unittest.main()
