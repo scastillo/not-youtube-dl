@@ -45,6 +45,7 @@ complete --command youtube-dl --long-option test
 complete --command youtube-dl --long-option playlist-reverse --description 'Download playlist videos in reverse order'
 complete --command youtube-dl --long-option xattr-set-filesize --description 'Set file xattribute ytdl.filesize with expected filesize (experimental)'
 complete --command youtube-dl --long-option hls-prefer-native --description 'Use the native HLS downloader instead of ffmpeg (experimental)'
+complete --command youtube-dl --long-option hls-use-mpegts --description 'Use the mpegts container for HLS videos, allowing to play the video while downloading (some players may not be able to play it)'
 complete --command youtube-dl --long-option external-downloader --description 'Use the specified external downloader. Currently supports aria2c,axel,curl,httpie,wget'
 complete --command youtube-dl --long-option external-downloader-args --description 'Give these arguments to the external downloader'
 complete --command youtube-dl --long-option batch-file --short-option a --description 'File containing URLs to download ('"'"'-'"'"' for stdin)' --require-parameter
@@ -107,7 +108,7 @@ complete --command youtube-dl --long-option sleep-interval --description 'Number
 complete --command youtube-dl --long-option format --short-option f --description 'Video format code, see the "FORMAT SELECTION" for all the info'
 complete --command youtube-dl --long-option all-formats --description 'Download all available video formats'
 complete --command youtube-dl --long-option prefer-free-formats --description 'Prefer free video formats unless a specific one is requested'
-complete --command youtube-dl --long-option list-formats --short-option F --description 'List all available formats of specified videos'
+complete --command youtube-dl --long-option list-formats --short-option F --description 'List all available formats of requested videos'
 complete --command youtube-dl --long-option youtube-include-dash-manifest
 complete --command youtube-dl --long-option youtube-skip-dash-manifest --description 'Do not download the DASH manifests and related data on YouTube videos'
 complete --command youtube-dl --long-option merge-output-format --description 'If a merge is required (e.g. bestvideo+bestaudio), output to given container format. One of mkv, mp4, ogg, webm, flv. Ignored if no merge is required'
@@ -116,7 +117,7 @@ complete --command youtube-dl --long-option write-auto-sub --description 'Write 
 complete --command youtube-dl --long-option all-subs --description 'Download all the available subtitles of the video'
 complete --command youtube-dl --long-option list-subs --description 'List all available subtitles for the video'
 complete --command youtube-dl --long-option sub-format --description 'Subtitle format, accepts formats preference, for example: "srt" or "ass/srt/best"'
-complete --command youtube-dl --long-option sub-lang --description 'Languages of the subtitles to download (optional) separated by commas, use IETF language tags like '"'"'en,pt'"'"''
+complete --command youtube-dl --long-option sub-lang --description 'Languages of the subtitles to download (optional) separated by commas, use --list-subs for available language tags'
 complete --command youtube-dl --long-option username --short-option u --description 'Login with this account ID'
 complete --command youtube-dl --long-option password --short-option p --description 'Account password. If this option is left out, youtube-dl will ask interactively.'
 complete --command youtube-dl --long-option twofactor --short-option 2 --description 'Two-factor auth code'
@@ -139,7 +140,7 @@ complete --command youtube-dl --long-option prefer-avconv --description 'Prefer 
 complete --command youtube-dl --long-option prefer-ffmpeg --description 'Prefer ffmpeg over avconv for running the postprocessors'
 complete --command youtube-dl --long-option ffmpeg-location --description 'Location of the ffmpeg/avconv binary; either the path to the binary or its containing directory.'
 complete --command youtube-dl --long-option exec --description 'Execute a command on the file after downloading, similar to find'"'"'s -exec syntax. Example: --exec '"'"'adb push {} /sdcard/Music/ && rm {}'"'"''
-complete --command youtube-dl --long-option convert-subtitles --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt)'
+complete --command youtube-dl --long-option convert-subs --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt)'
 
 
 complete --command youtube-dl --arguments ":ytfavorites :ytrecommended :ytsubscriptions :ytwatchlater :ythistory"

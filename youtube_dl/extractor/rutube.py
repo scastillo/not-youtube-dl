@@ -17,9 +17,9 @@ from ..utils import (
 class RutubeIE(InfoExtractor):
     IE_NAME = 'rutube'
     IE_DESC = 'Rutube videos'
-    _VALID_URL = r'https?://rutube\.ru/video/(?P<id>[\da-z]{32})'
+    _VALID_URL = r'https?://rutube\.ru/(?:video|play/embed)/(?P<id>[\da-z]{32})'
 
-    _TEST = {
+    _TESTS = [{
         'url': 'http://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/',
         'info_dict': {
             'id': '3eac3b4561676c17df9132a9a1e62e3e',
@@ -36,7 +36,10 @@ class RutubeIE(InfoExtractor):
             # It requires ffmpeg (m3u8 download)
             'skip_download': True,
         },
-    }
+    }, {
+        'url': 'http://rutube.ru/play/embed/a10e53b86e8f349080f718582ce4c661',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -55,15 +58,11 @@ class RutubeIE(InfoExtractor):
         for format_id, format_url in options['video_balancer'].items():
             ext = determine_ext(format_url)
             if ext == 'm3u8':
-                m3u8_formats = self._extract_m3u8_formats(
-                    format_url, video_id, 'mp4', m3u8_id=format_id, fatal=False)
-                if m3u8_formats:
-                    formats.extend(m3u8_formats)
+                formats.extend(self._extract_m3u8_formats(
+                    format_url, video_id, 'mp4', m3u8_id=format_id, fatal=False))
             elif ext == 'f4m':
-                f4m_formats = self._extract_f4m_formats(
-                    format_url, video_id, f4m_id=format_id, fatal=False)
-                if f4m_formats:
-                    formats.extend(f4m_formats)
+                formats.extend(self._extract_f4m_formats(
+                    format_url, video_id, f4m_id=format_id, fatal=False))
             else:
                 formats.append({
                     'url': format_url,

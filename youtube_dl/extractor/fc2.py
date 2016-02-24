@@ -37,8 +37,8 @@ class FC2IE(InfoExtractor):
         'params': {
             'username': 'ytdl@yt-dl.org',
             'password': '(snip)',
-            'skip': 'requires actual password'
-        }
+        },
+        'skip': 'requires actual password',
     }, {
         'url': 'http://video.fc2.com/en/a/content/20130926eZpARwsF',
         'only_matching': True,
@@ -87,7 +87,7 @@ class FC2IE(InfoExtractor):
         mimi = hashlib.md5((video_id + '_gGddgPfeaf_gzyr').encode('utf-8')).hexdigest()
 
         info_url = (
-            "http://video.fc2.com/ginfo.php?mimi={1:s}&href={2:s}&v={0:s}&fversion=WIN%2011%2C6%2C602%2C180&from=2&otag=0&upid={0:s}&tk=null&".
+            'http://video.fc2.com/ginfo.php?mimi={1:s}&href={2:s}&v={0:s}&fversion=WIN%2011%2C6%2C602%2C180&from=2&otag=0&upid={0:s}&tk=null&'.
             format(video_id, mimi, compat_urllib_request.quote(refer, safe=b'').replace('.', '%2E')))
 
         info_webpage = self._download_webpage(
