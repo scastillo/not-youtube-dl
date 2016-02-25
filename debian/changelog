@@ -5,7 +5,7 @@ youtube-dl (2016.02.22-1~2.gbpda09d9) UNRELEASED; urgency=medium
   * ACK NMU. Thanks Wookey! (Closes: #809454)
   * debian/changelog: Initiate new upload.
   * Imported Upstream version 2016.02.22.
-    (Closes: #808423, #809454, #808468)
+    (Closes: #808423, #809454, #808468, #721317)
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 24 Feb 2016 17:24:18 -0300
 
