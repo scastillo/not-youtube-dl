@@ -1,11 +1,12 @@
-youtube-dl (2016.02.22-1~2.gbpda09d9) UNRELEASED; urgency=medium
+youtube-dl (2016.02.22-1~3.gbpe44235) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @da09d9a2ee34eca765a7e78075fa2cb69976dce7 **
+  ** SNAPSHOT build @e442358cc1c29c817de336618fa2f8e311d9df20 **
 
   * ACK NMU. Thanks Wookey! (Closes: #809454)
-  * debian/changelog: Initiate new upload.
   * Imported Upstream version 2016.02.22.
     (Closes: #808423, #809454, #808468, #721317)
+  * debian/patches: Removed, they came from upstream.
+  * debian/control: Make all URLs use HTTPS.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 24 Feb 2016 17:24:18 -0300
 
