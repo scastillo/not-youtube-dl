@@ -1,6 +1,4 @@
-youtube-dl (2016.02.22-1~4.gbpc8f5b4) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @c8f5b4fc9bb9ebffecf8b4992ef65562b61de95b **
+youtube-dl (2016.02.22-1) unstable; urgency=medium
 
   * ACK NMU. Thanks Wookey! (Closes: #809454)
   * Imported Upstream version 2016.02.22.
@@ -9,8 +7,9 @@ youtube-dl (2016.02.22-1~4.gbpc8f5b4) UNRELEASED; urgency=medium
   * debian/control:
     + Make all URLs use HTTPS.
     + Update list of supported sites.
+    + The package complies with policy 3.9.7.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 24 Feb 2016 17:24:18 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 25 Feb 2016 00:38:12 -0300
 
 youtube-dl (2015.11.27.1-1.1) unstable; urgency=medium
 
