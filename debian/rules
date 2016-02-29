@@ -9,9 +9,8 @@ override_dh_auto_configure:
 	rm youtube-dl
 
 override_dh_clean:
-	-mv Makefile.inactive Makefile
-	-make clean
+	test -f Makefile || mv Makefile.inactive Makefile
+	make clean
 	dh_clean
-	rm -rf youtube_dl.egg-info
 
 override_dh_auto_test:
