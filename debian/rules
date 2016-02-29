@@ -1,26 +1,12 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --with python2 --buildsystem=python_distutils
+	dh $@ --with python2 --buildsystem=python_distutils \
+		--with bash-completion
 
 override_dh_auto_configure:
 	PREFIX=/usr SYSCONFDIR=/etc make
 	mv Makefile Makefile.inactive
 	rm youtube-dl
-
-override_dh_install:
-	mv debian/youtube-dl/usr/etc debian/youtube-dl/
-#	# For the future (similarly for fish):
-#	# dpkg-maintscript-helper rm_conffile /etc/youtube-dl.bash-completion \
-#	#   etc.
-#
-#	mv debian/youtube-dl/usr/etc/bash_completion.d/youtube-dl.bash-completion \
-#		debian/usr/share/bash-completion/completions/youtube-dl
-	dh_install
-
-override_dh_installdocs:
-	dh_installdocs
-	mv debian/youtube-dl/usr/share/doc/youtube_dl/* debian/youtube-dl/usr/share/doc/youtube-dl
-	rmdir debian/youtube-dl/usr/share/doc/youtube_dl
 
 override_dh_clean:
 	-mv Makefile.inactive Makefile
