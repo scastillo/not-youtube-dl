@@ -7,11 +7,11 @@ Build-Depends:
  debhelper (>= 9),
  dh-python,
  pandoc,
- python-pkg-resources,
+ python3-pkg-resources,
  zip
 Build-Depends-Indep:
- python
-X-Python-Version: >= 2.6
+ python3
+X-Python3-Version: >= 3.2
 Standards-Version: 3.9.7
 Homepage: https://rg3.github.com/youtube-dl/
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/youtube-dl.git
@@ -21,9 +21,9 @@ Package: youtube-dl
 Architecture: all
 Pre-Depends: dpkg (>= 1.15.7.2)
 Depends:
- python-pkg-resources,
+ python3-pkg-resources,
  ${misc:Depends},
- ${python:Depends}
+ ${python3:Depends},
 Recommends:
  aria2 | wget | curl,
  ca-certificates,

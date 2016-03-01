@@ -1,7 +1,11 @@
 #!/usr/bin/make -f
+
+#export DH_VERBOSE = 1
+export PYBUILD_NAME = youtube_dl
+export PATH := $(CURDIR)/debian/utils:$(PATH)
+
 %:
-	dh $@ --with python2 --buildsystem=python_distutils \
-		--with bash-completion
+	dh $@ --with python3 --buildsystem=pybuild --with bash-completion
 
 override_dh_auto_configure:
 	PREFIX=/usr SYSCONFDIR=/etc make
