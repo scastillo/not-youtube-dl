@@ -5,6 +5,7 @@ Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
  bash-completion,
  debhelper (>= 9),
+ dh-exec,
  dh-python,
  pandoc,
  python3-pkg-resources,
