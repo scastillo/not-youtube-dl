@@ -27,3 +27,5 @@ override_dh_clean:
 	-make clean
 	dh_clean
 	rm -rf youtube_dl.egg-info
+
+override_dh_auto_test:
