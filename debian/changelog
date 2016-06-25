@@ -1,3 +1,13 @@
+youtube-dl (2016.06.25-1~1.gbpfe9791) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @fe979149c83b5a935f7d28baf75848a9137316fd **
+
+  * debian/watch: Update for version 4.
+  * debian/watch: Skip pgpsigurlmangle for the moment.
+  * Imported Upstream version 2016.06.25
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 24 Jun 2016 23:27:20 -0300
+
 youtube-dl (2016.02.22-1) unstable; urgency=medium
 
   * ACK NMU. Thanks Wookey! (Closes: #809454)
