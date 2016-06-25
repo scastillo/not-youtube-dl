@@ -12,7 +12,7 @@ from ..utils import (
 
 
 class VeohIE(InfoExtractor):
-    _VALID_URL = r'http://(?:www\.)?veoh\.com/(?:watch|iphone/#_Watch)/(?P<id>(?:v|yapi-)[\da-zA-Z]+)'
+    _VALID_URL = r'https?://(?:www\.)?veoh\.com/(?:watch|iphone/#_Watch)/(?P<id>(?:v|yapi-)[\da-zA-Z]+)'
 
     _TESTS = [
         {
@@ -37,6 +37,7 @@ class VeohIE(InfoExtractor):
                 'uploader': 'afp-news',
                 'duration': 123,
             },
+            'skip': 'This video has been deleted.',
         },
         {
             'url': 'http://www.veoh.com/watch/v69525809F6Nc4frX',

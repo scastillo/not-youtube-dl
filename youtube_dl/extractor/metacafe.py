@@ -5,7 +5,6 @@ import re
 from .common import InfoExtractor
 from ..compat import (
     compat_parse_qs,
-    compat_urllib_parse,
     compat_urllib_parse_unquote,
 )
 from ..utils import (
@@ -13,11 +12,12 @@ from ..utils import (
     ExtractorError,
     int_or_none,
     sanitized_Request,
+    urlencode_postdata,
 )
 
 
 class MetacafeIE(InfoExtractor):
-    _VALID_URL = r'http://(?:www\.)?metacafe\.com/watch/([^/]+)/([^/]+)/.*'
+    _VALID_URL = r'https?://(?:www\.)?metacafe\.com/watch/([^/]+)/([^/]+)/.*'
     _DISCLAIMER = 'http://www.metacafe.com/family_filter/'
     _FILTER_POST = 'http://www.metacafe.com/f/index.php?inputType=filter&controllerGroup=user'
     IE_NAME = 'metacafe'
@@ -81,6 +81,9 @@ class MetacafeIE(InfoExtractor):
                 'title': 'Open: This is Face the Nation, February 9',
                 'description': 'md5:8a9ceec26d1f7ed6eab610834cc1a476',
                 'duration': 96,
+                'uploader': 'CBSI-NEW',
+                'upload_date': '20140209',
+                'timestamp': 1391959800,
             },
             'params': {
                 # rtmp download
@@ -117,7 +120,7 @@ class MetacafeIE(InfoExtractor):
             'filters': '0',
             'submit': "Continue - I'm over 18",
         }
-        request = sanitized_Request(self._FILTER_POST, compat_urllib_parse.urlencode(disclaimer_form))
+        request = sanitized_Request(self._FILTER_POST, urlencode_postdata(disclaimer_form))
         request.add_header('Content-Type', 'application/x-www-form-urlencoded')
         self.report_age_confirmation()
         self._download_webpage(request, None, False, 'Unable to confirm age')

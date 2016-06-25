@@ -52,7 +52,7 @@ class AMPIE(InfoExtractor):
         for media_data in media_content:
             media = media_data['@attributes']
             media_type = media['type']
-            if media_type == 'video/f4m':
+            if media_type in ('video/f4m', 'application/f4m+xml'):
                 formats.extend(self._extract_f4m_formats(
                     media['url'] + '?hdcore=3.4.0&plugin=aasp-3.4.0.132.124',
                     video_id, f4m_id='hds', fatal=False))
@@ -61,7 +61,7 @@ class AMPIE(InfoExtractor):
                     media['url'], video_id, 'mp4', m3u8_id='hls', fatal=False))
             else:
                 formats.append({
-                    'format_id': media_data['media-category']['@attributes']['label'],
+                    'format_id': media_data.get('media-category', {}).get('@attributes', {}).get('label'),
                     'url': media['url'],
                     'tbr': int_or_none(media.get('bitrate')),
                     'filesize': int_or_none(media.get('fileSize')),
@@ -69,12 +69,14 @@ class AMPIE(InfoExtractor):
 
         self._sort_formats(formats)
 
+        timestamp = parse_iso8601(item.get('pubDate'), ' ') or parse_iso8601(item.get('dc-date'))
+
         return {
             'id': video_id,
             'title': get_media_node('title'),
             'description': get_media_node('description'),
             'thumbnails': thumbnails,
-            'timestamp': parse_iso8601(item.get('pubDate'), ' '),
+            'timestamp': timestamp,
             'duration': int_or_none(media_content[0].get('@attributes', {}).get('duration')),
             'subtitles': subtitles,
             'formats': formats,
