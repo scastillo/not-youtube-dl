@@ -2,6 +2,11 @@
 %:
 	dh $@ --with python2 --buildsystem=python_distutils
 
+override_dh_auto_configure:
+	PREFIX=/usr SYSCONFDIR=/etc make
+	mv Makefile Makefile.inactive
+	rm youtube-dl
+
 override_dh_install:
 	mv debian/youtube-dl/usr/etc debian/youtube-dl/
 	dh_install
@@ -12,5 +17,7 @@ override_dh_installdocs:
 	rmdir debian/youtube-dl/usr/share/doc/youtube_dl
 
 override_dh_clean:
+	-mv Makefile.inactive Makefile
+	-make clean
 	dh_clean
 	rm -rf youtube_dl.egg-info
