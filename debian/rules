@@ -9,6 +9,12 @@ override_dh_auto_configure:
 
 override_dh_install:
 	mv debian/youtube-dl/usr/etc debian/youtube-dl/
+#	# For the future (similarly for fish):
+#	# dpkg-maintscript-helper rm_conffile /etc/youtube-dl.bash-completion \
+#	#   etc.
+#
+#	mv debian/youtube-dl/usr/etc/bash_completion.d/youtube-dl.bash-completion \
+#		debian/usr/share/bash-completion/completions/youtube-dl
 	dh_install
 
 override_dh_installdocs:
