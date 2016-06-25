@@ -1,6 +1,4 @@
-youtube-dl (2016.06.25-1~2.gbp0b8243) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @0b8243566d1786af12246b4affcd288dfb1bdee6 **
+youtube-dl (2016.06.25-1) unstable; urgency=medium
 
   * Imported Upstream version 2016.06.25 (Closes: #824799)
   * debian/watch:
@@ -12,7 +10,7 @@ youtube-dl (2016.06.25-1~2.gbp0b8243) UNRELEASED; urgency=medium
     + Add commented snippet for conffile removal.
     + Ignore tests temporarily.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 24 Jun 2016 23:27:20 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 25 Jun 2016 15:06:41 -0300
 
 youtube-dl (2016.02.22-1) unstable; urgency=medium
 
