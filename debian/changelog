@@ -2,7 +2,7 @@ youtube-dl (2016.06.25-1~2.gbp0b8243) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @0b8243566d1786af12246b4affcd288dfb1bdee6 **
 
-  * Imported Upstream version 2016.06.25
+  * Imported Upstream version 2016.06.25 (Closes: #824799)
   * debian/watch:
     + Update for version 4.
     + Skip pgpsigurlmangle for the moment.
