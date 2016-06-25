@@ -23,7 +23,7 @@ from ..utils import (
 
 
 class ArteTvIE(InfoExtractor):
-    _VALID_URL = r'http://videos\.arte\.tv/(?P<lang>fr|de|en|es)/.*-(?P<id>.*?)\.html'
+    _VALID_URL = r'https?://videos\.arte\.tv/(?P<lang>fr|de|en|es)/.*-(?P<id>.*?)\.html'
     IE_NAME = 'arte.tv'
 
     def _real_extract(self, url):
@@ -61,10 +61,7 @@ class ArteTvIE(InfoExtractor):
         }
 
 
-class ArteTVPlus7IE(InfoExtractor):
-    IE_NAME = 'arte.tv:+7'
-    _VALID_URL = r'https?://(?:www\.)?arte\.tv/guide/(?P<lang>fr|de|en|es)/(?:(?:sendungen|emissions|embed)/)?(?P<id>[^/]+)/(?P<name>[^/?#&+])'
-
+class ArteTVBaseIE(InfoExtractor):
     @classmethod
     def _extract_url_info(cls, url):
         mobj = re.match(cls._VALID_URL, url)
@@ -77,6 +74,125 @@ class ArteTVPlus7IE(InfoExtractor):
             # http://www.arte.tv/guide/fr/emissions/AJT/arte-journal
             video_id = mobj.group('id')
         return video_id, lang
+
+    def _extract_from_json_url(self, json_url, video_id, lang, title=None):
+        info = self._download_json(json_url, video_id)
+        player_info = info['videoJsonPlayer']
+
+        upload_date_str = player_info.get('shootingDate')
+        if not upload_date_str:
+            upload_date_str = (player_info.get('VRA') or player_info.get('VDA') or '').split(' ')[0]
+
+        title = (player_info.get('VTI') or title or player_info['VID']).strip()
+        subtitle = player_info.get('VSU', '').strip()
+        if subtitle:
+            title += ' - %s' % subtitle
+
+        info_dict = {
+            'id': player_info['VID'],
+            'title': title,
+            'description': player_info.get('VDE'),
+            'upload_date': unified_strdate(upload_date_str),
+            'thumbnail': player_info.get('programImage') or player_info.get('VTU', {}).get('IUR'),
+        }
+        qfunc = qualities(['HQ', 'MQ', 'EQ', 'SQ'])
+
+        LANGS = {
+            'fr': 'F',
+            'de': 'A',
+            'en': 'E[ANG]',
+            'es': 'E[ESP]',
+        }
+
+        langcode = LANGS.get(lang, lang)
+
+        formats = []
+        for format_id, format_dict in player_info['VSR'].items():
+            f = dict(format_dict)
+            versionCode = f.get('versionCode')
+            l = re.escape(langcode)
+
+            # Language preference from most to least priority
+            # Reference: section 5.6.3 of
+            # http://www.arte.tv/sites/en/corporate/files/complete-technical-guidelines-arte-geie-v1-05.pdf
+            PREFERENCES = (
+                # original version in requested language, without subtitles
+                r'VO{0}$'.format(l),
+                # original version in requested language, with partial subtitles in requested language
+                r'VO{0}-ST{0}$'.format(l),
+                # original version in requested language, with subtitles for the deaf and hard-of-hearing in requested language
+                r'VO{0}-STM{0}$'.format(l),
+                # non-original (dubbed) version in requested language, without subtitles
+                r'V{0}$'.format(l),
+                # non-original (dubbed) version in requested language, with subtitles partial subtitles in requested language
+                r'V{0}-ST{0}$'.format(l),
+                # non-original (dubbed) version in requested language, with subtitles for the deaf and hard-of-hearing in requested language
+                r'V{0}-STM{0}$'.format(l),
+                # original version in requested language, with partial subtitles in different language
+                r'VO{0}-ST(?!{0}).+?$'.format(l),
+                # original version in requested language, with subtitles for the deaf and hard-of-hearing in different language
+                r'VO{0}-STM(?!{0}).+?$'.format(l),
+                # original version in different language, with partial subtitles in requested language
+                r'VO(?:(?!{0}).+?)?-ST{0}$'.format(l),
+                # original version in different language, with subtitles for the deaf and hard-of-hearing in requested language
+                r'VO(?:(?!{0}).+?)?-STM{0}$'.format(l),
+                # original version in different language, without subtitles
+                r'VO(?:(?!{0}))?$'.format(l),
+                # original version in different language, with partial subtitles in different language
+                r'VO(?:(?!{0}).+?)?-ST(?!{0}).+?$'.format(l),
+                # original version in different language, with subtitles for the deaf and hard-of-hearing in different language
+                r'VO(?:(?!{0}).+?)?-STM(?!{0}).+?$'.format(l),
+            )
+
+            for pref, p in enumerate(PREFERENCES):
+                if re.match(p, versionCode):
+                    lang_pref = len(PREFERENCES) - pref
+                    break
+            else:
+                lang_pref = -1
+
+            format = {
+                'format_id': format_id,
+                'preference': -10 if f.get('videoFormat') == 'M3U8' else None,
+                'language_preference': lang_pref,
+                'format_note': '%s, %s' % (f.get('versionCode'), f.get('versionLibelle')),
+                'width': int_or_none(f.get('width')),
+                'height': int_or_none(f.get('height')),
+                'tbr': int_or_none(f.get('bitrate')),
+                'quality': qfunc(f.get('quality')),
+            }
+
+            if f.get('mediaType') == 'rtmp':
+                format['url'] = f['streamer']
+                format['play_path'] = 'mp4:' + f['url']
+                format['ext'] = 'flv'
+            else:
+                format['url'] = f['url']
+
+            formats.append(format)
+
+        self._check_formats(formats, video_id)
+        self._sort_formats(formats)
+
+        info_dict['formats'] = formats
+        return info_dict
+
+
+class ArteTVPlus7IE(ArteTVBaseIE):
+    IE_NAME = 'arte.tv:+7'
+    _VALID_URL = r'https?://(?:(?:www|sites)\.)?arte\.tv/[^/]+/(?P<lang>fr|de|en|es)/(?:[^/]+/)*(?P<id>[^/?#&]+)'
+
+    _TESTS = [{
+        'url': 'http://www.arte.tv/guide/de/sendungen/XEN/xenius/?vid=055918-015_PLUS7-D',
+        'only_matching': True,
+    }, {
+        'url': 'http://sites.arte.tv/karambolage/de/video/karambolage-22',
+        'only_matching': True,
+    }]
+
+    @classmethod
+    def suitable(cls, url):
+        return False if ArteTVPlaylistIE.suitable(url) else super(ArteTVPlus7IE, cls).suitable(url)
 
     def _real_extract(self, url):
         video_id, lang = self._extract_url_info(url)
@@ -121,111 +237,53 @@ class ArteTVPlus7IE(InfoExtractor):
                 json_url = compat_parse_qs(
                     compat_urllib_parse_urlparse(iframe_url).query)['json_url'][0]
         if json_url:
-            return self._extract_from_json_url(json_url, video_id, lang)
-        # Differend kind of embed URL (e.g.
+            title = self._search_regex(
+                r'<h3[^>]+title=(["\'])(?P<title>.+?)\1',
+                webpage, 'title', default=None, group='title')
+            return self._extract_from_json_url(json_url, video_id, lang, title=title)
+        # Different kind of embed URL (e.g.
         # http://www.arte.tv/magazine/trepalium/fr/episode-0406-replay-trepalium)
-        embed_url = self._search_regex(
-            r'<iframe[^>]+src=(["\'])(?P<url>.+?)\1',
-            webpage, 'embed url', group='url')
-        return self.url_result(embed_url)
-
-    def _extract_from_json_url(self, json_url, video_id, lang):
-        info = self._download_json(json_url, video_id)
-        player_info = info['videoJsonPlayer']
-
-        upload_date_str = player_info.get('shootingDate')
-        if not upload_date_str:
-            upload_date_str = (player_info.get('VRA') or player_info.get('VDA') or '').split(' ')[0]
-
-        title = player_info['VTI'].strip()
-        subtitle = player_info.get('VSU', '').strip()
-        if subtitle:
-            title += ' - %s' % subtitle
-
-        info_dict = {
-            'id': player_info['VID'],
-            'title': title,
-            'description': player_info.get('VDE'),
-            'upload_date': unified_strdate(upload_date_str),
-            'thumbnail': player_info.get('programImage') or player_info.get('VTU', {}).get('IUR'),
-        }
-        qfunc = qualities(['HQ', 'MQ', 'EQ', 'SQ'])
-
-        LANGS = {
-            'fr': 'F',
-            'de': 'A',
-            'en': 'E[ANG]',
-            'es': 'E[ESP]',
-        }
-
-        formats = []
-        for format_id, format_dict in player_info['VSR'].items():
-            f = dict(format_dict)
-            versionCode = f.get('versionCode')
-            langcode = LANGS.get(lang, lang)
-            lang_rexs = [r'VO?%s-' % re.escape(langcode), r'VO?.-ST%s$' % re.escape(langcode)]
-            lang_pref = None
-            if versionCode:
-                matched_lang_rexs = [r for r in lang_rexs if re.match(r, versionCode)]
-                lang_pref = -10 if not matched_lang_rexs else 10 * len(matched_lang_rexs)
-            source_pref = 0
-            if versionCode is not None:
-                # The original version with subtitles has lower relevance
-                if re.match(r'VO-ST(F|A|E)', versionCode):
-                    source_pref -= 10
-                # The version with sourds/mal subtitles has also lower relevance
-                elif re.match(r'VO?(F|A|E)-STM\1', versionCode):
-                    source_pref -= 9
-            format = {
-                'format_id': format_id,
-                'preference': -10 if f.get('videoFormat') == 'M3U8' else None,
-                'language_preference': lang_pref,
-                'format_note': '%s, %s' % (f.get('versionCode'), f.get('versionLibelle')),
-                'width': int_or_none(f.get('width')),
-                'height': int_or_none(f.get('height')),
-                'tbr': int_or_none(f.get('bitrate')),
-                'quality': qfunc(f.get('quality')),
-                'source_preference': source_pref,
-            }
-
-            if f.get('mediaType') == 'rtmp':
-                format['url'] = f['streamer']
-                format['play_path'] = 'mp4:' + f['url']
-                format['ext'] = 'flv'
-            else:
-                format['url'] = f['url']
-
-            formats.append(format)
-
-        self._check_formats(formats, video_id)
-        self._sort_formats(formats)
-
-        info_dict['formats'] = formats
-        return info_dict
+        entries = [
+            self.url_result(url)
+            for _, url in re.findall(r'<iframe[^>]+src=(["\'])(?P<url>.+?)\1', webpage)]
+        return self.playlist_result(entries)
 
 
 # It also uses the arte_vp_url url from the webpage to extract the information
 class ArteTVCreativeIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:creative'
-    _VALID_URL = r'https?://creative\.arte\.tv/(?P<lang>fr|de|en|es)/(?:magazine?/)?(?P<id>[^/?#&]+)'
+    _VALID_URL = r'https?://creative\.arte\.tv/(?P<lang>fr|de|en|es)/(?:[^/]+/)*(?P<id>[^/?#&]+)'
 
     _TESTS = [{
-        'url': 'http://creative.arte.tv/de/magazin/agentur-amateur-corporate-design',
+        'url': 'http://creative.arte.tv/fr/episode/osmosis-episode-1',
         'info_dict': {
-            'id': '72176',
+            'id': '057405-001-A',
             'ext': 'mp4',
-            'title': 'Folge 2 - Corporate Design',
-            'upload_date': '20131004',
+            'title': 'OSMOSIS - N\'AYEZ PLUS PEUR D\'AIMER (1)',
+            'upload_date': '20150716',
         },
     }, {
         'url': 'http://creative.arte.tv/fr/Monty-Python-Reunion',
+        'playlist_count': 11,
+        'add_ie': ['Youtube'],
+    }, {
+        'url': 'http://creative.arte.tv/de/episode/agentur-amateur-4-der-erste-kunde',
+        'only_matching': True,
+    }]
+
+
+class ArteTVInfoIE(ArteTVPlus7IE):
+    IE_NAME = 'arte.tv:info'
+    _VALID_URL = r'https?://info\.arte\.tv/(?P<lang>fr|de|en|es)/(?:[^/]+/)*(?P<id>[^/?#&]+)'
+
+    _TESTS = [{
+        'url': 'http://info.arte.tv/fr/service-civique-un-cache-misere',
         'info_dict': {
-            'id': '160676',
+            'id': '067528-000-A',
             'ext': 'mp4',
-            'title': 'Monty Python live (mostly)',
-            'description': 'Événement ! Quarante-cinq ans après leurs premiers succès, les légendaires Monty Python remontent sur scène.\n',
-            'upload_date': '20140805',
-        }
+            'title': 'Service civique, un cache misère ?',
+            'upload_date': '20160403',
+        },
     }]
 
 
@@ -251,6 +309,8 @@ class ArteTVDDCIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:ddc'
     _VALID_URL = r'https?://ddc\.arte\.tv/(?P<lang>emission|folge)/(?P<id>[^/?#&]+)'
 
+    _TESTS = []
+
     def _real_extract(self, url):
         video_id, lang = self._extract_url_info(url)
         if lang == 'folge':
@@ -269,7 +329,7 @@ class ArteTVConcertIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:concert'
     _VALID_URL = r'https?://concert\.arte\.tv/(?P<lang>fr|de|en|es)/(?P<id>[^/?#&]+)'
 
-    _TEST = {
+    _TESTS = [{
         'url': 'http://concert.arte.tv/de/notwist-im-pariser-konzertclub-divan-du-monde',
         'md5': '9ea035b7bd69696b67aa2ccaaa218161',
         'info_dict': {
@@ -279,24 +339,23 @@ class ArteTVConcertIE(ArteTVPlus7IE):
             'upload_date': '20140128',
             'description': 'md5:486eb08f991552ade77439fe6d82c305',
         },
-    }
+    }]
 
 
 class ArteTVCinemaIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:cinema'
     _VALID_URL = r'https?://cinema\.arte\.tv/(?P<lang>fr|de|en|es)/(?P<id>.+)'
 
-    _TEST = {
-        'url': 'http://cinema.arte.tv/de/node/38291',
-        'md5': '6b275511a5107c60bacbeeda368c3aa1',
+    _TESTS = [{
+        'url': 'http://cinema.arte.tv/fr/article/les-ailes-du-desir-de-julia-reck',
+        'md5': 'a5b9dd5575a11d93daf0e3f404f45438',
         'info_dict': {
-            'id': '055876-000_PWA12025-D',
+            'id': '062494-000-A',
             'ext': 'mp4',
-            'title': 'Tod auf dem Nil',
-            'upload_date': '20160122',
-            'description': 'md5:7f749bbb77d800ef2be11d54529b96bc',
+            'title': 'Film lauréat du concours web - "Les ailes du désir" de Julia Reck',
+            'upload_date': '20150807',
         },
-    }
+    }]
 
 
 class ArteTVMagazineIE(ArteTVPlus7IE):
@@ -334,12 +393,14 @@ class ArteTVEmbedIE(ArteTVPlus7IE):
     IE_NAME = 'arte.tv:embed'
     _VALID_URL = r'''(?x)
         http://www\.arte\.tv
-        /playerv2/embed\.php\?json_url=
+        /(?:playerv2/embed|arte_vp/index)\.php\?json_url=
         (?P<json_url>
             http://arte\.tv/papi/tvguide/videos/stream/player/
             (?P<lang>[^/]+)/(?P<id>[^/]+)[^&]*
         )
     '''
+
+    _TESTS = []
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -347,3 +408,33 @@ class ArteTVEmbedIE(ArteTVPlus7IE):
         lang = mobj.group('lang')
         json_url = mobj.group('json_url')
         return self._extract_from_json_url(json_url, video_id, lang)
+
+
+class ArteTVPlaylistIE(ArteTVBaseIE):
+    IE_NAME = 'arte.tv:playlist'
+    _VALID_URL = r'https?://(?:www\.)?arte\.tv/guide/(?P<lang>fr|de|en|es)/[^#]*#collection/(?P<id>PL-\d+)'
+
+    _TESTS = [{
+        'url': 'http://www.arte.tv/guide/de/plus7/?country=DE#collection/PL-013263/ARTETV',
+        'info_dict': {
+            'id': 'PL-013263',
+            'title': 'Areva & Uramin',
+        },
+        'playlist_mincount': 6,
+    }, {
+        'url': 'http://www.arte.tv/guide/de/playlists?country=DE#collection/PL-013190/ARTETV',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        playlist_id, lang = self._extract_url_info(url)
+        collection = self._download_json(
+            'https://api.arte.tv/api/player/v1/collectionData/%s/%s?source=videos'
+            % (lang, playlist_id), playlist_id)
+        title = collection.get('title')
+        description = collection.get('shortDescription') or collection.get('teaserText')
+        entries = [
+            self._extract_from_json_url(
+                video['jsonUrl'], video.get('programId') or playlist_id, lang)
+            for video in collection['videos'] if video.get('jsonUrl')]
+        return self.playlist_result(entries, playlist_id, title, description)

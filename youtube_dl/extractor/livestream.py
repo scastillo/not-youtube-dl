@@ -14,6 +14,7 @@ from ..utils import (
     xpath_with_ns,
     xpath_text,
     orderedSet,
+    update_url_query,
     int_or_none,
     float_or_none,
     parse_iso8601,
@@ -64,7 +65,7 @@ class LivestreamIE(InfoExtractor):
     def _parse_smil_formats(self, smil, smil_url, video_id, namespace=None, f4m_params=None, transform_rtmp_url=None):
         base_ele = find_xpath_attr(
             smil, self._xpath_ns('.//meta', namespace), 'name', 'httpBase')
-        base = base_ele.get('content') if base_ele else 'http://livestreamvod-f.akamaihd.net/'
+        base = base_ele.get('content') if base_ele is not None else 'http://livestreamvod-f.akamaihd.net/'
 
         formats = []
         video_nodes = smil.findall(self._xpath_ns('.//video', namespace))
@@ -72,7 +73,10 @@ class LivestreamIE(InfoExtractor):
         for vn in video_nodes:
             tbr = int_or_none(vn.attrib.get('system-bitrate'), 1000)
             furl = (
-                '%s%s?v=3.0.3&fp=WIN%%2014,0,0,145' % (base, vn.attrib['src']))
+                update_url_query(compat_urlparse.urljoin(base, vn.attrib['src']), {
+                    'v': '3.0.3',
+                    'fp': 'WIN% 14,0,0,145',
+                }))
             if 'clipBegin' in vn.attrib:
                 furl += '&ssek=' + vn.attrib['clipBegin']
             formats.append({
@@ -146,7 +150,7 @@ class LivestreamIE(InfoExtractor):
         }
 
     def _extract_stream_info(self, stream_info):
-        broadcast_id = stream_info['broadcast_id']
+        broadcast_id = compat_str(stream_info['broadcast_id'])
         is_live = stream_info.get('is_live')
 
         formats = []
@@ -199,9 +203,10 @@ class LivestreamIE(InfoExtractor):
             if not videos_info:
                 break
             for v in videos_info:
+                v_id = compat_str(v['id'])
                 entries.append(self.url_result(
-                    'http://livestream.com/accounts/%s/events/%s/videos/%s' % (account_id, event_id, v['id']),
-                    'Livestream', v['id'], v['caption']))
+                    'http://livestream.com/accounts/%s/events/%s/videos/%s' % (account_id, event_id, v_id),
+                    'Livestream', v_id, v.get('caption')))
             last_video = videos_info[-1]['id']
         return self.playlist_result(entries, event_id, event_data['full_name'])
 

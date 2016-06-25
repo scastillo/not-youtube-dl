@@ -8,7 +8,7 @@ import binascii
 import hashlib
 
 
-from .common import InfoExtractor
+from .once import OnceIE
 from ..compat import (
     compat_parse_qs,
     compat_urllib_parse_urlparse,
@@ -20,40 +20,43 @@ from ..utils import (
     int_or_none,
     sanitized_Request,
     unsmuggle_url,
+    update_url_query,
     xpath_with_ns,
     mimetype2ext,
+    find_xpath_attr,
 )
 
 default_ns = 'http://www.w3.org/2005/SMIL21/Language'
 _x = lambda p: xpath_with_ns(p, {'smil': default_ns})
 
 
-class ThePlatformBaseIE(InfoExtractor):
+class ThePlatformBaseIE(OnceIE):
     def _extract_theplatform_smil(self, smil_url, video_id, note='Downloading SMIL data'):
-        meta = self._download_xml(smil_url, video_id, note=note)
-        try:
-            error_msg = next(
-                n.attrib['abstract']
-                for n in meta.findall(_x('.//smil:ref'))
-                if n.attrib.get('title') == 'Geographic Restriction' or n.attrib.get('title') == 'Expired')
-        except StopIteration:
-            pass
-        else:
-            raise ExtractorError(error_msg, expected=True)
+        meta = self._download_xml(smil_url, video_id, note=note, query={'format': 'SMIL'})
+        error_element = find_xpath_attr(meta, _x('.//smil:ref'), 'src')
+        if error_element is not None and error_element.attrib['src'].startswith(
+                'http://link.theplatform.com/s/errorFiles/Unavailable.'):
+            raise ExtractorError(error_element.attrib['abstract'], expected=True)
 
-        formats = self._parse_smil_formats(
+        smil_formats = self._parse_smil_formats(
             meta, smil_url, video_id, namespace=default_ns,
             # the parameters are from syfy.com, other sites may use others,
             # they also work for nbc.com
             f4m_params={'g': 'UXWGVKRWHFSP', 'hdcore': '3.0.3'},
             transform_rtmp_url=lambda streamer, src: (streamer, 'mp4:' + src))
 
-        for _format in formats:
-            ext = determine_ext(_format['url'])
-            if ext == 'once':
-                _format['ext'] = 'mp4'
+        formats = []
+        for _format in smil_formats:
+            if OnceIE.suitable(_format['url']):
+                formats.extend(self._extract_once_formats(_format['url']))
+            else:
+                media_url = _format['url']
+                if determine_ext(media_url) == 'm3u8':
+                    hdnea2 = self._get_cookies(media_url).get('hdnea2')
+                    if hdnea2:
+                        _format['url'] = update_url_query(media_url, {'hdnea3': hdnea2.value})
 
-        self._sort_formats(formats)
+                formats.append(_format)
 
         subtitles = self._parse_smil_subtitles(meta, default_ns)
 
@@ -79,13 +82,15 @@ class ThePlatformBaseIE(InfoExtractor):
             'description': info['description'],
             'thumbnail': info['defaultThumbnailUrl'],
             'duration': int_or_none(info.get('duration'), 1000),
+            'timestamp': int_or_none(info.get('pubDate'), 1000) or None,
+            'uploader': info.get('billingCode'),
         }
 
 
 class ThePlatformIE(ThePlatformBaseIE):
     _VALID_URL = r'''(?x)
         (?:https?://(?:link|player)\.theplatform\.com/[sp]/(?P<provider_id>[^/]+)/
-           (?:(?P<media>(?:(?:[^/]+/)+select/)?media/)|(?P<config>(?:[^/\?]+/(?:swf|config)|onsite)/select/))?
+           (?:(?:(?:[^/]+/)+select/)?(?P<media>media/(?:guid/\d+/)?)|(?P<config>(?:[^/\?]+/(?:swf|config)|onsite)/select/))?
          |theplatform:)(?P<id>[^/\?&]+)'''
 
     _TESTS = [{
@@ -97,6 +102,9 @@ class ThePlatformIE(ThePlatformBaseIE):
             'title': 'Blackberry\'s big, bold Z30',
             'description': 'The Z30 is Blackberry\'s biggest, baddest mobile messaging device yet.',
             'duration': 247,
+            'timestamp': 1383239700,
+            'upload_date': '20131031',
+            'uploader': 'CBSI-NEW',
         },
         'params': {
             # rtmp download
@@ -110,6 +118,9 @@ class ThePlatformIE(ThePlatformBaseIE):
             'ext': 'flv',
             'description': 'md5:ac330c9258c04f9d7512cf26b9595409',
             'title': 'Tesla Model S: A second step towards a cleaner motoring future',
+            'timestamp': 1426176191,
+            'upload_date': '20150312',
+            'uploader': 'CBSI-NEW',
         },
         'params': {
             # rtmp download
@@ -122,13 +133,14 @@ class ThePlatformIE(ThePlatformBaseIE):
             'ext': 'mp4',
             'description': 'md5:644ad9188d655b742f942bf2e06b002d',
             'title': 'HIGHLIGHTS: USA bag first ever series Cup win',
+            'uploader': 'EGSM',
         }
     }, {
         'url': 'http://player.theplatform.com/p/NnzsPC/widget/select/media/4Y0TlYUr_ZT7',
         'only_matching': True,
     }, {
         'url': 'http://player.theplatform.com/p/2E2eJC/nbcNewsOffsite?guid=tdy_or_siri_150701',
-        'md5': '734f3790fb5fc4903da391beeebc4836',
+        'md5': 'fb96bb3d85118930a5b055783a3bd992',
         'info_dict': {
             'id': 'tdy_or_siri_150701',
             'ext': 'mp4',
@@ -138,7 +150,7 @@ class ThePlatformIE(ThePlatformBaseIE):
             'thumbnail': 're:^https?://.*\.jpg$',
             'timestamp': 1435752600,
             'upload_date': '20150701',
-            'categories': ['Today/Shows/Orange Room', 'Today/Sections/Money', 'Today/Topics/Tech', "Today/Topics/Editor's picks"],
+            'uploader': 'NBCU-NEWS',
         },
     }, {
         # From http://www.nbc.com/the-blacklist/video/sir-crispin-crandall/2928790?onid=137781#vc137781=1
@@ -146,6 +158,22 @@ class ThePlatformIE(ThePlatformBaseIE):
         'url': 'http://player.theplatform.com/p/NnzsPC/onsite_universal/select/media/guid/2410887629/2928790?fwsitesection=nbc_the_blacklist_video_library&autoPlay=true&carouselID=137781',
         'only_matching': True,
     }]
+
+    @classmethod
+    def _extract_urls(cls, webpage):
+        m = re.search(
+            r'''(?x)
+                    <meta\s+
+                        property=(["'])(?:og:video(?::(?:secure_)?url)?|twitter:player)\1\s+
+                        content=(["'])(?P<url>https?://player\.theplatform\.com/p/.+?)\2
+            ''', webpage)
+        if m:
+            return [m.group('url')]
+
+        matches = re.findall(
+            r'<(?:iframe|script)[^>]+src=(["\'])((?:https?:)?//player\.theplatform\.com/p/.+?)\1', webpage)
+        if matches:
+            return list(zip(*matches))[1]
 
     @staticmethod
     def _sign_url(url, sig_key, sig_secret, life=600, include_qs=False):
@@ -155,11 +183,11 @@ class ThePlatformIE(ThePlatformBaseIE):
         def str_to_hex(str):
             return binascii.b2a_hex(str.encode('ascii')).decode('ascii')
 
-        def hex_to_str(hex):
-            return binascii.a2b_hex(hex)
+        def hex_to_bytes(hex):
+            return binascii.a2b_hex(hex.encode('ascii'))
 
-        relative_path = url.split('http://link.theplatform.com/s/')[1].split('?')[0]
-        clear_text = hex_to_str(flags + expiration_date + str_to_hex(relative_path))
+        relative_path = re.match(r'https?://link.theplatform.com/s/([^?]+)', url).group(1)
+        clear_text = hex_to_bytes(flags + expiration_date + str_to_hex(relative_path))
         checksum = hmac.new(sig_key.encode('ascii'), clear_text, hashlib.sha1).hexdigest()
         sig = flags + expiration_date + checksum + str_to_hex(sig_secret)
         return '%s&sig=%s' % (url, sig)
@@ -174,10 +202,10 @@ class ThePlatformIE(ThePlatformBaseIE):
         if not provider_id:
             provider_id = 'dJ5BDC'
 
-        path = provider_id
+        path = provider_id + '/'
         if mobj.group('media'):
-            path += '/media'
-        path += '/' + video_id
+            path += mobj.group('media')
+        path += video_id
 
         qs_dict = compat_parse_qs(compat_urllib_parse_urlparse(url).query)
         if 'guid' in qs_dict:
@@ -216,7 +244,7 @@ class ThePlatformIE(ThePlatformBaseIE):
                 webpage, 'smil url', group='url')
             path = self._search_regex(
                 r'link\.theplatform\.com/s/((?:[^/?#&]+/)+[^/?#&]+)', smil_url, 'path')
-            smil_url += '?' if '?' not in smil_url else '&' + 'formats=m3u,mpeg4&format=SMIL'
+            smil_url += '?' if '?' not in smil_url else '&' + 'formats=m3u,mpeg4'
         elif mobj.group('config'):
             config_url = url + '&form=json'
             config_url = config_url.replace('swf/', 'config/')
@@ -226,15 +254,16 @@ class ThePlatformIE(ThePlatformBaseIE):
                 release_url = config['releaseUrl']
             else:
                 release_url = 'http://link.theplatform.com/s/%s?mbr=true' % path
-            smil_url = release_url + '&format=SMIL&formats=MPEG4&manifest=f4m'
+            smil_url = release_url + '&formats=MPEG4&manifest=f4m'
         else:
-            smil_url = 'http://link.theplatform.com/s/%s/meta.smil?format=smil&mbr=true' % path
+            smil_url = 'http://link.theplatform.com/s/%s?mbr=true' % path
 
         sig = smuggled_data.get('sig')
         if sig:
             smil_url = self._sign_url(smil_url, sig['key'], sig['secret'])
 
         formats, subtitles = self._extract_theplatform_smil(smil_url, video_id)
+        self._sort_formats(formats)
 
         ret = self.get_metadata(path, video_id)
         combined_subtitles = self._merge_subtitles(ret.get('subtitles', {}), subtitles)
@@ -248,12 +277,12 @@ class ThePlatformIE(ThePlatformBaseIE):
 
 
 class ThePlatformFeedIE(ThePlatformBaseIE):
-    _URL_TEMPLATE = '%s//feed.theplatform.com/f/%s/%s?form=json&byGuid=%s'
-    _VALID_URL = r'https?://feed\.theplatform\.com/f/(?P<provider_id>[^/]+)/(?P<feed_id>[^?/]+)\?(?:[^&]+&)*byGuid=(?P<id>[a-zA-Z0-9_]+)'
-    _TEST = {
+    _URL_TEMPLATE = '%s//feed.theplatform.com/f/%s/%s?form=json&%s'
+    _VALID_URL = r'https?://feed\.theplatform\.com/f/(?P<provider_id>[^/]+)/(?P<feed_id>[^?/]+)\?(?:[^&]+&)*(?P<filter>by(?:Gui|I)d=(?P<id>[\w-]+))'
+    _TESTS = [{
         # From http://player.theplatform.com/p/7wvmTC/MSNBCEmbeddedOffSite?guid=n_hardball_5biden_140207
         'url': 'http://feed.theplatform.com/f/7wvmTC/msnbc_video-p-test?form=json&pretty=true&range=-40&byGuid=n_hardball_5biden_140207',
-        'md5': '22d2b84f058d3586efcd99e57d59d314',
+        'md5': '6e32495b5073ab414471b615c5ded394',
         'info_dict': {
             'id': 'n_hardball_5biden_140207',
             'ext': 'mp4',
@@ -264,33 +293,40 @@ class ThePlatformFeedIE(ThePlatformBaseIE):
             'timestamp': 1391824260,
             'duration': 467.0,
             'categories': ['MSNBC/Issues/Democrats', 'MSNBC/Issues/Elections/Election 2016'],
+            'uploader': 'NBCU-NEWS',
         },
-    }
+    }]
 
-    def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-
-        video_id = mobj.group('id')
-        provider_id = mobj.group('provider_id')
-        feed_id = mobj.group('feed_id')
-
-        real_url = self._URL_TEMPLATE % (self.http_scheme(), provider_id, feed_id, video_id)
-        feed = self._download_json(real_url, video_id)
-        entry = feed['entries'][0]
+    def _extract_feed_info(self, provider_id, feed_id, filter_query, video_id, custom_fields=None, asset_types_query={}):
+        real_url = self._URL_TEMPLATE % (self.http_scheme(), provider_id, feed_id, filter_query)
+        entry = self._download_json(real_url, video_id)['entries'][0]
 
         formats = []
         subtitles = {}
         first_video_id = None
         duration = None
+        asset_types = []
         for item in entry['media$content']:
-            smil_url = item['plfile$url'] + '&format=SMIL&mbr=true'
+            smil_url = item['plfile$url']
             cur_video_id = ThePlatformIE._match_id(smil_url)
             if first_video_id is None:
                 first_video_id = cur_video_id
                 duration = float_or_none(item.get('plfile$duration'))
-            cur_formats, cur_subtitles = self._extract_theplatform_smil(smil_url, video_id, 'Downloading SMIL data for %s' % cur_video_id)
-            formats.extend(cur_formats)
-            subtitles = self._merge_subtitles(subtitles, cur_subtitles)
+            for asset_type in item['plfile$assetTypes']:
+                if asset_type in asset_types:
+                    continue
+                asset_types.append(asset_type)
+                query = {
+                    'mbr': 'true',
+                    'formats': item['plfile$format'],
+                    'assetTypes': asset_type,
+                }
+                if asset_type in asset_types_query:
+                    query.update(asset_types_query[asset_type])
+                cur_formats, cur_subtitles = self._extract_theplatform_smil(update_url_query(
+                    smil_url, query), video_id, 'Downloading SMIL data for %s' % asset_type)
+                formats.extend(cur_formats)
+                subtitles = self._merge_subtitles(subtitles, cur_subtitles)
 
         self._sort_formats(formats)
 
@@ -314,5 +350,17 @@ class ThePlatformFeedIE(ThePlatformBaseIE):
             'timestamp': timestamp,
             'categories': categories,
         })
+        if custom_fields:
+            ret.update(custom_fields(entry))
 
         return ret
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+
+        video_id = mobj.group('id')
+        provider_id = mobj.group('provider_id')
+        feed_id = mobj.group('feed_id')
+        filter_query = mobj.group('filter')
+
+        return self._extract_feed_info(provider_id, feed_id, filter_query, video_id)

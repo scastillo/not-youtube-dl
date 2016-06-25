@@ -7,7 +7,7 @@ from ..utils import qualities
 
 
 class UnistraIE(InfoExtractor):
-    _VALID_URL = r'http://utv\.unistra\.fr/(?:index|video)\.php\?id_video\=(?P<id>\d+)'
+    _VALID_URL = r'https?://utv\.unistra\.fr/(?:index|video)\.php\?id_video\=(?P<id>\d+)'
 
     _TESTS = [
         {
@@ -49,6 +49,7 @@ class UnistraIE(InfoExtractor):
                 'format_id': format_id,
                 'quality': quality(format_id)
             })
+        self._sort_formats(formats)
 
         title = self._html_search_regex(
             r'<title>UTV - (.*?)</', webpage, 'title')
