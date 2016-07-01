@@ -5,7 +5,9 @@ Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
  debhelper (>= 9),
  dh-python,
- python-pkg-resources
+ pandoc,
+ python-pkg-resources,
+ zip
 Build-Depends-Indep:
  python
 X-Python-Version: >= 2.6
