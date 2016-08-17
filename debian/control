@@ -24,6 +24,7 @@ Depends:
  ${python:Depends}
 Recommends:
  aria2 | wget | curl,
+ ca-certificates,
  ffmpeg | libav-tools,
  mpv | mplayer | mplayer2,
  rtmpdump
