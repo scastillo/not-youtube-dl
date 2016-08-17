@@ -1,10 +1,11 @@
-youtube-dl (2016.06.25-2~2.gbpf1b3eb) UNRELEASED; urgency=medium
+youtube-dl (2016.06.25-2~3.gbpcdea2e) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @f1b3ebd0ecae1b02b0d1482ae35bcc1225d97888 **
+  ** SNAPSHOT build @cdea2e429e5bfc70c13b9a15efd0be9936703147 **
 
   * debian/control: Add B-D on pandoc and zip. Closes: #828905.
     Thanks to Chris Lamb (for the report) and Logan Rosen from Ubuntu (for a patch).
   * debian/control: Add recommends on ca-certificates. (Closes: 819759)
+  * debian/watch: Add back pgpsigurlmangle.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 01 Jul 2016 10:13:45 -0300
 
