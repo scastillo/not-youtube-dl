@@ -1,7 +1,6 @@
-youtube-dl (2016.06.25-2~3.gbpcdea2e) UNRELEASED; urgency=medium
+youtube-dl (2016.06.25-2) unstable; urgency=medium
 
-  ** SNAPSHOT build @cdea2e429e5bfc70c13b9a15efd0be9936703147 **
-
+  * The "The next upload will only support Python 3" release.
   * debian/control:
     + Add B-D on pandoc and zip. (Closes: #828905)
       Thanks to Chris Lamb (for the report) and Logan Rosen from Ubuntu
@@ -9,7 +8,7 @@ youtube-dl (2016.06.25-2~3.gbpcdea2e) UNRELEASED; urgency=medium
     + Add recommends on ca-certificates. (Closes: 819759)
   * debian/watch: Add back pgpsigurlmangle.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 01 Jul 2016 10:13:45 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Aug 2016 07:39:54 -0300
 
 youtube-dl (2016.06.25-1) unstable; urgency=medium
 
