@@ -1,3 +1,12 @@
+youtube-dl (2016.08.17-1~1.gbp99b46a) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @99b46abf79266c2bf5eabc291dc4f366e61b5dde **
+
+  * Revert "debian/watch: Add back pgpsigurlmangle."
+  * Imported Upstream version 2016.08.17
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Aug 2016 10:25:56 -0300
+
 youtube-dl (2016.06.25-2) unstable; urgency=medium
 
   * The "The next upload will only support Python 3" release.
