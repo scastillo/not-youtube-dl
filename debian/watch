@@ -1,4 +1,4 @@
 version=4
-opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%youtube-dl-$1.tar.gz%,dversionmangle=s/\+dfsg\d*$//,pgpsigurlmangle=s/$/.sig/" \
+opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%youtube-dl-$1.tar.gz%,dversionmangle=s/\+dfsg\d*$//" \
 https://github.com/rg3/youtube-dl/releases \
      (?:.*?/)?v?(\d[\d.]*)\.tar\.gz debian uupdate
