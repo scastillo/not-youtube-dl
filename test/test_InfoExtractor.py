@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from test.helper import FakeYDL
 from youtube_dl.extractor.common import InfoExtractor
 from youtube_dl.extractor import YoutubeIE, get_info_extractor
-from youtube_dl.utils import encode_data_uri, strip_jsonp, ExtractorError
+from youtube_dl.utils import encode_data_uri, strip_jsonp, ExtractorError, RegexNotFoundError
 
 
 class TestIE(InfoExtractor):
@@ -48,6 +48,9 @@ class TestInfoExtractor(unittest.TestCase):
         self.assertEqual(ie._og_search_property('foobar', html), 'Foo')
         self.assertEqual(ie._og_search_property('test1', html), 'foo > < bar')
         self.assertEqual(ie._og_search_property('test2', html), 'foo >//< bar')
+        self.assertEqual(ie._og_search_property(('test0', 'test1'), html), 'foo > < bar')
+        self.assertRaises(RegexNotFoundError, ie._og_search_property, 'test0', html, None, fatal=True)
+        self.assertRaises(RegexNotFoundError, ie._og_search_property, ('test0', 'test00'), html, None, fatal=True)
 
     def test_html_search_meta(self):
         ie = self.ie
@@ -66,6 +69,11 @@ class TestInfoExtractor(unittest.TestCase):
         self.assertEqual(ie._html_search_meta('d', html), '4')
         self.assertEqual(ie._html_search_meta('e', html), '5')
         self.assertEqual(ie._html_search_meta('f', html), '6')
+        self.assertEqual(ie._html_search_meta(('a', 'b', 'c'), html), '1')
+        self.assertEqual(ie._html_search_meta(('c', 'b', 'a'), html), '3')
+        self.assertEqual(ie._html_search_meta(('z', 'x', 'c'), html), '3')
+        self.assertRaises(RegexNotFoundError, ie._html_search_meta, 'z', html, None, fatal=True)
+        self.assertRaises(RegexNotFoundError, ie._html_search_meta, ('z', 'x'), html, None, fatal=True)
 
     def test_download_json(self):
         uri = encode_data_uri(b'{"foo": "blah"}', 'application/json')

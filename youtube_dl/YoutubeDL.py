@@ -5,6 +5,7 @@ from __future__ import absolute_import, unicode_literals
 
 import collections
 import contextlib
+import copy
 import datetime
 import errno
 import fileinput
@@ -196,8 +197,8 @@ class YoutubeDL(object):
     prefer_insecure:   Use HTTP instead of HTTPS to retrieve information.
                        At the moment, this is only supported by YouTube.
     proxy:             URL of the proxy server to use
-    cn_verification_proxy:  URL of the proxy to use for IP address verification
-                       on Chinese sites. (Experimental)
+    geo_verification_proxy:  URL of the proxy to use for IP address verification
+                       on geo-restricted sites. (Experimental)
     socket_timeout:    Time to wait for unresponsive hosts, in seconds
     bidi_workaround:   Work around buggy terminals without bidirectional text
                        support, using fridibi
@@ -248,7 +249,16 @@ class YoutubeDL(object):
     source_address:    (Experimental) Client-side IP address to bind to.
     call_home:         Boolean, true iff we are allowed to contact the
                        youtube-dl servers for debugging.
-    sleep_interval:    Number of seconds to sleep before each download.
+    sleep_interval:    Number of seconds to sleep before each download when
+                       used alone or a lower bound of a range for randomized
+                       sleep before each download (minimum possible number
+                       of seconds to sleep) when used along with
+                       max_sleep_interval.
+    max_sleep_interval:Upper bound of a range for randomized sleep before each
+                       download (maximum possible number of seconds to sleep).
+                       Must only be used along with sleep_interval.
+                       Actual sleep time will be a random float from range
+                       [sleep_interval; max_sleep_interval].
     listformats:       Print an overview of available video formats and exit.
     list_thumbnails:   Print a table of all thumbnails and exit.
     match_filter:      A function that gets called with the info_dict of
@@ -303,6 +313,11 @@ class YoutubeDL(object):
         }
         self.params.update(params)
         self.cache = Cache(self)
+
+        if self.params.get('cn_verification_proxy') is not None:
+            self.report_warning('--cn-verification-proxy is deprecated. Use --geo-verification-proxy instead.')
+            if self.params.get('geo_verification_proxy') is None:
+                self.params['geo_verification_proxy'] = self.params['cn_verification_proxy']
 
         if params.get('bidi_workaround', False):
             try:
@@ -1046,9 +1061,9 @@ class YoutubeDL(object):
             if isinstance(selector, list):
                 fs = [_build_selector_function(s) for s in selector]
 
-                def selector_function(formats):
+                def selector_function(ctx):
                     for f in fs:
-                        for format in f(formats):
+                        for format in f(ctx):
                             yield format
                 return selector_function
             elif selector.type == GROUP:
@@ -1056,17 +1071,17 @@ class YoutubeDL(object):
             elif selector.type == PICKFIRST:
                 fs = [_build_selector_function(s) for s in selector.selector]
 
-                def selector_function(formats):
+                def selector_function(ctx):
                     for f in fs:
-                        picked_formats = list(f(formats))
+                        picked_formats = list(f(ctx))
                         if picked_formats:
                             return picked_formats
                     return []
             elif selector.type == SINGLE:
                 format_spec = selector.selector
 
-                def selector_function(formats):
-                    formats = list(formats)
+                def selector_function(ctx):
+                    formats = list(ctx['formats'])
                     if not formats:
                         return
                     if format_spec == 'all':
@@ -1079,9 +1094,10 @@ class YoutubeDL(object):
                             if f.get('vcodec') != 'none' and f.get('acodec') != 'none']
                         if audiovideo_formats:
                             yield audiovideo_formats[format_idx]
-                        # for audio only (soundcloud) or video only (imgur) urls, select the best/worst audio format
-                        elif (all(f.get('acodec') != 'none' for f in formats) or
-                              all(f.get('vcodec') != 'none' for f in formats)):
+                        # for extractors with incomplete formats (audio only (soundcloud)
+                        # or video only (imgur)) we will fallback to best/worst
+                        # {video,audio}-only format
+                        elif ctx['incomplete_formats']:
                             yield formats[format_idx]
                     elif format_spec == 'bestaudio':
                         audio_formats = [
@@ -1155,17 +1171,18 @@ class YoutubeDL(object):
                     }
                 video_selector, audio_selector = map(_build_selector_function, selector.selector)
 
-                def selector_function(formats):
-                    formats = list(formats)
-                    for pair in itertools.product(video_selector(formats), audio_selector(formats)):
+                def selector_function(ctx):
+                    for pair in itertools.product(
+                            video_selector(copy.deepcopy(ctx)), audio_selector(copy.deepcopy(ctx))):
                         yield _merge(pair)
 
             filters = [self._build_format_filter(f) for f in selector.filters]
 
-            def final_selector(formats):
+            def final_selector(ctx):
+                ctx_copy = copy.deepcopy(ctx)
                 for _filter in filters:
-                    formats = list(filter(_filter, formats))
-                return selector_function(formats)
+                    ctx_copy['formats'] = list(filter(_filter, ctx_copy['formats']))
+                return selector_function(ctx_copy)
             return final_selector
 
         stream = io.BytesIO(format_spec.encode('utf-8'))
@@ -1372,7 +1389,34 @@ class YoutubeDL(object):
             req_format_list.append('best')
             req_format = '/'.join(req_format_list)
         format_selector = self.build_format_selector(req_format)
-        formats_to_download = list(format_selector(formats))
+
+        # While in format selection we may need to have an access to the original
+        # format set in order to calculate some metrics or do some processing.
+        # For now we need to be able to guess whether original formats provided
+        # by extractor are incomplete or not (i.e. whether extractor provides only
+        # video-only or audio-only formats) for proper formats selection for
+        # extractors with such incomplete formats (see
+        # https://github.com/rg3/youtube-dl/pull/5556).
+        # Since formats may be filtered during format selection and may not match
+        # the original formats the results may be incorrect. Thus original formats
+        # or pre-calculated metrics should be passed to format selection routines
+        # as well.
+        # We will pass a context object containing all necessary additional data
+        # instead of just formats.
+        # This fixes incorrect format selection issue (see
+        # https://github.com/rg3/youtube-dl/issues/10083).
+        incomplete_formats = (
+            # All formats are video-only or
+            all(f.get('vcodec') != 'none' and f.get('acodec') == 'none' for f in formats) or
+            # all formats are audio-only
+            all(f.get('vcodec') == 'none' and f.get('acodec') != 'none' for f in formats))
+
+        ctx = {
+            'formats': formats,
+            'incomplete_formats': incomplete_formats,
+        }
+
+        formats_to_download = list(format_selector(ctx))
         if not formats_to_download:
             raise ExtractorError('requested format not available',
                                  expected=True)
@@ -1559,7 +1603,9 @@ class YoutubeDL(object):
                         self.to_screen('[info] Video subtitle %s.%s is already_present' % (sub_lang, sub_format))
                     else:
                         self.to_screen('[info] Writing video subtitles to: ' + sub_filename)
-                        with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8') as subfile:
+                        # Use newline='' to prevent conversion of newline characters
+                        # See https://github.com/rg3/youtube-dl/issues/10268
+                        with io.open(encodeFilename(sub_filename), 'w', encoding='utf-8', newline='') as subfile:
                             subfile.write(sub_data)
                 except (OSError, IOError):
                     self.report_error('Cannot write subtitles file ' + sub_filename)
