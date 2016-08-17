@@ -26,6 +26,7 @@ class CBSNewsIE(CBSBaseIE):
                 # rtmp download
                 'skip_download': True,
             },
+            'skip': 'Subscribers only',
         },
         {
             'url': 'http://www.cbsnews.com/videos/fort-hood-shooting-army-downplays-mental-illness-as-cause-of-attack/',
@@ -69,6 +70,7 @@ class CBSNewsLiveVideoIE(InfoExtractor):
     IE_DESC = 'CBS News Live Videos'
     _VALID_URL = r'https?://(?:www\.)?cbsnews\.com/live/video/(?P<id>[\da-z_-]+)'
 
+    # Live videos get deleted soon. See http://www.cbsnews.com/live/ for the latest examples
     _TEST = {
         'url': 'http://www.cbsnews.com/live/video/clinton-sanders-prepare-to-face-off-in-nh/',
         'info_dict': {
@@ -77,6 +79,7 @@ class CBSNewsLiveVideoIE(InfoExtractor):
             'title': 'Clinton, Sanders Prepare To Face Off In NH',
             'duration': 334,
         },
+        'skip': 'Video gone',
     }
 
     def _real_extract(self, url):

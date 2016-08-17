@@ -33,6 +33,7 @@ from youtube_dl.utils import (
     ExtractorError,
     find_xpath_attr,
     fix_xml_ampersands,
+    get_element_by_class,
     InAdvancePagedList,
     intlist_to_bytes,
     is_html,
@@ -41,6 +42,7 @@ from youtube_dl.utils import (
     ohdave_rsa_encrypt,
     OnDemandPagedList,
     orderedSet,
+    parse_age_limit,
     parse_duration,
     parse_filesize,
     parse_count,
@@ -60,11 +62,13 @@ from youtube_dl.utils import (
     timeconvert,
     unescapeHTML,
     unified_strdate,
+    unified_timestamp,
     unsmuggle_url,
     uppercase_escape,
     lowercase_escape,
     url_basename,
     urlencode_postdata,
+    urshift,
     update_url_query,
     version_tuple,
     xpath_with_ns,
@@ -78,6 +82,7 @@ from youtube_dl.utils import (
     cli_option,
     cli_valueless_option,
     cli_bool_option,
+    parse_codecs,
 )
 from youtube_dl.compat import (
     compat_chr,
@@ -283,7 +288,28 @@ class TestUtil(unittest.TestCase):
             '20150202')
         self.assertEqual(unified_strdate('Feb 14th 2016 5:45PM'), '20160214')
         self.assertEqual(unified_strdate('25-09-2014'), '20140925')
+        self.assertEqual(unified_strdate('27.02.2016 17:30'), '20160227')
         self.assertEqual(unified_strdate('UNKNOWN DATE FORMAT'), None)
+
+    def test_unified_timestamps(self):
+        self.assertEqual(unified_timestamp('December 21, 2010'), 1292889600)
+        self.assertEqual(unified_timestamp('8/7/2009'), 1247011200)
+        self.assertEqual(unified_timestamp('Dec 14, 2012'), 1355443200)
+        self.assertEqual(unified_timestamp('2012/10/11 01:56:38 +0000'), 1349920598)
+        self.assertEqual(unified_timestamp('1968 12 10'), -33436800)
+        self.assertEqual(unified_timestamp('1968-12-10'), -33436800)
+        self.assertEqual(unified_timestamp('28/01/2014 21:00:00 +0100'), 1390939200)
+        self.assertEqual(
+            unified_timestamp('11/26/2014 11:30:00 AM PST', day_first=False),
+            1417001400)
+        self.assertEqual(
+            unified_timestamp('2/2/2015 6:47:40 PM', day_first=False),
+            1422902860)
+        self.assertEqual(unified_timestamp('Feb 14th 2016 5:45PM'), 1455471900)
+        self.assertEqual(unified_timestamp('25-09-2014'), 1411603200)
+        self.assertEqual(unified_timestamp('27.02.2016 17:30'), 1456594200)
+        self.assertEqual(unified_timestamp('UNKNOWN DATE FORMAT'), None)
+        self.assertEqual(unified_timestamp('May 16, 2016 11:15 PM'), 1463440500)
 
     def test_determine_ext(self):
         self.assertEqual(determine_ext('http://example.com/foo/bar.mp4/?download'), 'mp4')
@@ -383,6 +409,12 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(res_url, url)
         self.assertEqual(res_data, None)
 
+        smug_url = smuggle_url(url, {'a': 'b'})
+        smug_smug_url = smuggle_url(smug_url, {'c': 'd'})
+        res_url, res_data = unsmuggle_url(smug_smug_url)
+        self.assertEqual(res_url, url)
+        self.assertEqual(res_data, {'a': 'b', 'c': 'd'})
+
     def test_shell_quote(self):
         args = ['ffmpeg', '-i', encodeFilename('ñ€ß\'.mp4')]
         self.assertEqual(shell_quote(args), """ffmpeg -i 'ñ€ß'"'"'.mp4'""")
@@ -400,6 +432,20 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             url_basename('http://media.w3.org/2010/05/sintel/trailer.mp4'),
             'trailer.mp4')
+
+    def test_parse_age_limit(self):
+        self.assertEqual(parse_age_limit(None), None)
+        self.assertEqual(parse_age_limit(False), None)
+        self.assertEqual(parse_age_limit('invalid'), None)
+        self.assertEqual(parse_age_limit(0), 0)
+        self.assertEqual(parse_age_limit(18), 18)
+        self.assertEqual(parse_age_limit(21), 21)
+        self.assertEqual(parse_age_limit(22), None)
+        self.assertEqual(parse_age_limit('18'), 18)
+        self.assertEqual(parse_age_limit('18+'), 18)
+        self.assertEqual(parse_age_limit('PG-13'), 13)
+        self.assertEqual(parse_age_limit('TV-14'), 14)
+        self.assertEqual(parse_age_limit('TV-MA'), 17)
 
     def test_parse_duration(self):
         self.assertEqual(parse_duration(None), None)
@@ -578,6 +624,29 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(
             limit_length('foo bar baz asd', 12).startswith('foo bar'))
         self.assertTrue('...' in limit_length('foo bar baz asd', 12))
+
+    def test_parse_codecs(self):
+        self.assertEqual(parse_codecs(''), {})
+        self.assertEqual(parse_codecs('avc1.77.30, mp4a.40.2'), {
+            'vcodec': 'avc1.77.30',
+            'acodec': 'mp4a.40.2',
+        })
+        self.assertEqual(parse_codecs('mp4a.40.2'), {
+            'vcodec': 'none',
+            'acodec': 'mp4a.40.2',
+        })
+        self.assertEqual(parse_codecs('mp4a.40.5,avc1.42001e'), {
+            'vcodec': 'avc1.42001e',
+            'acodec': 'mp4a.40.5',
+        })
+        self.assertEqual(parse_codecs('avc3.640028'), {
+            'vcodec': 'avc3.640028',
+            'acodec': 'none',
+        })
+        self.assertEqual(parse_codecs(', h264,,newcodec,aac'), {
+            'vcodec': 'h264',
+            'acodec': 'aac',
+        })
 
     def test_escape_rfc3986(self):
         reserved = "!*'();:@&=+$,/?#[]"
@@ -899,6 +968,7 @@ The first line
         self.assertEqual(cli_option({'proxy': '127.0.0.1:3128'}, '--proxy', 'proxy'), ['--proxy', '127.0.0.1:3128'])
         self.assertEqual(cli_option({'proxy': None}, '--proxy', 'proxy'), [])
         self.assertEqual(cli_option({}, '--proxy', 'proxy'), [])
+        self.assertEqual(cli_option({'retries': 10}, '--retries', 'retries'), ['--retries', '10'])
 
     def test_cli_valueless_option(self):
         self.assertEqual(cli_valueless_option(
@@ -958,6 +1028,18 @@ The first line
 
         self.assertRaises(ValueError, encode_base_n, 0, 70)
         self.assertRaises(ValueError, encode_base_n, 0, 60, custom_table)
+
+    def test_urshift(self):
+        self.assertEqual(urshift(3, 1), 1)
+        self.assertEqual(urshift(-3, 1), 2147483646)
+
+    def test_get_element_by_class(self):
+        html = '''
+            <span class="foo bar">nice</span>
+        '''
+
+        self.assertEqual(get_element_by_class('foo', html), 'nice')
+        self.assertEqual(get_element_by_class('no-such-class', html), None)
 
 if __name__ == '__main__':
     unittest.main()

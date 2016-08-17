@@ -9,6 +9,7 @@ import hashlib
 
 
 from .once import OnceIE
+from .adobepass import AdobePassIE
 from ..compat import (
     compat_parse_qs,
     compat_urllib_parse_urlparse,
@@ -62,19 +63,20 @@ class ThePlatformBaseIE(OnceIE):
 
         return formats, subtitles
 
-    def get_metadata(self, path, video_id):
+    def _download_theplatform_metadata(self, path, video_id):
         info_url = 'http://link.theplatform.com/s/%s?format=preview' % path
-        info = self._download_json(info_url, video_id)
+        return self._download_json(info_url, video_id)
 
+    def _parse_theplatform_metadata(self, info):
         subtitles = {}
         captions = info.get('captions')
         if isinstance(captions, list):
             for caption in captions:
                 lang, src, mime = caption.get('lang', 'en'), caption.get('src'), caption.get('type')
-                subtitles[lang] = [{
+                subtitles.setdefault(lang, []).append({
                     'ext': mimetype2ext(mime),
                     'url': src,
-                }]
+                })
 
         return {
             'title': info['title'],
@@ -86,8 +88,12 @@ class ThePlatformBaseIE(OnceIE):
             'uploader': info.get('billingCode'),
         }
 
+    def _extract_theplatform_metadata(self, path, video_id):
+        info = self._download_theplatform_metadata(path, video_id)
+        return self._parse_theplatform_metadata(info)
 
-class ThePlatformIE(ThePlatformBaseIE):
+
+class ThePlatformIE(ThePlatformBaseIE, AdobePassIE):
     _VALID_URL = r'''(?x)
         (?:https?://(?:link|player)\.theplatform\.com/[sp]/(?P<provider_id>[^/]+)/
            (?:(?:(?:[^/]+/)+select/)?(?P<media>media/(?:guid/\d+/)?)|(?P<config>(?:[^/\?]+/(?:swf|config)|onsite)/select/))?
@@ -265,7 +271,7 @@ class ThePlatformIE(ThePlatformBaseIE):
         formats, subtitles = self._extract_theplatform_smil(smil_url, video_id)
         self._sort_formats(formats)
 
-        ret = self.get_metadata(path, video_id)
+        ret = self._extract_theplatform_metadata(path, video_id)
         combined_subtitles = self._merge_subtitles(ret.get('subtitles', {}), subtitles)
         ret.update({
             'id': video_id,
@@ -339,7 +345,7 @@ class ThePlatformFeedIE(ThePlatformBaseIE):
         timestamp = int_or_none(entry.get('media$availableDate'), scale=1000)
         categories = [item['media$name'] for item in entry.get('media$categories', [])]
 
-        ret = self.get_metadata('%s/%s' % (provider_id, first_video_id), video_id)
+        ret = self._extract_theplatform_metadata('%s/%s' % (provider_id, first_video_id), video_id)
         subtitles = self._merge_subtitles(subtitles, ret['subtitles'])
         ret.update({
             'id': video_id,

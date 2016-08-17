@@ -8,19 +8,16 @@ from ..compat import (
     compat_str,
     compat_urllib_parse_urlencode,
 )
-from ..utils import (
-    ExtractorError,
-    sanitized_Request,
-)
+from ..utils import ExtractorError
 
 
 class SohuIE(InfoExtractor):
     _VALID_URL = r'https?://(?P<mytv>my\.)?tv\.sohu\.com/.+?/(?(mytv)|n)(?P<id>\d+)\.shtml.*?'
 
+    # Sohu videos give different MD5 sums on Travis CI and my machine
     _TESTS = [{
         'note': 'This video is available only in Mainland China',
         'url': 'http://tv.sohu.com/20130724/n382479172.shtml#super',
-        'md5': '29175c8cadd8b5cc4055001e85d6b372',
         'info_dict': {
             'id': '382479172',
             'ext': 'mp4',
@@ -29,7 +26,6 @@ class SohuIE(InfoExtractor):
         'skip': 'On available in China',
     }, {
         'url': 'http://tv.sohu.com/20150305/n409385080.shtml',
-        'md5': '699060e75cf58858dd47fb9c03c42cfb',
         'info_dict': {
             'id': '409385080',
             'ext': 'mp4',
@@ -37,7 +33,6 @@ class SohuIE(InfoExtractor):
         }
     }, {
         'url': 'http://my.tv.sohu.com/us/232799889/78693464.shtml',
-        'md5': '9bf34be48f2f4dadcb226c74127e203c',
         'info_dict': {
             'id': '78693464',
             'ext': 'mp4',
@@ -51,7 +46,6 @@ class SohuIE(InfoExtractor):
             'title': '【神探苍实战秘籍】第13期 战争之影 赫卡里姆',
         },
         'playlist': [{
-            'md5': 'bdbfb8f39924725e6589c146bc1883ad',
             'info_dict': {
                 'id': '78910339_part1',
                 'ext': 'mp4',
@@ -59,7 +53,6 @@ class SohuIE(InfoExtractor):
                 'title': '【神探苍实战秘籍】第13期 战争之影 赫卡里姆',
             }
         }, {
-            'md5': '3e1f46aaeb95354fd10e7fca9fc1804e',
             'info_dict': {
                 'id': '78910339_part2',
                 'ext': 'mp4',
@@ -67,7 +60,6 @@ class SohuIE(InfoExtractor):
                 'title': '【神探苍实战秘籍】第13期 战争之影 赫卡里姆',
             }
         }, {
-            'md5': '8407e634175fdac706766481b9443450',
             'info_dict': {
                 'id': '78910339_part3',
                 'ext': 'mp4',
@@ -96,15 +88,10 @@ class SohuIE(InfoExtractor):
             else:
                 base_data_url = 'http://hot.vrs.sohu.com/vrs_flash.action?vid='
 
-            req = sanitized_Request(base_data_url + vid_id)
-
-            cn_verification_proxy = self._downloader.params.get('cn_verification_proxy')
-            if cn_verification_proxy:
-                req.add_header('Ytdl-request-proxy', cn_verification_proxy)
-
             return self._download_json(
-                req, video_id,
-                'Downloading JSON data for %s' % vid_id)
+                base_data_url + vid_id, video_id,
+                'Downloading JSON data for %s' % vid_id,
+                headers=self.geo_verification_headers())
 
         mobj = re.match(self._VALID_URL, url)
         video_id = mobj.group('id')
