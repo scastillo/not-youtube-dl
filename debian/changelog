@@ -1,9 +1,20 @@
 youtube-dl (2016.08.17-1~1.gbp99b46a) UNRELEASED; urgency=medium
 
+  [ Rogério Brito ]
   ** SNAPSHOT build @99b46abf79266c2bf5eabc291dc4f366e61b5dde **
 
   * Revert "debian/watch: Add back pgpsigurlmangle."
   * Imported Upstream version 2016.08.17
+  * debian/patches: Remove unneeded patches.
+
+  [ Carlos Maddela ]
+  * Install support files via debhelper instead of setup.py.
+  * Tidy up cleanup rule and keep lintian happy.
+  * Rebuild with only Python 3 support. (Closes: #723990)
+  * Update Standards-Version to 3.9.8 (no changes required).
+  * Stop libav compatibility links from being considered as genuine.
+    (Closes: #798936)
+  * Add support for zsh completion. (Closes: #816412)
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Aug 2016 10:25:56 -0300
 
