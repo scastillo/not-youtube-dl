@@ -1,8 +1,8 @@
-youtube-dl (2016.08.17-1~1.gbp99b46a) UNRELEASED; urgency=medium
+youtube-dl (2016.12.01-1~1.gbp47d80e) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @47d80ec0b18245caeb97018d4c1af18d0b5b972b **
 
   [ Rogério Brito ]
-  ** SNAPSHOT build @99b46abf79266c2bf5eabc291dc4f366e61b5dde **
-
   * Revert "debian/watch: Add back pgpsigurlmangle."
   * Imported Upstream version 2016.08.17
   * debian/patches: Remove unneeded patches.
@@ -15,6 +15,9 @@ youtube-dl (2016.08.17-1~1.gbp99b46a) UNRELEASED; urgency=medium
   * Stop libav compatibility links from being considered as genuine.
     (Closes: #798936)
   * Add support for zsh completion. (Closes: #816412)
+
+  [ Rogério Brito ]
+  * New upstream version 2016.12.01
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Aug 2016 10:25:56 -0300
 
