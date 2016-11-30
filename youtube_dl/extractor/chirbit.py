@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import base64
+import re
 
 from .common import InfoExtractor
 from ..utils import parse_duration
@@ -65,12 +66,11 @@ class ChirbitIE(InfoExtractor):
 
 class ChirbitProfileIE(InfoExtractor):
     IE_NAME = 'chirbit:profile'
-    _VALID_URL = r'https?://(?:www\.)?chirbit.com/(?:rss/)?(?P<id>[^/]+)'
+    _VALID_URL = r'https?://(?:www\.)?chirbit\.com/(?:rss/)?(?P<id>[^/]+)'
     _TEST = {
         'url': 'http://chirbit.com/ScarletBeauty',
         'info_dict': {
             'id': 'ScarletBeauty',
-            'title': 'Chirbits by ScarletBeauty',
         },
         'playlist_mincount': 3,
     }
@@ -78,13 +78,10 @@ class ChirbitProfileIE(InfoExtractor):
     def _real_extract(self, url):
         profile_id = self._match_id(url)
 
-        rss = self._download_xml(
-            'http://chirbit.com/rss/%s' % profile_id, profile_id)
+        webpage = self._download_webpage(url, profile_id)
 
         entries = [
-            self.url_result(audio_url.text, 'Chirbit')
-            for audio_url in rss.findall('./channel/item/link')]
+            self.url_result(self._proto_relative_url('//chirb.it/' + video_id))
+            for _, video_id in re.findall(r'<input[^>]+id=([\'"])copy-btn-(?P<id>[0-9a-zA-Z]+)\1', webpage)]
 
-        title = rss.find('./channel/title').text
-
-        return self.playlist_result(entries, profile_id, title)
+        return self.playlist_result(entries, profile_id)

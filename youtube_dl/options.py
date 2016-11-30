@@ -94,7 +94,7 @@ def parseOpts(overrideArguments=None):
         setattr(parser.values, option.dest, value.split(','))
 
     def _hide_login_info(opts):
-        PRIVATE_OPTS = ['-p', '--password', '-u', '--username', '--video-password']
+        PRIVATE_OPTS = ['-p', '--password', '-u', '--username', '--video-password', '--ap-password', '--ap-username']
         eqre = re.compile('^(?P<key>' + ('|'.join(re.escape(po) for po in PRIVATE_OPTS)) + ')=.+$')
 
         def _scrub_eq(o):
@@ -351,6 +351,24 @@ def parseOpts(overrideArguments=None):
         dest='videopassword', metavar='PASSWORD',
         help='Video password (vimeo, smotri, youku)')
 
+    adobe_pass = optparse.OptionGroup(parser, 'Adobe Pass Options')
+    adobe_pass.add_option(
+        '--ap-mso',
+        dest='ap_mso', metavar='MSO',
+        help='Adobe Pass multiple-system operator (TV provider) identifier, use --ap-list-mso for a list of available MSOs')
+    adobe_pass.add_option(
+        '--ap-username',
+        dest='ap_username', metavar='USERNAME',
+        help='Multiple-system operator account login')
+    adobe_pass.add_option(
+        '--ap-password',
+        dest='ap_password', metavar='PASSWORD',
+        help='Multiple-system operator account password. If this option is left out, youtube-dl will ask interactively.')
+    adobe_pass.add_option(
+        '--ap-list-mso',
+        action='store_true', dest='ap_list_mso', default=False,
+        help='List all supported multiple-system operators')
+
     video_format = optparse.OptionGroup(parser, 'Video Format Options')
     video_format.add_option(
         '-f', '--format',
@@ -423,7 +441,15 @@ def parseOpts(overrideArguments=None):
     downloader.add_option(
         '--fragment-retries',
         dest='fragment_retries', metavar='RETRIES', default=10,
-        help='Number of retries for a fragment (default is %default), or "infinite" (DASH only)')
+        help='Number of retries for a fragment (default is %default), or "infinite" (DASH and hlsnative only)')
+    downloader.add_option(
+        '--skip-unavailable-fragments',
+        action='store_true', dest='skip_unavailable_fragments', default=True,
+        help='Skip unavailable fragments (DASH and hlsnative only)')
+    general.add_option(
+        '--abort-on-unavailable-fragment',
+        action='store_false', dest='skip_unavailable_fragments',
+        help='Abort downloading when some fragment is not available')
     downloader.add_option(
         '--buffer-size',
         dest='buffersize', metavar='SIZE', default='1024',
@@ -628,22 +654,7 @@ def parseOpts(overrideArguments=None):
     filesystem.add_option(
         '-o', '--output',
         dest='outtmpl', metavar='TEMPLATE',
-        help=('Output filename template. Use %(title)s to get the title, '
-              '%(uploader)s for the uploader name, %(uploader_id)s for the uploader nickname if different, '
-              '%(autonumber)s to get an automatically incremented number, '
-              '%(ext)s for the filename extension, '
-              '%(format)s for the format description (like "22 - 1280x720" or "HD"), '
-              '%(format_id)s for the unique id of the format (like YouTube\'s itags: "137"), '
-              '%(upload_date)s for the upload date (YYYYMMDD), '
-              '%(extractor)s for the provider (youtube, metacafe, etc), '
-              '%(id)s for the video id, '
-              '%(playlist_title)s, %(playlist_id)s, or %(playlist)s (=title if present, ID otherwise) for the playlist the video is in, '
-              '%(playlist_index)s for the position in the playlist. '
-              '%(height)s and %(width)s for the width and height of the video format. '
-              '%(resolution)s for a textual description of the resolution of the video format. '
-              '%% for a literal percent. '
-              'Use - to output to stdout. Can also be used to download to a different directory, '
-              'for example with -o \'/my/downloads/%(uploader)s/%(title)s-%(id)s.%(ext)s\' .'))
+        help=('Output filename template, see the "OUTPUT TEMPLATE" for all the info'))
     filesystem.add_option(
         '--autonumber-size',
         dest='autonumber_size', metavar='NUMBER',
@@ -820,6 +831,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(video_format)
     parser.add_option_group(subtitles)
     parser.add_option_group(authentication)
+    parser.add_option_group(adobe_pass)
     parser.add_option_group(postproc)
 
     if overrideArguments is not None:

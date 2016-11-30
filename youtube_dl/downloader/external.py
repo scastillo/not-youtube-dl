@@ -220,6 +220,12 @@ class FFmpegFD(ExternalFD):
         if proxy:
             if not re.match(r'^[\da-zA-Z]+://', proxy):
                 proxy = 'http://%s' % proxy
+
+            if proxy.startswith('socks'):
+                self.report_warning(
+                    '%s does not support SOCKS proxies. Downloading is likely to fail. '
+                    'Consider adding --hls-prefer-native to your command.' % self.get_basename())
+
             # Since December 2015 ffmpeg supports -http_proxy option (see
             # http://git.videolan.org/?p=ffmpeg.git;a=commit;h=b4eb1f29ebddd60c41a2eb39f5af701e38e0d3fd)
             # We could switch to the following code if we are able to detect version properly
@@ -286,6 +292,7 @@ class FFmpegFD(ExternalFD):
 
 class AVconvFD(FFmpegFD):
     pass
+
 
 _BY_NAME = dict(
     (klass.get_basename(), klass)

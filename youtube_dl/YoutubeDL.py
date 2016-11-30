@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 from __future__ import absolute_import, unicode_literals
 
@@ -131,6 +131,9 @@ class YoutubeDL(object):
     username:          Username for authentication purposes.
     password:          Password for authentication purposes.
     videopassword:     Password for accessing a video.
+    ap_mso:            Adobe Pass multiple-system operator identifier.
+    ap_username:       Multiple-system operator account username.
+    ap_password:       Multiple-system operator account password.
     usenetrc:          Use netrc for authentication instead.
     verbose:           Print additional info to stdout.
     quiet:             Do not print messages to stdout.
@@ -1256,8 +1259,10 @@ class YoutubeDL(object):
                 info_dict['thumbnails'] = thumbnails = [{'url': thumbnail}]
         if thumbnails:
             thumbnails.sort(key=lambda t: (
-                t.get('preference'), t.get('width'), t.get('height'),
-                t.get('id'), t.get('url')))
+                t.get('preference') if t.get('preference') is not None else -1,
+                t.get('width') if t.get('width') is not None else -1,
+                t.get('height') if t.get('height') is not None else -1,
+                t.get('id') if t.get('id') is not None else '', t.get('url')))
             for i, t in enumerate(thumbnails):
                 t['url'] = sanitize_url(t['url'])
                 if t.get('width') and t.get('height'):
@@ -1299,7 +1304,7 @@ class YoutubeDL(object):
                 for subtitle_format in subtitle:
                     if subtitle_format.get('url'):
                         subtitle_format['url'] = sanitize_url(subtitle_format['url'])
-                    if 'ext' not in subtitle_format:
+                    if subtitle_format.get('ext') is None:
                         subtitle_format['ext'] = determine_ext(subtitle_format['url']).lower()
 
         if self.params.get('listsubtitles', False):
@@ -1354,7 +1359,7 @@ class YoutubeDL(object):
                     note=' ({0})'.format(format['format_note']) if format.get('format_note') is not None else '',
                 )
             # Automatically determine file extension if missing
-            if 'ext' not in format:
+            if format.get('ext') is None:
                 format['ext'] = determine_ext(format['url']).lower()
             # Automatically determine protocol if missing (useful for format
             # selection purposes)
@@ -1653,7 +1658,7 @@ class YoutubeDL(object):
                         video_ext, audio_ext = audio.get('ext'), video.get('ext')
                         if video_ext and audio_ext:
                             COMPATIBLE_EXTS = (
-                                ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v'),
+                                ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma'),
                                 ('webm')
                             )
                             for exts in COMPATIBLE_EXTS:

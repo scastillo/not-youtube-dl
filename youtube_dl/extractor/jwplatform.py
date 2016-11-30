@@ -9,6 +9,7 @@ from ..utils import (
     determine_ext,
     float_or_none,
     int_or_none,
+    js_to_json,
     mimetype2ext,
 )
 
@@ -19,24 +20,32 @@ class JWPlatformBaseIE(InfoExtractor):
         # TODO: Merge this with JWPlayer-related codes in generic.py
 
         mobj = re.search(
-            'jwplayer\((?P<quote>[\'"])[^\'" ]+(?P=quote)\)\.setup\((?P<options>[^)]+)\)',
+            r'jwplayer\((?P<quote>[\'"])[^\'" ]+(?P=quote)\)\.setup\s*\((?P<options>[^)]+)\)',
             webpage)
         if mobj:
             return mobj.group('options')
 
     def _extract_jwplayer_data(self, webpage, video_id, *args, **kwargs):
         jwplayer_data = self._parse_json(
-            self._find_jwplayer_data(webpage), video_id)
+            self._find_jwplayer_data(webpage), video_id,
+            transform_source=js_to_json)
         return self._parse_jwplayer_data(
             jwplayer_data, video_id, *args, **kwargs)
 
-    def _parse_jwplayer_data(self, jwplayer_data, video_id=None, require_title=True, m3u8_id=None, rtmp_params=None, base_url=None):
+    def _parse_jwplayer_data(self, jwplayer_data, video_id=None, require_title=True,
+                             m3u8_id=None, mpd_id=None, rtmp_params=None, base_url=None):
         # JWPlayer backward compatibility: flattened playlists
         # https://github.com/jwplayer/jwplayer/blob/v7.4.3/src/js/api/config.js#L81-L96
         if 'playlist' not in jwplayer_data:
             jwplayer_data = {'playlist': [jwplayer_data]}
 
         entries = []
+
+        # JWPlayer backward compatibility: single playlist item
+        # https://github.com/jwplayer/jwplayer/blob/v7.7.0/src/js/playlist/playlist.js#L10
+        if not isinstance(jwplayer_data['playlist'], list):
+            jwplayer_data['playlist'] = [jwplayer_data['playlist']]
+
         for video_data in jwplayer_data['playlist']:
             # JWPlayer backward compatibility: flattened sources
             # https://github.com/jwplayer/jwplayer/blob/v7.4.3/src/js/playlist/item.js#L29-L35
@@ -55,6 +64,9 @@ class JWPlatformBaseIE(InfoExtractor):
                 if source_type == 'hls' or ext == 'm3u8':
                     formats.extend(self._extract_m3u8_formats(
                         source_url, this_video_id, 'mp4', 'm3u8_native', m3u8_id=m3u8_id, fatal=False))
+                elif ext == 'mpd':
+                    formats.extend(self._extract_mpd_formats(
+                        source_url, this_video_id, mpd_id=mpd_id, fatal=False))
                 # https://github.com/jwplayer/jwplayer/blob/master/src/js/providers/default.js#L67
                 elif source_type.startswith('audio') or ext in ('oga', 'aac', 'mp3', 'mpeg', 'vorbis'):
                     formats.append({
@@ -63,10 +75,17 @@ class JWPlatformBaseIE(InfoExtractor):
                         'ext': ext,
                     })
                 else:
+                    height = int_or_none(source.get('height'))
+                    if height is None:
+                        # Often no height is provided but there is a label in
+                        # format like 1080p.
+                        height = int_or_none(self._search_regex(
+                            r'^(\d{3,})[pP]$', source.get('label') or '',
+                            'height', default=None))
                     a_format = {
                         'url': source_url,
                         'width': int_or_none(source.get('width')),
-                        'height': int_or_none(source.get('height')),
+                        'height': height,
                         'ext': ext,
                     }
                     if source_url.startswith('rtmp'):
