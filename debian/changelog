@@ -19,7 +19,7 @@ youtube-dl (2016.12.01-1) unstable; urgency=medium
   [ Rogério Brito ]
   * New upstream version 2016.12.01 (Closes: #753309, #781180, #841156, #840839)
   * debian/watch:
-    + Reenable signature checking.
+    + Re-enable signature checking.
   * debian/control:
     + Remove mplayer2 from recommends. (Closes: #841187)
     + Rerun wrap-and-sort.
