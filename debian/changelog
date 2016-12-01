@@ -1,6 +1,4 @@
-youtube-dl (2016.12.01-1~1.gbp47d80e) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @47d80ec0b18245caeb97018d4c1af18d0b5b972b **
+youtube-dl (2016.12.01-1) unstable; urgency=medium
 
   [ Rogério Brito ]
   * Revert "debian/watch: Add back pgpsigurlmangle."
@@ -8,18 +6,25 @@ youtube-dl (2016.12.01-1~1.gbp47d80e) UNRELEASED; urgency=medium
   * debian/patches: Remove unneeded patches.
 
   [ Carlos Maddela ]
-  * Install support files via debhelper instead of setup.py.
   * Tidy up cleanup rule and keep lintian happy.
   * Rebuild with only Python 3 support. (Closes: #723990)
   * Update Standards-Version to 3.9.8 (no changes required).
-  * Stop libav compatibility links from being considered as genuine.
-    (Closes: #798936)
   * Add support for zsh completion. (Closes: #816412)
+  * debian/patches:
+    + skip_support_file_installation.patch: Install support files via
+      debhelper instead of setup.py.
+    + fix_libav_compat_outdated.patch: Stop libav compatibility links from
+      being considered as genuine. (Closes: #798936)
 
   [ Rogério Brito ]
-  * New upstream version 2016.12.01
+  * New upstream version 2016.12.01 (Closes: #753309, #781180, #841156, #840839)
+  * debian/watch:
+    + Reenable signature checking.
+  * debian/control:
+    + Remove mplayer2 from recommends. (Closes: #841187)
+    + Rerun wrap-and-sort.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Aug 2016 10:25:56 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 01 Dec 2016 01:18:00 -0200
 
 youtube-dl (2016.06.25-2) unstable; urgency=medium
 
