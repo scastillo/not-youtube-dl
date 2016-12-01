@@ -20,11 +20,12 @@ Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/youtube-dl.git
 
 Package: youtube-dl
 Architecture: all
-Pre-Depends: dpkg (>= 1.15.7.2)
+Pre-Depends:
+ dpkg (>= 1.15.7.2)
 Depends:
  python3-pkg-resources,
  ${misc:Depends},
- ${python3:Depends},
+ ${python3:Depends}
 Recommends:
  aria2 | wget | curl,
  ca-certificates,
