@@ -1,2 +1,3 @@
 skip_support_file_installation.patch
 fix_libav_compat_outdated.patch
+fix_youtube_extraction.patch
