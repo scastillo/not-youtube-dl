@@ -1,3 +1,13 @@
+youtube-dl (2016.12.01-2~1.gbpaca839) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @aca8393b9aaf0ce346e51be5d77bd5e8fdcf621a **
+
+  * debian/patches: Add patch from upstream to fix extraction from youtube.
+    (Closes: #850893, #851157)
+  * debian/upstream/signing-key.asc: Add keys for both upstream "releasers".
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 12 Jan 2017 14:04:00 -0200
+
 youtube-dl (2016.12.01-1) unstable; urgency=medium
 
   [ Rogério Brito ]
