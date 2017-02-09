@@ -33,7 +33,9 @@ _x = lambda p: xpath_with_ns(p, {'smil': default_ns})
 
 class ThePlatformBaseIE(OnceIE):
     def _extract_theplatform_smil(self, smil_url, video_id, note='Downloading SMIL data'):
-        meta = self._download_xml(smil_url, video_id, note=note, query={'format': 'SMIL'})
+        meta = self._download_xml(
+            smil_url, video_id, note=note, query={'format': 'SMIL'},
+            headers=self.geo_verification_headers())
         error_element = find_xpath_attr(meta, _x('.//smil:ref'), 'src')
         if error_element is not None and error_element.attrib['src'].startswith(
                 'http://link.theplatform.com/s/errorFiles/Unavailable.'):
@@ -154,7 +156,7 @@ class ThePlatformIE(ThePlatformBaseIE, AdobePassIE):
             'title': 'iPhone Siri’s sassy response to a math question has people talking',
             'description': 'md5:a565d1deadd5086f3331d57298ec6333',
             'duration': 83.0,
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'timestamp': 1435752600,
             'upload_date': '20150701',
             'uploader': 'NBCU-NEWS',
@@ -295,7 +297,7 @@ class ThePlatformFeedIE(ThePlatformBaseIE):
             'ext': 'mp4',
             'title': 'The Biden factor: will Joe run in 2016?',
             'description': 'Could Vice President Joe Biden be preparing a 2016 campaign? Mark Halperin and Sam Stein weigh in.',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'upload_date': '20140208',
             'timestamp': 1391824260,
             'duration': 467.0,

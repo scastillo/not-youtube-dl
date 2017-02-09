@@ -142,7 +142,7 @@ class CrunchyrollIE(CrunchyrollBaseIE):
             'ext': 'flv',
             'title': 'Culture Japan Episode 1 – Rebuilding Japan after the 3.11',
             'description': 'md5:2fbc01f90b87e8e9137296f37b461c12',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': 'Danny Choo Network',
             'upload_date': '20120213',
         },
@@ -158,9 +158,28 @@ class CrunchyrollIE(CrunchyrollBaseIE):
             'ext': 'mp4',
             'title': 'Re:ZERO -Starting Life in Another World- Episode 5 – The Morning of Our Promise Is Still Distant',
             'description': 'md5:97664de1ab24bbf77a9c01918cb7dca9',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': 'TV TOKYO',
             'upload_date': '20160508',
+        },
+        'params': {
+            # m3u8 download
+            'skip_download': True,
+        },
+    }, {
+        'url': 'http://www.crunchyroll.com/konosuba-gods-blessing-on-this-wonderful-world/episode-1-give-me-deliverance-from-this-judicial-injustice-727589',
+        'info_dict': {
+            'id': '727589',
+            'ext': 'mp4',
+            'title': "KONOSUBA -God's blessing on this wonderful world! 2 Episode 1 – Give Me Deliverance from this Judicial Injustice!",
+            'description': 'md5:cbcf05e528124b0f3a0a419fc805ea7d',
+            'thumbnail': r're:^https?://.*\.jpg$',
+            'uploader': 'Kadokawa Pictures Inc.',
+            'upload_date': '20170118',
+            'series': "KONOSUBA -God's blessing on this wonderful world!",
+            'season_number': 2,
+            'episode': 'Give Me Deliverance from this Judicial Injustice!',
+            'episode_number': 1,
         },
         'params': {
             # m3u8 download
@@ -236,8 +255,7 @@ class CrunchyrollIE(CrunchyrollBaseIE):
         output += 'WrapStyle: %s\n' % sub_root.attrib['wrap_style']
         output += 'PlayResX: %s\n' % sub_root.attrib['play_res_x']
         output += 'PlayResY: %s\n' % sub_root.attrib['play_res_y']
-        output += """ScaledBorderAndShadow: no
-
+        output += """
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 """
@@ -439,6 +457,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
         subtitles = self.extract_subtitles(video_id, webpage)
 
+        # webpage provide more accurate data than series_title from XML
+        series = self._html_search_regex(
+            r'id=["\']showmedia_about_episode_num[^>]+>\s*<a[^>]+>([^<]+)',
+            webpage, 'series', default=xpath_text(metadata, 'series_title'))
+
+        episode = xpath_text(metadata, 'episode_title')
+        episode_number = int_or_none(xpath_text(metadata, 'episode_number'))
+
+        season_number = int_or_none(self._search_regex(
+            r'(?s)<h4[^>]+id=["\']showmedia_about_episode_num[^>]+>.+?</h4>\s*<h4>\s*Season (\d+)',
+            webpage, 'season number', default=None))
+
         return {
             'id': video_id,
             'title': video_title,
@@ -446,9 +476,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             'thumbnail': xpath_text(metadata, 'episode_image_url'),
             'uploader': video_uploader,
             'upload_date': video_upload_date,
-            'series': xpath_text(metadata, 'series_title'),
-            'episode': xpath_text(metadata, 'episode_title'),
-            'episode_number': int_or_none(xpath_text(metadata, 'episode_number')),
+            'series': series,
+            'season_number': season_number,
+            'episode': episode,
+            'episode_number': episode_number,
             'subtitles': subtitles,
             'formats': formats,
         }

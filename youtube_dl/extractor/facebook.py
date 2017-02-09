@@ -12,14 +12,16 @@ from ..compat import (
     compat_urllib_parse_unquote_plus,
 )
 from ..utils import (
+    clean_html,
     error_to_compat_str,
     ExtractorError,
+    get_element_by_id,
     int_or_none,
+    js_to_json,
     limit_length,
     sanitized_Request,
+    try_get,
     urlencode_postdata,
-    get_element_by_id,
-    clean_html,
 )
 
 
@@ -27,7 +29,7 @@ class FacebookIE(InfoExtractor):
     _VALID_URL = r'''(?x)
                 (?:
                     https?://
-                        (?:[\w-]+\.)?facebook\.com/
+                        (?:[\w-]+\.)?(?:facebook\.com|facebookcorewwwi\.onion)/
                         (?:[^#]*?\#!/)?
                         (?:
                             (?:
@@ -71,7 +73,7 @@ class FacebookIE(InfoExtractor):
         'info_dict': {
             'id': '274175099429670',
             'ext': 'mp4',
-            'title': 'Facebook video #274175099429670',
+            'title': 'Asif Nawab Butt posted a video to his Timeline.',
             'uploader': 'Asif Nawab Butt',
             'upload_date': '20140506',
             'timestamp': 1399398998,
@@ -149,6 +151,9 @@ class FacebookIE(InfoExtractor):
         'only_matching': True,
     }, {
         'url': 'https://zh-hk.facebook.com/peoplespower/videos/1135894589806027/',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.facebookcorewwwi.onion/video.php?v=274175099429670',
         'only_matching': True,
     }]
 
@@ -240,12 +245,30 @@ class FacebookIE(InfoExtractor):
 
         video_data = None
 
+        def extract_video_data(instances):
+            for item in instances:
+                if item[1][0] == 'VideoConfig':
+                    video_item = item[2][0]
+                    if video_item.get('video_id') == video_id:
+                        return video_item['videoData']
+
         server_js_data = self._parse_json(self._search_regex(
-            r'handleServerJS\(({.+})(?:\);|,")', webpage, 'server js data', default='{}'), video_id)
-        for item in server_js_data.get('instances', []):
-            if item[1][0] == 'VideoConfig':
-                video_data = item[2][0]['videoData']
-                break
+            r'handleServerJS\(({.+})(?:\);|,")', webpage,
+            'server js data', default='{}'), video_id, fatal=False)
+
+        if server_js_data:
+            video_data = extract_video_data(server_js_data.get('instances', []))
+
+        if not video_data:
+            server_js_data = self._parse_json(
+                self._search_regex(
+                    r'bigPipe\.onPageletArrive\(({.+?})\)\s*;\s*}\s*\)\s*,\s*["\']onPageletArrive\s+stream_pagelet',
+                    webpage, 'js data', default='{}'),
+                video_id, transform_source=js_to_json, fatal=False)
+            if server_js_data:
+                video_data = extract_video_data(try_get(
+                    server_js_data, lambda x: x['jsmods']['instances'],
+                    list) or [])
 
         if not video_data:
             if not fatal_if_no_video:
@@ -255,6 +278,8 @@ class FacebookIE(InfoExtractor):
                 raise ExtractorError(
                     'The video is not available, Facebook said: "%s"' % m_msg.group(1),
                     expected=True)
+            elif '>You must log in to continue' in webpage:
+                self.raise_login_required()
             else:
                 raise ExtractorError('Cannot parse data')
 
@@ -293,10 +318,16 @@ class FacebookIE(InfoExtractor):
             video_title = self._html_search_regex(
                 r'(?s)<span class="fbPhotosPhotoCaption".*?id="fbPhotoPageCaption"><span class="hasCaption">(.*?)</span>',
                 webpage, 'alternative title', default=None)
-            video_title = limit_length(video_title, 80)
         if not video_title:
+            video_title = self._html_search_meta(
+                'description', webpage, 'title')
+        if video_title:
+            video_title = limit_length(video_title, 80)
+        else:
             video_title = 'Facebook video #%s' % video_id
-        uploader = clean_html(get_element_by_id('fbPhotoPageAuthorName', webpage))
+        uploader = clean_html(get_element_by_id(
+            'fbPhotoPageAuthorName', webpage)) or self._search_regex(
+            r'ownerName\s*:\s*"([^"]+)"', webpage, 'uploader', fatal=False)
         timestamp = int_or_none(self._search_regex(
             r'<abbr[^>]+data-utime=["\'](\d+)', webpage,
             'timestamp', default=None))
