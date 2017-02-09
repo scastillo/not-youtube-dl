@@ -29,7 +29,7 @@ Windows users can [download an .exe file](https://yt-dl.org/latest/youtube-dl.ex
 
 You can also use pip:
 
-    sudo pip install --upgrade youtube-dl
+    sudo -H pip install --upgrade youtube-dl
     
 This command will update youtube-dl if you have already installed it. See the [pypi page](https://pypi.python.org/pypi/youtube_dl) for more information.
 
@@ -44,11 +44,7 @@ Or with [MacPorts](https://www.macports.org/):
 Alternatively, refer to the [developer instructions](#developer-instructions) for how to check out and work with the git repository. For further options, including PGP signatures, see the [youtube-dl Download Page](https://rg3.github.io/youtube-dl/download.html).
 
 # DESCRIPTION
-**youtube-dl** is a command-line program to download videos from
-YouTube.com and a few more sites. It requires the Python interpreter, version
-2.6, 2.7, or 3.2+, and it is not platform specific. It should work on
-your Unix box, on Windows or on Mac OS X. It is released to the public domain,
-which means you can modify it, redistribute it or use it however you like.
+**youtube-dl** is a command-line program to download videos from YouTube.com and a few more sites. It requires the Python interpreter, version 2.6, 2.7, or 3.2+, and it is not platform specific. It should work on your Unix box, on Windows or on Mac OS X. It is released to the public domain, which means you can modify it, redistribute it or use it however you like.
 
     youtube-dl [OPTIONS] URL [URL...]
 
@@ -84,13 +80,14 @@ which means you can modify it, redistribute it or use it however you like.
                                      configuration in ~/.config/youtube-
                                      dl/config (%APPDATA%/youtube-dl/config.txt
                                      on Windows)
+    --config-location PATH           Location of the configuration file; either
+                                     the path to the config or its containing
+                                     directory.
     --flat-playlist                  Do not extract the videos of a playlist,
                                      only list them.
     --mark-watched                   Mark videos watched (YouTube only)
     --no-mark-watched                Do not mark videos watched (YouTube only)
     --no-color                       Do not emit color codes in output
-    --abort-on-unavailable-fragment  Abort downloading when some fragment is not
-                                     available
 
 ## Network Options:
     --proxy URL                      Use the specified HTTP/HTTPS/SOCKS proxy.
@@ -100,16 +97,13 @@ which means you can modify it, redistribute it or use it however you like.
                                      string (--proxy "") for direct connection
     --socket-timeout SECONDS         Time to wait before giving up, in seconds
     --source-address IP              Client-side IP address to bind to
-                                     (experimental)
     -4, --force-ipv4                 Make all connections via IPv4
-                                     (experimental)
     -6, --force-ipv6                 Make all connections via IPv6
-                                     (experimental)
     --geo-verification-proxy URL     Use this proxy to verify the IP address for
                                      some geo-restricted sites. The default
                                      proxy specified by --proxy (or none, if the
                                      options is not present) is used for the
-                                     actual downloading. (experimental)
+                                     actual downloading.
 
 ## Video Selection:
     --playlist-start NUMBER          Playlist video to start at (default is 1)
@@ -140,23 +134,23 @@ which means you can modify it, redistribute it or use it however you like.
                                      COUNT views
     --max-views COUNT                Do not download any videos with more than
                                      COUNT views
-    --match-filter FILTER            Generic video filter (experimental).
-                                     Specify any key (see help for -o for a list
-                                     of available keys) to match if the key is
-                                     present, !key to check if the key is not
-                                     present,key > NUMBER (like "comment_count >
-                                     12", also works with >=, <, <=, !=, =) to
-                                     compare against a number, and & to require
-                                     multiple matches. Values which are not
-                                     known are excluded unless you put a
-                                     question mark (?) after the operator.For
-                                     example, to only match videos that have
-                                     been liked more than 100 times and disliked
-                                     less than 50 times (or the dislike
-                                     functionality is not available at the given
-                                     service), but who also have a description,
-                                     use --match-filter "like_count > 100 &
-                                     dislike_count <? 50 & description" .
+    --match-filter FILTER            Generic video filter. Specify any key (see
+                                     help for -o for a list of available keys)
+                                     to match if the key is present, !key to
+                                     check if the key is not present,key >
+                                     NUMBER (like "comment_count > 12", also
+                                     works with >=, <, <=, !=, =) to compare
+                                     against a number, and & to require multiple
+                                     matches. Values which are not known are
+                                     excluded unless you put a question mark (?)
+                                     after the operator.For example, to only
+                                     match videos that have been liked more than
+                                     100 times and disliked less than 50 times
+                                     (or the dislike functionality is not
+                                     available at the given service), but who
+                                     also have a description, use --match-filter
+                                     "like_count > 100 & dislike_count <? 50 &
+                                     description" .
     --no-playlist                    Download only the video, if the URL refers
                                      to a video and a playlist.
     --yes-playlist                   Download the playlist, if the URL refers to
@@ -179,6 +173,8 @@ which means you can modify it, redistribute it or use it however you like.
                                      only)
     --skip-unavailable-fragments     Skip unavailable fragments (DASH and
                                      hlsnative only)
+    --abort-on-unavailable-fragment  Abort downloading when some fragment is not
+                                     available
     --buffer-size SIZE               Size of download buffer (e.g. 1024 or 16K)
                                      (default is 1024)
     --no-resize-buffer               Do not automatically adjust the buffer
@@ -186,8 +182,9 @@ which means you can modify it, redistribute it or use it however you like.
                                      automatically resized from an initial value
                                      of SIZE.
     --playlist-reverse               Download playlist videos in reverse order
+    --playlist-random                Download playlist videos in random order
     --xattr-set-filesize             Set file xattribute ytdl.filesize with
-                                     expected filesize (experimental)
+                                     expected file size (experimental)
     --hls-prefer-native              Use the native HLS downloader instead of
                                      ffmpeg
     --hls-prefer-ffmpeg              Use ffmpeg instead of the native HLS
@@ -211,7 +208,9 @@ which means you can modify it, redistribute it or use it however you like.
     --autonumber-size NUMBER         Specify the number of digits in
                                      %(autonumber)s when it is present in output
                                      filename template or --auto-number option
-                                     is given
+                                     is given (default is 5)
+    --autonumber-start NUMBER        Specify the start value for %(autonumber)s
+                                     (default is 1)
     --restrict-filenames             Restrict filenames to only ASCII
                                      characters, and avoid "&" and spaces in
                                      filenames
@@ -354,7 +353,7 @@ which means you can modify it, redistribute it or use it however you like.
     -u, --username USERNAME          Login with this account ID
     -p, --password PASSWORD          Account password. If this option is left
                                      out, youtube-dl will ask interactively.
-    -2, --twofactor TWOFACTOR        Two-factor auth code
+    -2, --twofactor TWOFACTOR        Two-factor authentication code
     -n, --netrc                      Use .netrc authentication data
     --video-password PASSWORD        Video password (vimeo, smotri, youku)
 
@@ -375,7 +374,7 @@ which means you can modify it, redistribute it or use it however you like.
                                      avprobe)
     --audio-format FORMAT            Specify audio format: "best", "aac",
                                      "vorbis", "mp3", "m4a", "opus", or "wav";
-                                     "best" by default
+                                     "best" by default; No effect without -x
     --audio-quality QUALITY          Specify ffmpeg/avconv audio quality, insert
                                      a value between 0 (better) and 9 (worse)
                                      for VBR or a specific bitrate like 128K
@@ -446,6 +445,8 @@ For example, with the following configuration file youtube-dl will always extrac
 Note that options in configuration file are just the same options aka switches used in regular command line calls thus there **must be no whitespace** after `-` or `--`, e.g. `-o` or `--proxy` but not `- o` or `-- proxy`.
 
 You can use `--ignore-config` if you want to disable the configuration file for a particular youtube-dl run.
+
+You can also use `--config-location` if you want to use custom configuration file for a particular youtube-dl run.
 
 ### Authentication with `.netrc` file
 
@@ -638,7 +639,7 @@ Also filtering work for comparisons `=` (equals), `!=` (not equals), `^=` (begin
  - `acodec`: Name of the audio codec in use
  - `vcodec`: Name of the video codec in use
  - `container`: Name of the container format
- - `protocol`: The protocol that will be used for the actual download, lower-case. `http`, `https`, `rtsp`, `rtmp`, `rtmpe`, `m3u8`, or `m3u8_native`
+ - `protocol`: The protocol that will be used for the actual download, lower-case (`http`, `https`, `rtsp`, `rtmp`, `rtmpe`, `mms`, `f4m`, `ism`, `m3u8`, or `m3u8_native`)
  - `format_id`: A short description of the format
 
 Note that none of the aforementioned meta fields are guaranteed to be present since this solely depends on the metadata obtained by particular extractor, i.e. the metadata offered by the video hoster.
@@ -664,7 +665,7 @@ $ youtube-dl -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 # Download best format available but not better that 480p
 $ youtube-dl -f 'bestvideo[height<=480]+bestaudio/best[height<=480]'
 
-# Download best video only format but no bigger that 50 MB
+# Download best video only format but no bigger than 50 MB
 $ youtube-dl -f 'best[filesize<50M]'
 
 # Download best format available via direct link over HTTP/HTTPS protocol
@@ -744,7 +745,7 @@ Most people asking this question are not aware that youtube-dl now defaults to d
 
 ### I get HTTP error 402 when trying to download a video. What's this?
 
-Apparently YouTube requires you to pass a CAPTCHA test if you download too much. We're [considering to provide a way to let you solve the CAPTCHA](https://github.com/rg3/youtube-dl/issues/154), but at the moment, your best course of action is pointing a webbrowser to the youtube URL, solving the CAPTCHA, and restart youtube-dl.
+Apparently YouTube requires you to pass a CAPTCHA test if you download too much. We're [considering to provide a way to let you solve the CAPTCHA](https://github.com/rg3/youtube-dl/issues/154), but at the moment, your best course of action is pointing a web browser to the youtube URL, solving the CAPTCHA, and restart youtube-dl.
 
 ### Do I need any other programs?
 
@@ -756,7 +757,7 @@ Videos or video formats streamed via RTMP protocol can only be downloaded when [
 
 Once the video is fully downloaded, use any video player, such as [mpv](https://mpv.io/), [vlc](http://www.videolan.org/) or [mplayer](http://www.mplayerhq.hu/).
 
-### I extracted a video URL with `-g`, but it does not play on another machine / in my webbrowser.
+### I extracted a video URL with `-g`, but it does not play on another machine / in my web browser.
 
 It depends a lot on the service. In many cases, requests for the video (to download/play it) must come from the same IP address and with the same cookies and/or HTTP headers. Use the `--cookies` option to write the required cookies into a file, and advise your downloader to read cookies from that file. Some sites also require a common user agent to be used, use `--dump-user-agent` to see the one in use by youtube-dl. You can also get necessary cookies and HTTP headers from JSON output obtained with `--dump-json`.
 
@@ -840,7 +841,7 @@ Use the `--cookies` option, for example `--cookies /path/to/cookies/file.txt`.
 
 In order to extract cookies from browser use any conforming browser extension for exporting cookies. For example, [cookies.txt](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg) (for Chrome) or [Export Cookies](https://addons.mozilla.org/en-US/firefox/addon/export-cookies/) (for Firefox).
 
-Note that the cookies file must be in Mozilla/Netscape format and the first line of the cookies file must be either `# HTTP Cookie File` or `# Netscape HTTP Cookie File`. Make sure you have correct [newline format](https://en.wikipedia.org/wiki/Newline) in the cookies file and convert newlines if necessary to correspond with your OS, namely `CRLF` (`\r\n`) for Windows, `LF` (`\n`) for Linux and `CR` (`\r`) for Mac OS. `HTTP Error 400: Bad Request` when using `--cookies` is a good sign of invalid newline format.
+Note that the cookies file must be in Mozilla/Netscape format and the first line of the cookies file must be either `# HTTP Cookie File` or `# Netscape HTTP Cookie File`. Make sure you have correct [newline format](https://en.wikipedia.org/wiki/Newline) in the cookies file and convert newlines if necessary to correspond with your OS, namely `CRLF` (`\r\n`) for Windows and `LF` (`\n`) for Unix and Unix-like systems (Linux, Mac OS, etc.). `HTTP Error 400: Bad Request` when using `--cookies` is a good sign of invalid newline format.
 
 Passing cookies to youtube-dl is a good way to workaround login when a particular extractor does not implement it explicitly. Another use case is working around [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA) some websites require you to solve in particular cases in order to get access (e.g. YouTube, CloudFlare).
 
@@ -932,7 +933,7 @@ If you want to create a build of youtube-dl yourself, you'll need
 
 If you want to add support for a new site, first of all **make sure** this site is **not dedicated to [copyright infringement](README.md#can-you-add-support-for-this-anime-video-site-or-site-which-shows-current-movies-for-free)**. youtube-dl does **not support** such sites thus pull requests adding support for them **will be rejected**.
 
-After you have ensured this site is distributing it's content legally, you can follow this quick list (assuming your service is called `yourextractor`):
+After you have ensured this site is distributing its content legally, you can follow this quick list (assuming your service is called `yourextractor`):
 
 1. [Fork this repository](https://github.com/rg3/youtube-dl/fork)
 2. Check out the source code with:
@@ -962,7 +963,7 @@ After you have ensured this site is distributing it's content legally, you can f
                 'id': '42',
                 'ext': 'mp4',
                 'title': 'Video title goes here',
-                'thumbnail': 're:^https?://.*\.jpg$',
+                'thumbnail': r're:^https?://.*\.jpg$',
                 # TODO more properties, either as:
                 # * A value
                 # * MD5 checksum; start the string with md5:
@@ -1037,7 +1038,7 @@ Assume at this point `meta`'s layout is:
 }
 ```
 
-Assume you want to extract `summary` and put it into the resulting info dict as `description`. Since `description` is an optional metafield you should be ready that this key may be missing from the `meta` dict, so that you should extract it like:
+Assume you want to extract `summary` and put it into the resulting info dict as `description`. Since `description` is an optional meta field you should be ready that this key may be missing from the `meta` dict, so that you should extract it like:
 
 ```python
 description = meta.get('summary')  # correct
@@ -1149,7 +1150,7 @@ with youtube_dl.YoutubeDL(ydl_opts) as ydl:
     ydl.download(['http://www.youtube.com/watch?v=BaW_jenozKc'])
 ```
 
-Most likely, you'll want to use various options. For a list of options available, have a look at [`youtube_dl/YoutubeDL.py`](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/YoutubeDL.py#L128-L278). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
+Most likely, you'll want to use various options. For a list of options available, have a look at [`youtube_dl/YoutubeDL.py`](https://github.com/rg3/youtube-dl/blob/master/youtube_dl/YoutubeDL.py#L129-L279). For a start, if you want to intercept youtube-dl's output, set a `logger` object.
 
 Here's a more complete example of a program that outputs only errors (and a short message after the download is finished), and downloads/converts the video to an mp3 file:
 
@@ -1252,7 +1253,7 @@ We are then presented with a very complicated request when the original problem 
 
 Some of our users seem to think there is a limit of issues they can or should open. There is no limit of issues they can or should open. While it may seem appealing to be able to dump all your issues into one ticket, that means that someone who solves one of your issues cannot mark the issue as closed. Typically, reporting a bunch of issues leads to the ticket lingering since nobody wants to attack that behemoth, until someone mercifully splits the issue into multiple ones.
 
-In particular, every site support request issue should only pertain to services at one site (generally under a common domain, but always using the same backend technology). Do not request support for vimeo user videos, Whitehouse podcasts, and Google Plus pages in the same issue. Also, make sure that you don't post bug reports alongside feature requests. As a rule of thumb, a feature request does not include outputs of youtube-dl that are not immediately related to the feature at hand. Do not post reports of a network error alongside the request for a new video service.
+In particular, every site support request issue should only pertain to services at one site (generally under a common domain, but always using the same backend technology). Do not request support for vimeo user videos, White house podcasts, and Google Plus pages in the same issue. Also, make sure that you don't post bug reports alongside feature requests. As a rule of thumb, a feature request does not include outputs of youtube-dl that are not immediately related to the feature at hand. Do not post reports of a network error alongside the request for a new video service.
 
 ###  Is anyone going to need the feature?
 

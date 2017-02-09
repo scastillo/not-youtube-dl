@@ -18,7 +18,7 @@ from ..utils import (
 
 class DouyuTVIE(InfoExtractor):
     IE_DESC = '斗鱼'
-    _VALID_URL = r'https?://(?:www\.)?douyu(?:tv)?\.com/(?P<id>[A-Za-z0-9]+)'
+    _VALID_URL = r'https?://(?:www\.)?douyu(?:tv)?\.com/(?:[^/]+/)*(?P<id>[A-Za-z0-9]+)'
     _TESTS = [{
         'url': 'http://www.douyutv.com/iseven',
         'info_dict': {
@@ -26,8 +26,8 @@ class DouyuTVIE(InfoExtractor):
             'display_id': 'iseven',
             'ext': 'flv',
             'title': 're:^清晨醒脑！T-ara根本停不下来！ [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$',
-            'description': 're:.*m7show@163\.com.*',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'description': r're:.*m7show@163\.com.*',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': '7师傅',
             'is_live': True,
         },
@@ -42,7 +42,7 @@ class DouyuTVIE(InfoExtractor):
             'ext': 'flv',
             'title': 're:^小漠从零单排记！——CSOL2躲猫猫 [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$',
             'description': 'md5:746a2f7a253966a06755a912f0acc0d2',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': 'douyu小漠',
             'is_live': True,
         },
@@ -57,8 +57,8 @@ class DouyuTVIE(InfoExtractor):
             'display_id': '17732',
             'ext': 'flv',
             'title': 're:^清晨醒脑！T-ara根本停不下来！ [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$',
-            'description': 're:.*m7show@163\.com.*',
-            'thumbnail': 're:^https?://.*\.jpg$',
+            'description': r're:.*m7show@163\.com.*',
+            'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': '7师傅',
             'is_live': True,
         },
@@ -67,6 +67,10 @@ class DouyuTVIE(InfoExtractor):
         },
     }, {
         'url': 'http://www.douyu.com/xiaocang',
+        'only_matching': True,
+    }, {
+        # \"room_id\"
+        'url': 'http://www.douyu.com/t/lpl',
         'only_matching': True,
     }]
 
@@ -82,7 +86,7 @@ class DouyuTVIE(InfoExtractor):
         else:
             page = self._download_webpage(url, video_id)
             room_id = self._html_search_regex(
-                r'"room_id"\s*:\s*(\d+),', page, 'room id')
+                r'"room_id\\?"\s*:\s*(\d+),', page, 'room id')
 
         room = self._download_json(
             'http://m.douyu.com/html5/live?roomId=%s' % room_id, video_id,

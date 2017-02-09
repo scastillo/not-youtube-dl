@@ -179,6 +179,10 @@ def parseOpts(overrideArguments=None):
         'Do not read the user configuration in ~/.config/youtube-dl/config '
         '(%APPDATA%/youtube-dl/config.txt on Windows)')
     general.add_option(
+        '--config-location',
+        dest='config_location', metavar='PATH',
+        help='Location of the configuration file; either the path to the config or its containing directory.')
+    general.add_option(
         '--flat-playlist',
         action='store_const', dest='extract_flat', const='in_playlist',
         default=False,
@@ -212,23 +216,23 @@ def parseOpts(overrideArguments=None):
     network.add_option(
         '--source-address',
         metavar='IP', dest='source_address', default=None,
-        help='Client-side IP address to bind to (experimental)',
+        help='Client-side IP address to bind to',
     )
     network.add_option(
         '-4', '--force-ipv4',
         action='store_const', const='0.0.0.0', dest='source_address',
-        help='Make all connections via IPv4 (experimental)',
+        help='Make all connections via IPv4',
     )
     network.add_option(
         '-6', '--force-ipv6',
         action='store_const', const='::', dest='source_address',
-        help='Make all connections via IPv6 (experimental)',
+        help='Make all connections via IPv6',
     )
     network.add_option(
         '--geo-verification-proxy',
         dest='geo_verification_proxy', default=None, metavar='URL',
         help='Use this proxy to verify the IP address for some geo-restricted sites. '
-        'The default proxy specified by --proxy (or none, if the options is not present) is used for the actual downloading. (experimental)'
+        'The default proxy specified by --proxy (or none, if the options is not present) is used for the actual downloading.'
     )
     network.add_option(
         '--cn-verification-proxy',
@@ -293,7 +297,7 @@ def parseOpts(overrideArguments=None):
         '--match-filter',
         metavar='FILTER', dest='match_filter', default=None,
         help=(
-            'Generic video filter (experimental). '
+            'Generic video filter. '
             'Specify any key (see help for -o for a list of available keys) to'
             ' match if the key is present, '
             '!key to check if the key is not present,'
@@ -341,7 +345,7 @@ def parseOpts(overrideArguments=None):
     authentication.add_option(
         '-2', '--twofactor',
         dest='twofactor', metavar='TWOFACTOR',
-        help='Two-factor auth code')
+        help='Two-factor authentication code')
     authentication.add_option(
         '-n', '--netrc',
         action='store_true', dest='usenetrc', default=False,
@@ -446,7 +450,7 @@ def parseOpts(overrideArguments=None):
         '--skip-unavailable-fragments',
         action='store_true', dest='skip_unavailable_fragments', default=True,
         help='Skip unavailable fragments (DASH and hlsnative only)')
-    general.add_option(
+    downloader.add_option(
         '--abort-on-unavailable-fragment',
         action='store_false', dest='skip_unavailable_fragments',
         help='Abort downloading when some fragment is not available')
@@ -467,9 +471,13 @@ def parseOpts(overrideArguments=None):
         action='store_true',
         help='Download playlist videos in reverse order')
     downloader.add_option(
+        '--playlist-random',
+        action='store_true',
+        help='Download playlist videos in random order')
+    downloader.add_option(
         '--xattr-set-filesize',
         dest='xattr_set_filesize', action='store_true',
-        help='Set file xattribute ytdl.filesize with expected filesize (experimental)')
+        help='Set file xattribute ytdl.filesize with expected file size (experimental)')
     downloader.add_option(
         '--hls-prefer-native',
         dest='hls_prefer_native', action='store_true', default=None,
@@ -657,8 +665,12 @@ def parseOpts(overrideArguments=None):
         help=('Output filename template, see the "OUTPUT TEMPLATE" for all the info'))
     filesystem.add_option(
         '--autonumber-size',
-        dest='autonumber_size', metavar='NUMBER',
-        help='Specify the number of digits in %(autonumber)s when it is present in output filename template or --auto-number option is given')
+        dest='autonumber_size', metavar='NUMBER', default=5, type=int,
+        help='Specify the number of digits in %(autonumber)s when it is present in output filename template or --auto-number option is given (default is %default)')
+    filesystem.add_option(
+        '--autonumber-start',
+        dest='autonumber_start', metavar='NUMBER', default=1, type=int,
+        help='Specify the start value for %(autonumber)s (default is %default)')
     filesystem.add_option(
         '--restrict-filenames',
         action='store_true', dest='restrictfilenames', default=False,
@@ -747,7 +759,7 @@ def parseOpts(overrideArguments=None):
         help='Convert video files to audio-only files (requires ffmpeg or avconv and ffprobe or avprobe)')
     postproc.add_option(
         '--audio-format', metavar='FORMAT', dest='audioformat', default='best',
-        help='Specify audio format: "best", "aac", "vorbis", "mp3", "m4a", "opus", or "wav"; "%default" by default')
+        help='Specify audio format: "best", "aac", "vorbis", "mp3", "m4a", "opus", or "wav"; "%default" by default; No effect without -x')
     postproc.add_option(
         '--audio-quality', metavar='QUALITY',
         dest='audioquality', default='5',
@@ -845,22 +857,32 @@ def parseOpts(overrideArguments=None):
             return conf
 
         command_line_conf = compat_conf(sys.argv[1:])
+        opts, args = parser.parse_args(command_line_conf)
 
-        if '--ignore-config' in command_line_conf:
-            system_conf = []
-            user_conf = []
+        system_conf = user_conf = custom_conf = []
+
+        if '--config-location' in command_line_conf:
+            location = compat_expanduser(opts.config_location)
+            if os.path.isdir(location):
+                location = os.path.join(location, 'youtube-dl.conf')
+            if not os.path.exists(location):
+                parser.error('config-location %s does not exist.' % location)
+            custom_conf = _readOptions(location)
+        elif '--ignore-config' in command_line_conf:
+            pass
         else:
             system_conf = _readOptions('/etc/youtube-dl.conf')
-            if '--ignore-config' in system_conf:
-                user_conf = []
-            else:
+            if '--ignore-config' not in system_conf:
                 user_conf = _readUserConf()
-        argv = system_conf + user_conf + command_line_conf
 
+        argv = system_conf + user_conf + custom_conf + command_line_conf
         opts, args = parser.parse_args(argv)
         if opts.verbose:
-            write_string('[debug] System config: ' + repr(_hide_login_info(system_conf)) + '\n')
-            write_string('[debug] User config: ' + repr(_hide_login_info(user_conf)) + '\n')
-            write_string('[debug] Command-line args: ' + repr(_hide_login_info(command_line_conf)) + '\n')
+            for conf_label, conf in (
+                    ('System config', system_conf),
+                    ('User config', user_conf),
+                    ('Custom config', custom_conf),
+                    ('Command-line args', command_line_conf)):
+                write_string('[debug] %s: %s\n' % (conf_label, repr(_hide_login_info(conf))))
 
     return parser, opts, args

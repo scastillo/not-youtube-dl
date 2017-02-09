@@ -156,7 +156,12 @@ class PornHubIE(InfoExtractor):
         comment_count = self._extract_count(
             r'All Comments\s*<span>\(([\d,.]+)\)', webpage, 'comment')
 
-        video_urls = list(map(compat_urllib_parse_unquote, re.findall(r"player_quality_[0-9]{3}p\s*=\s*'([^']+)'", webpage)))
+        video_urls = []
+        for quote, video_url in re.findall(
+                r'player_quality_[0-9]{3,4}p\s*=\s*(["\'])(.+?)\1;', webpage):
+            video_urls.append(compat_urllib_parse_unquote(re.sub(
+                r'{0}\s*\+\s*{0}'.format(quote), '', video_url)))
+
         if webpage.find('"encrypted":true') != -1:
             password = compat_urllib_parse_unquote_plus(
                 self._search_regex(r'"video_title":"([^"]+)', webpage, 'password'))
@@ -229,7 +234,14 @@ class PornHubPlaylistBaseIE(InfoExtractor):
 
         webpage = self._download_webpage(url, playlist_id)
 
-        entries = self._extract_entries(webpage)
+        # Only process container div with main playlist content skipping
+        # drop-down menu that uses similar pattern for videos (see
+        # https://github.com/rg3/youtube-dl/issues/11594).
+        container = self._search_regex(
+            r'(?s)(<div[^>]+class=["\']container.+)', webpage,
+            'container', default=webpage)
+
+        entries = self._extract_entries(container)
 
         playlist = self._parse_json(
             self._search_regex(
@@ -243,12 +255,12 @@ class PornHubPlaylistBaseIE(InfoExtractor):
 class PornHubPlaylistIE(PornHubPlaylistBaseIE):
     _VALID_URL = r'https?://(?:www\.)?pornhub\.com/playlist/(?P<id>\d+)'
     _TESTS = [{
-        'url': 'http://www.pornhub.com/playlist/6201671',
+        'url': 'http://www.pornhub.com/playlist/4667351',
         'info_dict': {
-            'id': '6201671',
-            'title': 'P0p4',
+            'id': '4667351',
+            'title': 'Nataly Hot',
         },
-        'playlist_mincount': 35,
+        'playlist_mincount': 2,
     }]
 
 

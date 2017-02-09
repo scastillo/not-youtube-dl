@@ -59,14 +59,26 @@ class LimelightBaseIE(InfoExtractor):
                     format_id = 'rtmp'
                     if stream.get('videoBitRate'):
                         format_id += '-%d' % int_or_none(stream['videoBitRate'])
-                    http_url = 'http://cpl.delvenetworks.com/' + rtmp.group('playpath')[4:]
-                    urls.append(http_url)
-                    http_fmt = fmt.copy()
-                    http_fmt.update({
-                        'url': http_url,
-                        'format_id': format_id.replace('rtmp', 'http'),
-                    })
-                    formats.append(http_fmt)
+                    http_format_id = format_id.replace('rtmp', 'http')
+
+                    CDN_HOSTS = (
+                        ('delvenetworks.com', 'cpl.delvenetworks.com'),
+                        ('video.llnw.net', 's2.content.video.llnw.net'),
+                    )
+                    for cdn_host, http_host in CDN_HOSTS:
+                        if cdn_host not in rtmp.group('host').lower():
+                            continue
+                        http_url = 'http://%s/%s' % (http_host, rtmp.group('playpath')[4:])
+                        urls.append(http_url)
+                        if self._is_valid_url(http_url, video_id, http_format_id):
+                            http_fmt = fmt.copy()
+                            http_fmt.update({
+                                'url': http_url,
+                                'format_id': http_format_id,
+                            })
+                            formats.append(http_fmt)
+                            break
+
                     fmt.update({
                         'url': rtmp.group('url'),
                         'play_path': rtmp.group('playpath'),
@@ -164,7 +176,7 @@ class LimelightMediaIE(LimelightBaseIE):
             'ext': 'mp4',
             'title': 'HaP and the HB Prince Trailer',
             'description': 'md5:8005b944181778e313d95c1237ddb640',
-            'thumbnail': 're:^https?://.*\.jpeg$',
+            'thumbnail': r're:^https?://.*\.jpeg$',
             'duration': 144.23,
             'timestamp': 1244136834,
             'upload_date': '20090604',
@@ -181,7 +193,7 @@ class LimelightMediaIE(LimelightBaseIE):
             'id': 'a3e00274d4564ec4a9b29b9466432335',
             'ext': 'mp4',
             'title': '3Play Media Overview Video',
-            'thumbnail': 're:^https?://.*\.jpeg$',
+            'thumbnail': r're:^https?://.*\.jpeg$',
             'duration': 78.101,
             'timestamp': 1338929955,
             'upload_date': '20120605',

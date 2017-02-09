@@ -70,6 +70,7 @@ from youtube_dl.utils import (
     lowercase_escape,
     url_basename,
     base_url,
+    urljoin,
     urlencode_postdata,
     urshift,
     update_url_query,
@@ -294,6 +295,9 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(unified_strdate('27.02.2016 17:30'), '20160227')
         self.assertEqual(unified_strdate('UNKNOWN DATE FORMAT'), None)
         self.assertEqual(unified_strdate('Feb 7, 2016 at 6:35 pm'), '20160207')
+        self.assertEqual(unified_strdate('July 15th, 2013'), '20130715')
+        self.assertEqual(unified_strdate('September 1st, 2013'), '20130901')
+        self.assertEqual(unified_strdate('Sep 2nd, 2013'), '20130902')
 
     def test_unified_timestamps(self):
         self.assertEqual(unified_timestamp('December 21, 2010'), 1292889600)
@@ -445,6 +449,23 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(base_url('http://foo.de/bar/baz'), 'http://foo.de/bar/')
         self.assertEqual(base_url('http://foo.de/bar/baz?x=z/x/c'), 'http://foo.de/bar/')
 
+    def test_urljoin(self):
+        self.assertEqual(urljoin('http://foo.de/', '/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('//foo.de/', '/a/b/c.txt'), '//foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de/', 'a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de', '/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de', 'a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de/', 'http://foo.de/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de/', '//foo.de/a/b/c.txt'), '//foo.de/a/b/c.txt')
+        self.assertEqual(urljoin(None, 'http://foo.de/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin(None, '//foo.de/a/b/c.txt'), '//foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('', 'http://foo.de/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin(['foobar'], 'http://foo.de/a/b/c.txt'), 'http://foo.de/a/b/c.txt')
+        self.assertEqual(urljoin('http://foo.de/', None), None)
+        self.assertEqual(urljoin('http://foo.de/', ''), None)
+        self.assertEqual(urljoin('http://foo.de/', ['foobar']), None)
+        self.assertEqual(urljoin('http://foo.de/a/b/c.txt', '.././../d.txt'), 'http://foo.de/d.txt')
+
     def test_parse_age_limit(self):
         self.assertEqual(parse_age_limit(None), None)
         self.assertEqual(parse_age_limit(False), None)
@@ -489,6 +510,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_duration('1 hour 3 minutes'), 3780)
         self.assertEqual(parse_duration('87 Min.'), 5220)
         self.assertEqual(parse_duration('PT1H0.040S'), 3600.04)
+        self.assertEqual(parse_duration('PT00H03M30SZ'), 210)
 
     def test_fix_xml_ampersands(self):
         self.assertEqual(
@@ -763,11 +785,26 @@ class TestUtil(unittest.TestCase):
         on = js_to_json('["abc", "def",]')
         self.assertEqual(json.loads(on), ['abc', 'def'])
 
+        on = js_to_json('[/*comment\n*/"abc"/*comment\n*/,/*comment\n*/"def",/*comment\n*/]')
+        self.assertEqual(json.loads(on), ['abc', 'def'])
+
+        on = js_to_json('[//comment\n"abc" //comment\n,//comment\n"def",//comment\n]')
+        self.assertEqual(json.loads(on), ['abc', 'def'])
+
         on = js_to_json('{"abc": "def",}')
+        self.assertEqual(json.loads(on), {'abc': 'def'})
+
+        on = js_to_json('{/*comment\n*/"abc"/*comment\n*/:/*comment\n*/"def"/*comment\n*/,/*comment\n*/}')
         self.assertEqual(json.loads(on), {'abc': 'def'})
 
         on = js_to_json('{ 0: /* " \n */ ",]" , }')
         self.assertEqual(json.loads(on), {'0': ',]'})
+
+        on = js_to_json('{ /*comment\n*/0/*comment\n*/: /* " \n */ ",]" , }')
+        self.assertEqual(json.loads(on), {'0': ',]'})
+
+        on = js_to_json('{ 0: // comment\n1 }')
+        self.assertEqual(json.loads(on), {'0': 1})
 
         on = js_to_json(r'["<p>x<\/p>"]')
         self.assertEqual(json.loads(on), ['<p>x</p>'])
@@ -778,13 +815,25 @@ class TestUtil(unittest.TestCase):
         on = js_to_json("['a\\\nb']")
         self.assertEqual(json.loads(on), ['ab'])
 
+        on = js_to_json("/*comment\n*/[/*comment\n*/'a\\\nb'/*comment\n*/]/*comment\n*/")
+        self.assertEqual(json.loads(on), ['ab'])
+
         on = js_to_json('{0xff:0xff}')
+        self.assertEqual(json.loads(on), {'255': 255})
+
+        on = js_to_json('{/*comment\n*/0xff/*comment\n*/:/*comment\n*/0xff/*comment\n*/}')
         self.assertEqual(json.loads(on), {'255': 255})
 
         on = js_to_json('{077:077}')
         self.assertEqual(json.loads(on), {'63': 63})
 
+        on = js_to_json('{/*comment\n*/077/*comment\n*/:/*comment\n*/077/*comment\n*/}')
+        self.assertEqual(json.loads(on), {'63': 63})
+
         on = js_to_json('{42:42}')
+        self.assertEqual(json.loads(on), {'42': 42})
+
+        on = js_to_json('{/*comment\n*/42/*comment\n*/:/*comment\n*/42/*comment\n*/}')
         self.assertEqual(json.loads(on), {'42': 42})
 
     def test_extract_attributes(self):

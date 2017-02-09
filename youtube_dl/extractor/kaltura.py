@@ -107,7 +107,7 @@ class KalturaIE(InfoExtractor):
                         (?P<q1>['\"])wid(?P=q1)\s*:\s*
                         (?P<q2>['\"])_?(?P<partner_id>(?:(?!(?P=q2)).)+)(?P=q2),.*?
                         (?P<q3>['\"])entry_?[Ii]d(?P=q3)\s*:\s*
-                        (?P<q4>['\"])(?P<id>(?:(?!(?P=q4)).)+)(?P=q4),
+                        (?P<q4>['\"])(?P<id>(?:(?!(?P=q4)).)+)(?P=q4)(?:,|\s*\})
                 """, webpage) or
             re.search(
                 r'''(?xs)
@@ -266,6 +266,12 @@ class KalturaIE(InfoExtractor):
             # skip for now.
             if f.get('fileExt') == 'chun':
                 continue
+            if not f.get('fileExt'):
+                # QT indicates QuickTime; some videos have broken fileExt
+                if f.get('containerFormat') == 'qt':
+                    f['fileExt'] = 'mov'
+                else:
+                    f['fileExt'] = 'mp4'
             video_url = sign_url(
                 '%s/flavorId/%s' % (data_url, f['id']))
             # audio-only has no videoCodecId (e.g. kaltura:1926081:0_c03e1b5g
@@ -316,6 +322,6 @@ class KalturaIE(InfoExtractor):
             'thumbnail': info.get('thumbnailUrl'),
             'duration': info.get('duration'),
             'timestamp': info.get('createdAt'),
-            'uploader_id': info.get('userId'),
+            'uploader_id': info.get('userId') if info.get('userId') != 'None' else None,
             'view_count': info.get('plays'),
         }
