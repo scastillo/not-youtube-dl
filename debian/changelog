@@ -1,12 +1,14 @@
-youtube-dl (2016.12.01-2~1.gbpaca839) UNRELEASED; urgency=medium
+youtube-dl (2017.02.07-1~0.gbpb8d8e1) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @aca8393b9aaf0ce346e51be5d77bd5e8fdcf621a **
+  ** SNAPSHOT build @b8d8e13c1f9e4d3cdd7d41c5c9d711a36dd5f9c3 **
 
-  * debian/patches: Add patch from upstream to fix extraction from youtube.
-    (Closes: #850893, #851157)
-  * debian/upstream/signing-key.asc: Add keys for both upstream "releasers".
+  * New upstream version 2017.02.07 (Closes: #850893, #851157, #854314, #853120)
+  * debian/upstream/signing-key.asc:
+    + Add keys for both upstream "releasers". (Addresses: #846495)
+  * debian/watch: Simplify the watch file.
+    Thanks to "user" for the warning. (Closes: #846495)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 12 Jan 2017 14:04:00 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Feb 2017 05:12:40 -0200
 
 youtube-dl (2016.12.01-1) unstable; urgency=medium
 
