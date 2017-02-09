@@ -1,6 +1,4 @@
-youtube-dl (2017.02.07-1~1.gbpd2632e) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @d2632ebbe0759622d4ab7aff134421194974b394 **
+youtube-dl (2017.02.07-1) unstable; urgency=medium
 
   * New upstream version 2017.02.07
     (Closes: #850893, #851157, #854314, #853120)
@@ -8,8 +6,11 @@ youtube-dl (2017.02.07-1~1.gbpd2632e) UNRELEASED; urgency=medium
     + Add keys for both upstream "releasers". (Addresses: #846495)
   * debian/watch: Simplify the watch file and make it work.
     Thanks to "user" for the warning. (Closes: #846495)
+  * debian/control:
+    + Update list of supported sites. People keep complaining that it is not
+      up-to-date.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Feb 2017 05:30:58 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Feb 2017 05:39:37 -0200
 
 youtube-dl (2016.12.01-1) unstable; urgency=medium
 
