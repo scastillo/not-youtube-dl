@@ -1,14 +1,15 @@
-youtube-dl (2017.02.07-1~0.gbpb8d8e1) UNRELEASED; urgency=medium
+youtube-dl (2017.02.07-1~1.gbpd2632e) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @b8d8e13c1f9e4d3cdd7d41c5c9d711a36dd5f9c3 **
+  ** SNAPSHOT build @d2632ebbe0759622d4ab7aff134421194974b394 **
 
-  * New upstream version 2017.02.07 (Closes: #850893, #851157, #854314, #853120)
+  * New upstream version 2017.02.07
+    (Closes: #850893, #851157, #854314, #853120)
   * debian/upstream/signing-key.asc:
     + Add keys for both upstream "releasers". (Addresses: #846495)
-  * debian/watch: Simplify the watch file.
+  * debian/watch: Simplify the watch file and make it work.
     Thanks to "user" for the warning. (Closes: #846495)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Feb 2017 05:12:40 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Feb 2017 05:30:58 -0200
 
 youtube-dl (2016.12.01-1) unstable; urgency=medium
 
