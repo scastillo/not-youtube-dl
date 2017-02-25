@@ -72,20 +72,25 @@ class OpenloadIE(InfoExtractor):
             raise ExtractorError('File not found', expected=True)
 
         ol_id = self._search_regex(
-            '<span[^>]+id="[^"]+"[^>]*>([0-9]+)</span>',
+            '<span[^>]+id="[^"]+"[^>]*>([0-9A-Za-z]+)</span>',
             webpage, 'openload ID')
 
-        first_three_chars = int(float(ol_id[0:][:3]))
-        fifth_char = int(float(ol_id[3:5]))
-        urlcode = ''
-        num = 5
+        first_char = int(ol_id[0])
+        urlcode = []
+        num = 1
 
         while num < len(ol_id):
-            urlcode += compat_chr(int(float(ol_id[num:][:3])) +
-                                  first_three_chars - fifth_char * int(float(ol_id[num + 3:][:2])))
+            i = ord(ol_id[num])
+            key = 0
+            if i <= 90:
+                key = i - 65
+            elif i >= 97:
+                key = 25 + i - 97
+            urlcode.append((key, compat_chr(int(ol_id[num + 2:num + 5]) // int(ol_id[num + 1]) - first_char)))
             num += 5
 
-        video_url = 'https://openload.co/stream/' + urlcode
+        video_url = 'https://openload.co/stream/' + ''.join(
+            [value for _, value in sorted(urlcode, key=lambda x: x[0])])
 
         title = self._og_search_title(webpage, default=None) or self._search_regex(
             r'<span[^>]+class=["\']title["\'][^>]*>([^<]+)', webpage,

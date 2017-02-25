@@ -22,6 +22,9 @@ complete --command youtube-dl --long-option force-ipv4 --short-option 4 --descri
 complete --command youtube-dl --long-option force-ipv6 --short-option 6 --description 'Make all connections via IPv6'
 complete --command youtube-dl --long-option geo-verification-proxy --description 'Use this proxy to verify the IP address for some geo-restricted sites. The default proxy specified by --proxy (or none, if the options is not present) is used for the actual downloading.'
 complete --command youtube-dl --long-option cn-verification-proxy
+complete --command youtube-dl --long-option geo-bypass --description 'Bypass geographic restriction via faking X-Forwarded-For HTTP header (experimental)'
+complete --command youtube-dl --long-option no-geo-bypass --description 'Do not bypass geographic restriction via faking X-Forwarded-For HTTP header (experimental)'
+complete --command youtube-dl --long-option geo-bypass-country --description 'Force bypass geographic restriction with explicitly provided two-letter ISO 3166-2 country code (experimental)'
 complete --command youtube-dl --long-option playlist-start --description 'Playlist video to start at (default is %default)'
 complete --command youtube-dl --long-option playlist-end --description 'Playlist video to end at (default is last)'
 complete --command youtube-dl --long-option playlist-items --description 'Playlist video items to download. Specify indices of the videos in the playlist separated by commas like: "--playlist-items 1,2,5,8" if you want to download videos indexed 1, 2, 5, 8 in the playlist. You can specify range: "--playlist-items 1-3,7,10-13", it will download the videos at index 1, 2, 3, 7, 10, 11, 12 and 13.'
@@ -35,7 +38,7 @@ complete --command youtube-dl --long-option datebefore --description 'Download o
 complete --command youtube-dl --long-option dateafter --description 'Download only videos uploaded on or after this date (i.e. inclusive)'
 complete --command youtube-dl --long-option min-views --description 'Do not download any videos with less than COUNT views'
 complete --command youtube-dl --long-option max-views --description 'Do not download any videos with more than COUNT views'
-complete --command youtube-dl --long-option match-filter --description 'Generic video filter. Specify any key (see help for -o for a list of available keys) to match if the key is present, !key to check if the key is not present,key > NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to compare against a number, and & to require multiple matches. Values which are not known are excluded unless you put a question mark (?) after the operator.For example, to only match videos that have been liked more than 100 times and disliked less than 50 times (or the dislike functionality is not available at the given service), but who also have a description, use --match-filter "like_count > 100 & dislike_count <? 50 & description" .'
+complete --command youtube-dl --long-option match-filter --description 'Generic video filter. Specify any key (see help for -o for a list of available keys) to match if the key is present, !key to check if the key is not present, key > NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to compare against a number, key = '"'"'LITERAL'"'"' (like "uploader = '"'"'Mike Smith'"'"'", also works with !=) to match against a string literal and & to require multiple matches. Values which are not known are excluded unless you put a question mark (?) after the operator. For example, to only match videos that have been liked more than 100 times and disliked less than 50 times (or the dislike functionality is not available at the given service), but who also have a description, use --match-filter "like_count > 100 & dislike_count <? 50 & description" .'
 complete --command youtube-dl --long-option no-playlist --description 'Download only the video, if the URL refers to a video and a playlist.'
 complete --command youtube-dl --long-option yes-playlist --description 'Download the playlist, if the URL refers to a video and a playlist.'
 complete --command youtube-dl --long-option age-limit --description 'Download only videos suitable for the given age'
@@ -60,12 +63,12 @@ complete --command youtube-dl --long-option external-downloader-args --descripti
 complete --command youtube-dl --long-option batch-file --short-option a --description 'File containing URLs to download ('"'"'-'"'"' for stdin)' --require-parameter
 complete --command youtube-dl --long-option id --description 'Use only video ID in file name'
 complete --command youtube-dl --long-option output --short-option o --description 'Output filename template, see the "OUTPUT TEMPLATE" for all the info'
-complete --command youtube-dl --long-option autonumber-size --description 'Specify the number of digits in %(autonumber)s when it is present in output filename template or --auto-number option is given (default is %default)'
+complete --command youtube-dl --long-option autonumber-size
 complete --command youtube-dl --long-option autonumber-start --description 'Specify the start value for %(autonumber)s (default is %default)'
 complete --command youtube-dl --long-option restrict-filenames --description 'Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames'
-complete --command youtube-dl --long-option auto-number --short-option A --description '[deprecated; use -o "%(autonumber)s-%(title)s.%(ext)s" ] Number downloaded files starting from 00000'
-complete --command youtube-dl --long-option title --short-option t --description '[deprecated] Use title in file name (default)'
-complete --command youtube-dl --long-option literal --short-option l --description '[deprecated] Alias of --title'
+complete --command youtube-dl --long-option auto-number --short-option A
+complete --command youtube-dl --long-option title --short-option t
+complete --command youtube-dl --long-option literal --short-option l
 complete --command youtube-dl --long-option no-overwrites --short-option w --description 'Do not overwrite files'
 complete --command youtube-dl --long-option continue --short-option c --description 'Force resume of partially downloaded files. By default, youtube-dl will resume downloads if possible.'
 complete --command youtube-dl --long-option no-continue --description 'Do not resume partially downloaded files (restart from beginning)'
