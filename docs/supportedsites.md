@@ -11,6 +11,7 @@
  - **4tube**
  - **56.com**
  - **5min**
+ - **6play**
  - **8tracks**
  - **91porn**
  - **9c9media**
@@ -168,6 +169,7 @@
  - **ComedyCentralShortname**
  - **ComedyCentralTV**
  - **CondeNast**: Condé Nast media group: Allure, Architectural Digest, Ars Technica, Bon Appétit, Brides, Condé Nast, Condé Nast Traveler, Details, Epicurious, GQ, Glamour, Golf Digest, SELF, Teen Vogue, The New Yorker, Vanity Fair, Vogue, W Magazine, WIRED
+ - **Corus**
  - **Coub**
  - **Cracked**
  - **Crackle**
@@ -308,7 +310,6 @@
  - **HellPorno**
  - **Helsinki**: helsinki.fi
  - **HentaiStigma**
- - **HGTV**
  - **hgtv.com:show**
  - **HistoricFilms**
  - **history:topic**: History.com Topic
@@ -545,8 +546,10 @@
  - **OktoberfestTV**
  - **on.aol.com**
  - **OnDemandKorea**
+ - **onet.pl**
  - **onet.tv**
  - **onet.tv:channel**
+ - **OnetMVP**
  - **OnionStudios**
  - **Ooyala**
  - **OoyalaExternal**
@@ -667,6 +670,7 @@
  - **screen.yahoo:search**: Yahoo screen search
  - **Screencast**
  - **ScreencastOMatic**
+ - **scrippsnetworks:watch**
  - **Seeker**
  - **SenateISVP**
  - **SendtoNews**
@@ -676,7 +680,7 @@
  - **Shared**: shared.sx
  - **ShowRoomLive**
  - **Sina**
- - **SixPlay**
+ - **SkylineWebcams**
  - **skynewsarabia:article**
  - **skynewsarabia:video**
  - **SkySports**
@@ -711,6 +715,7 @@
  - **SportBoxEmbed**
  - **SportDeutschland**
  - **Sportschau**
+ - **Sprout**
  - **sr:mediathek**: Saarländischer Rundfunk
  - **SRGSSR**
  - **SRGSSRPlay**: srf.ch, rts.ch, rsi.ch, rtr.ch and swissinfo.ch play sites
@@ -800,10 +805,12 @@
  - **TVCArticle**
  - **tvigle**: Интернет-телевидение Tvigle.ru
  - **tvland.com**
+ - **TVN24**
  - **TVNoe**
  - **tvp**: Telewizja Polska
  - **tvp:embed**: Telewizja Polska
  - **tvp:series**
+ - **TVPlayer**
  - **Tweakers**
  - **twitch:chapter**
  - **twitch:clips**
@@ -897,6 +904,7 @@
  - **vlive**
  - **vlive:channel**
  - **Vodlocker**
+ - **VODPl**
  - **VODPlatform**
  - **VoiceRepublic**
  - **VoxMedia**

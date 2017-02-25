@@ -138,11 +138,30 @@ Make all connections via IPv4
 Make all connections via IPv6
 .RS
 .RE
+.SS Geo Restriction:
 .TP
 .B \-\-geo\-verification\-proxy \f[I]URL\f[]
 Use this proxy to verify the IP address for some geo\-restricted sites.
 The default proxy specified by \-\-proxy (or none, if the options is not
 present) is used for the actual downloading.
+.RS
+.RE
+.TP
+.B \-\-geo\-bypass
+Bypass geographic restriction via faking X\-Forwarded\-For HTTP header
+(experimental)
+.RS
+.RE
+.TP
+.B \-\-no\-geo\-bypass
+Do not bypass geographic restriction via faking X\-Forwarded\-For HTTP
+header (experimental)
+.RS
+.RE
+.TP
+.B \-\-geo\-bypass\-country \f[I]CODE\f[]
+Force bypass geographic restriction with explicitly provided two\-letter
+ISO 3166\-2 country code (experimental)
 .RS
 .RE
 .SS Video Selection:
@@ -224,15 +243,17 @@ Do not download any videos with more than COUNT views
 .B \-\-match\-filter \f[I]FILTER\f[]
 Generic video filter.
 Specify any key (see help for \-o for a list of available keys) to match
-if the key is present, !key to check if the key is not present,key >
+if the key is present, !key to check if the key is not present, key >
 NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to
-compare against a number, and & to require multiple matches.
+compare against a number, key = \[aq]LITERAL\[aq] (like "uploader =
+\[aq]Mike Smith\[aq]", also works with !=) to match against a string
+literal and & to require multiple matches.
 Values which are not known are excluded unless you put a question mark
-(?) after the operator.For example, to only match videos that have been
-liked more than 100 times and disliked less than 50 times (or the
-dislike functionality is not available at the given service), but who
-also have a description, use \-\-match\-filter "like_count > 100 &
-dislike_count <?
+(?) after the operator.
+For example, to only match videos that have been liked more than 100
+times and disliked less than 50 times (or the dislike functionality is
+not available at the given service), but who also have a description,
+use \-\-match\-filter "like_count > 100 & dislike_count <?
 50 & description" .
 .RS
 .RE
@@ -362,13 +383,6 @@ Output filename template, see the "OUTPUT TEMPLATE" for all the info
 .RS
 .RE
 .TP
-.B \-\-autonumber\-size \f[I]NUMBER\f[]
-Specify the number of digits in %(autonumber)s when it is present in
-output filename template or \-\-auto\-number option is given (default is
-5)
-.RS
-.RE
-.TP
 .B \-\-autonumber\-start \f[I]NUMBER\f[]
 Specify the start value for %(autonumber)s (default is 1)
 .RS
@@ -377,22 +391,6 @@ Specify the start value for %(autonumber)s (default is 1)
 .B \-\-restrict\-filenames
 Restrict filenames to only ASCII characters, and avoid "&" and spaces in
 filenames
-.RS
-.RE
-.TP
-.B \-A, \-\-auto\-number
-[deprecated; use \-o "%(autonumber)s\-%(title)s.%(ext)s" ] Number
-downloaded files starting from 00000
-.RS
-.RE
-.TP
-.B \-t, \-\-title
-[deprecated] Use title in file name (default)
-.RS
-.RE
-.TP
-.B \-l, \-\-literal
-[deprecated] Alias of \-\-title
 .RS
 .RE
 .TP
@@ -995,135 +993,145 @@ single file, like in
 \f[C]youtube\-dl\ \-o\ funny_video.flv\ "http://some/video"\f[].
 However, it may contain special sequences that will be replaced when
 downloading each video.
-The special sequences have the format \f[C]%(NAME)s\f[].
+The special sequences may be formatted according to python string
+formatting
+operations (https://docs.python.org/2/library/stdtypes.html#string-formatting).
+For example, \f[C]%(NAME)s\f[] or \f[C]%(NAME)05d\f[].
 To clarify, that is a percent symbol followed by a name in parentheses,
-followed by a lowercase S.
-Allowed names are:
+followed by a formatting operations.
+Allowed names along with sequence type are:
 .IP \[bu] 2
-\f[C]id\f[]: Video identifier
+\f[C]id\f[] (string): Video identifier
 .IP \[bu] 2
-\f[C]title\f[]: Video title
+\f[C]title\f[] (string): Video title
 .IP \[bu] 2
-\f[C]url\f[]: Video URL
+\f[C]url\f[] (string): Video URL
 .IP \[bu] 2
-\f[C]ext\f[]: Video filename extension
+\f[C]ext\f[] (string): Video filename extension
 .IP \[bu] 2
-\f[C]alt_title\f[]: A secondary title of the video
+\f[C]alt_title\f[] (string): A secondary title of the video
 .IP \[bu] 2
-\f[C]display_id\f[]: An alternative identifier for the video
+\f[C]display_id\f[] (string): An alternative identifier for the video
 .IP \[bu] 2
-\f[C]uploader\f[]: Full name of the video uploader
+\f[C]uploader\f[] (string): Full name of the video uploader
 .IP \[bu] 2
-\f[C]license\f[]: License name the video is licensed under
+\f[C]license\f[] (string): License name the video is licensed under
 .IP \[bu] 2
-\f[C]creator\f[]: The creator of the video
+\f[C]creator\f[] (string): The creator of the video
 .IP \[bu] 2
-\f[C]release_date\f[]: The date (YYYYMMDD) when the video was released
+\f[C]release_date\f[] (string): The date (YYYYMMDD) when the video was
+released
 .IP \[bu] 2
-\f[C]timestamp\f[]: UNIX timestamp of the moment the video became
-available
+\f[C]timestamp\f[] (numeric): UNIX timestamp of the moment the video
+became available
 .IP \[bu] 2
-\f[C]upload_date\f[]: Video upload date (YYYYMMDD)
+\f[C]upload_date\f[] (string): Video upload date (YYYYMMDD)
 .IP \[bu] 2
-\f[C]uploader_id\f[]: Nickname or id of the video uploader
+\f[C]uploader_id\f[] (string): Nickname or id of the video uploader
 .IP \[bu] 2
-\f[C]location\f[]: Physical location where the video was filmed
+\f[C]location\f[] (string): Physical location where the video was filmed
 .IP \[bu] 2
-\f[C]duration\f[]: Length of the video in seconds
+\f[C]duration\f[] (numeric): Length of the video in seconds
 .IP \[bu] 2
-\f[C]view_count\f[]: How many users have watched the video on the
-platform
+\f[C]view_count\f[] (numeric): How many users have watched the video on
+the platform
 .IP \[bu] 2
-\f[C]like_count\f[]: Number of positive ratings of the video
+\f[C]like_count\f[] (numeric): Number of positive ratings of the video
 .IP \[bu] 2
-\f[C]dislike_count\f[]: Number of negative ratings of the video
+\f[C]dislike_count\f[] (numeric): Number of negative ratings of the
+video
 .IP \[bu] 2
-\f[C]repost_count\f[]: Number of reposts of the video
+\f[C]repost_count\f[] (numeric): Number of reposts of the video
 .IP \[bu] 2
-\f[C]average_rating\f[]: Average rating give by users, the scale used
-depends on the webpage
+\f[C]average_rating\f[] (numeric): Average rating give by users, the
+scale used depends on the webpage
 .IP \[bu] 2
-\f[C]comment_count\f[]: Number of comments on the video
+\f[C]comment_count\f[] (numeric): Number of comments on the video
 .IP \[bu] 2
-\f[C]age_limit\f[]: Age restriction for the video (years)
+\f[C]age_limit\f[] (numeric): Age restriction for the video (years)
 .IP \[bu] 2
-\f[C]format\f[]: A human\-readable description of the format
+\f[C]format\f[] (string): A human\-readable description of the format
 .IP \[bu] 2
-\f[C]format_id\f[]: Format code specified by \f[C]\-\-format\f[]
+\f[C]format_id\f[] (string): Format code specified by
+\f[C]\-\-format\f[]
 .IP \[bu] 2
-\f[C]format_note\f[]: Additional info about the format
+\f[C]format_note\f[] (string): Additional info about the format
 .IP \[bu] 2
-\f[C]width\f[]: Width of the video
+\f[C]width\f[] (numeric): Width of the video
 .IP \[bu] 2
-\f[C]height\f[]: Height of the video
+\f[C]height\f[] (numeric): Height of the video
 .IP \[bu] 2
-\f[C]resolution\f[]: Textual description of width and height
+\f[C]resolution\f[] (string): Textual description of width and height
 .IP \[bu] 2
-\f[C]tbr\f[]: Average bitrate of audio and video in KBit/s
+\f[C]tbr\f[] (numeric): Average bitrate of audio and video in KBit/s
 .IP \[bu] 2
-\f[C]abr\f[]: Average audio bitrate in KBit/s
+\f[C]abr\f[] (numeric): Average audio bitrate in KBit/s
 .IP \[bu] 2
-\f[C]acodec\f[]: Name of the audio codec in use
+\f[C]acodec\f[] (string): Name of the audio codec in use
 .IP \[bu] 2
-\f[C]asr\f[]: Audio sampling rate in Hertz
+\f[C]asr\f[] (numeric): Audio sampling rate in Hertz
 .IP \[bu] 2
-\f[C]vbr\f[]: Average video bitrate in KBit/s
+\f[C]vbr\f[] (numeric): Average video bitrate in KBit/s
 .IP \[bu] 2
-\f[C]fps\f[]: Frame rate
+\f[C]fps\f[] (numeric): Frame rate
 .IP \[bu] 2
-\f[C]vcodec\f[]: Name of the video codec in use
+\f[C]vcodec\f[] (string): Name of the video codec in use
 .IP \[bu] 2
-\f[C]container\f[]: Name of the container format
+\f[C]container\f[] (string): Name of the container format
 .IP \[bu] 2
-\f[C]filesize\f[]: The number of bytes, if known in advance
+\f[C]filesize\f[] (numeric): The number of bytes, if known in advance
 .IP \[bu] 2
-\f[C]filesize_approx\f[]: An estimate for the number of bytes
+\f[C]filesize_approx\f[] (numeric): An estimate for the number of bytes
 .IP \[bu] 2
-\f[C]protocol\f[]: The protocol that will be used for the actual
-download
+\f[C]protocol\f[] (string): The protocol that will be used for the
+actual download
 .IP \[bu] 2
-\f[C]extractor\f[]: Name of the extractor
+\f[C]extractor\f[] (string): Name of the extractor
 .IP \[bu] 2
-\f[C]extractor_key\f[]: Key name of the extractor
+\f[C]extractor_key\f[] (string): Key name of the extractor
 .IP \[bu] 2
-\f[C]epoch\f[]: Unix epoch when creating the file
+\f[C]epoch\f[] (numeric): Unix epoch when creating the file
 .IP \[bu] 2
-\f[C]autonumber\f[]: Five\-digit number that will be increased with each
-download, starting at zero
+\f[C]autonumber\f[] (numeric): Five\-digit number that will be increased
+with each download, starting at zero
 .IP \[bu] 2
-\f[C]playlist\f[]: Name or id of the playlist that contains the video
+\f[C]playlist\f[] (string): Name or id of the playlist that contains the
+video
 .IP \[bu] 2
-\f[C]playlist_index\f[]: Index of the video in the playlist padded with
-leading zeros according to the total length of the playlist
+\f[C]playlist_index\f[] (numeric): Index of the video in the playlist
+padded with leading zeros according to the total length of the playlist
 .IP \[bu] 2
-\f[C]playlist_id\f[]: Playlist identifier
+\f[C]playlist_id\f[] (string): Playlist identifier
 .IP \[bu] 2
-\f[C]playlist_title\f[]: Playlist title
+\f[C]playlist_title\f[] (string): Playlist title
 .PP
 Available for the video that belongs to some logical chapter or section:
-\- \f[C]chapter\f[]: Name or title of the chapter the video belongs to
-\- \f[C]chapter_number\f[]: Number of the chapter the video belongs to
-\- \f[C]chapter_id\f[]: Id of the chapter the video belongs to
+\- \f[C]chapter\f[] (string): Name or title of the chapter the video
+belongs to \- \f[C]chapter_number\f[] (numeric): Number of the chapter
+the video belongs to \- \f[C]chapter_id\f[] (string): Id of the chapter
+the video belongs to
 .PP
 Available for the video that is an episode of some series or programme:
-\- \f[C]series\f[]: Title of the series or programme the video episode
-belongs to \- \f[C]season\f[]: Title of the season the video episode
-belongs to \- \f[C]season_number\f[]: Number of the season the video
-episode belongs to \- \f[C]season_id\f[]: Id of the season the video
-episode belongs to \- \f[C]episode\f[]: Title of the video episode \-
-\f[C]episode_number\f[]: Number of the video episode within a season \-
-\f[C]episode_id\f[]: Id of the video episode
+\- \f[C]series\f[] (string): Title of the series or programme the video
+episode belongs to \- \f[C]season\f[] (string): Title of the season the
+video episode belongs to \- \f[C]season_number\f[] (numeric): Number of
+the season the video episode belongs to \- \f[C]season_id\f[] (string):
+Id of the season the video episode belongs to \- \f[C]episode\f[]
+(string): Title of the video episode \- \f[C]episode_number\f[]
+(numeric): Number of the video episode within a season \-
+\f[C]episode_id\f[] (string): Id of the video episode
 .PP
 Available for the media that is a track or a part of a music album: \-
-\f[C]track\f[]: Title of the track \- \f[C]track_number\f[]: Number of
-the track within an album or a disc \- \f[C]track_id\f[]: Id of the
-track \- \f[C]artist\f[]: Artist(s) of the track \- \f[C]genre\f[]:
-Genre(s) of the track \- \f[C]album\f[]: Title of the album the track
-belongs to \- \f[C]album_type\f[]: Type of the album \-
-\f[C]album_artist\f[]: List of all artists appeared on the album \-
-\f[C]disc_number\f[]: Number of the disc or other physical medium the
-track belongs to \- \f[C]release_year\f[]: Year (YYYY) when the album
-was released
+\f[C]track\f[] (string): Title of the track \- \f[C]track_number\f[]
+(numeric): Number of the track within an album or a disc \-
+\f[C]track_id\f[] (string): Id of the track \- \f[C]artist\f[] (string):
+Artist(s) of the track \- \f[C]genre\f[] (string): Genre(s) of the track
+\- \f[C]album\f[] (string): Title of the album the track belongs to \-
+\f[C]album_type\f[] (string): Type of the album \- \f[C]album_artist\f[]
+(string): List of all artists appeared on the album \-
+\f[C]disc_number\f[] (numeric): Number of the disc or other physical
+medium the track belongs to \- \f[C]release_year\f[] (numeric): Year
+(YYYY) when the album was released
 .PP
 Each aforementioned sequence when referenced in an output template will
 be replaced by the actual value corresponding to the sequence name.
@@ -1136,6 +1144,10 @@ with title \f[C]youtube\-dl\ test\ video\f[] and id
 \f[C]BaW_jenozKcj\f[], this will result in a
 \f[C]youtube\-dl\ test\ video\-BaW_jenozKcj.mp4\f[] file created in the
 current directory.
+.PP
+For numeric sequences you can use numeric related formatting, for
+example, \f[C]%(view_count)05d\f[] will result in a string with view
+count padded with zeros up to 5 characters, like in \f[C]00042\f[].
 .PP
 Output templates can also contain arbitrary hierarchical path, e.g.
 \f[C]\-o\ \[aq]%(playlist)s/%(playlist_index)s\ \-\ %(title)s.%(ext)s\[aq]\f[]

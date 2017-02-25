@@ -202,6 +202,7 @@ from .commonprotocols import (
     RtmpIE,
 )
 from .condenast import CondeNastIE
+from .corus import CorusIE
 from .cracked import CrackedIE
 from .crackle import CrackleIE
 from .criterion import CriterionIE
@@ -381,10 +382,7 @@ from .heise import HeiseIE
 from .hellporno import HellPornoIE
 from .helsinki import HelsinkiIE
 from .hentaistigma import HentaiStigmaIE
-from .hgtv import (
-    HGTVIE,
-    HGTVComShowIE,
-)
+from .hgtv import HGTVComShowIE
 from .historicfilms import HistoricFilmsIE
 from .hitbox import HitboxIE, HitboxLiveIE
 from .hitrecord import HitRecordIE
@@ -696,6 +694,8 @@ from .ondemandkorea import OnDemandKoreaIE
 from .onet import (
     OnetIE,
     OnetChannelIE,
+    OnetMVPIE,
+    OnetPlIE,
 )
 from .onionstudios import OnionStudiosIE
 from .ooyala import (
@@ -838,6 +838,7 @@ from .sbs import SBSIE
 from .scivee import SciVeeIE
 from .screencast import ScreencastIE
 from .screencastomatic import ScreencastOMaticIE
+from .scrippsnetworks import ScrippsNetworksWatchIE
 from .seeker import SeekerIE
 from .senateisvp import SenateISVPIE
 from .sendtonews import SendtoNewsIE
@@ -851,6 +852,7 @@ from .shared import (
 from .showroomlive import ShowRoomLiveIE
 from .sina import SinaIE
 from .sixplay import SixPlayIE
+from .skylinewebcams import SkylineWebcamsIE
 from .skynewsarabia import (
     SkyNewsArabiaIE,
     SkyNewsArabiaArticleIE,
@@ -895,6 +897,7 @@ from .sport5 import Sport5IE
 from .sportbox import SportBoxEmbedIE
 from .sportdeutschland import SportDeutschlandIE
 from .sportschau import SportschauIE
+from .sprout import SproutIE
 from .srgssr import (
     SRGSSRIE,
     SRGSSRPlayIE,
@@ -1007,6 +1010,7 @@ from .tvc import (
 )
 from .tvigle import TvigleIE
 from .tvland import TVLandIE
+from .tvn24 import TVN24IE
 from .tvnoe import TVNoeIE
 from .tvp import (
     TVPEmbedIE,
@@ -1017,6 +1021,7 @@ from .tvplay import (
     TVPlayIE,
     ViafreeIE,
 )
+from .tvplayer import TVPlayerIE
 from .tweakers import TweakersIE
 from .twentyfourvideo import TwentyFourVideoIE
 from .twentymin import TwentyMinutenIE
@@ -1146,6 +1151,7 @@ from .vlive import (
     VLiveChannelIE
 )
 from .vodlocker import VodlockerIE
+from .vodpl import VODPlIE
 from .vodplatform import VODPlatformIE
 from .voicerepublic import VoiceRepublicIE
 from .voxmedia import VoxMediaIE
