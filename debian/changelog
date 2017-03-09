@@ -1,10 +1,11 @@
-youtube-dl (2017.03.07-1~1.gbp2b4515) UNRELEASED; urgency=medium
+youtube-dl (2017.03.07-1~2.gbp5da5b9) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @2b4515201a54c38e34434ea2817d606be134a7c9 **
+  ** SNAPSHOT build @5da5b952db07bb98a8f3a4b208a84e94e5bec9c0 **
 
   * New upstream version 2017.03.07. Fixes downloads from Facebook.
+  * debian/control: Update list of supported sites (and list one per line).
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 08 Mar 2017 22:53:26 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 09 Mar 2017 05:03:40 -0300
 
 youtube-dl (2017.02.24.1-1) unstable; urgency=medium
 
