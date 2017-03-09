@@ -515,6 +515,9 @@ class BrightcoveNewIE(InfoExtractor):
         return entries
 
     def _real_extract(self, url):
+        url, smuggled_data = unsmuggle_url(url, {})
+        self._initialize_geo_bypass(smuggled_data.get('geo_countries'))
+
         account_id, player_id, embed, video_id = re.match(self._VALID_URL, url).groups()
 
         webpage = self._download_webpage(
@@ -544,8 +547,10 @@ class BrightcoveNewIE(InfoExtractor):
         except ExtractorError as e:
             if isinstance(e.cause, compat_HTTPError) and e.cause.code == 403:
                 json_data = self._parse_json(e.cause.read().decode(), video_id)[0]
-                raise ExtractorError(
-                    json_data.get('message') or json_data['error_code'], expected=True)
+                message = json_data.get('message') or json_data['error_code']
+                if json_data.get('error_subcode') == 'CLIENT_GEO':
+                    self.raise_geo_restricted(msg=message)
+                raise ExtractorError(message, expected=True)
             raise
 
         title = json_data['name'].strip()
