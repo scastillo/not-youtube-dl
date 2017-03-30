@@ -1,10 +1,9 @@
-youtube-dl (2017.03.26-1~1.gbped6eef) UNRELEASED; urgency=medium
+youtube-dl (2017.03.26-1) unstable; urgency=medium
 
-  ** SNAPSHOT build @ed6eef637d5115dea4adc4e40f030f0688f29c37 **
+  * New upstream version 2017.03.26.
+    + More fixes for downloads from popular sites.
 
-  * New upstream version 2017.03.26
-
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 30 Mar 2017 15:27:46 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 30 Mar 2017 18:18:12 -0300
 
 youtube-dl (2017.03.07-1) unstable; urgency=medium
 
