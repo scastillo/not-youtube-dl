@@ -142,7 +142,7 @@ complete --command youtube-dl --long-option ap-username --description 'Multiple-
 complete --command youtube-dl --long-option ap-password --description 'Multiple-system operator account password. If this option is left out, youtube-dl will ask interactively.'
 complete --command youtube-dl --long-option ap-list-mso --description 'List all supported multiple-system operators'
 complete --command youtube-dl --long-option extract-audio --short-option x --description 'Convert video files to audio-only files (requires ffmpeg or avconv and ffprobe or avprobe)'
-complete --command youtube-dl --long-option audio-format --description 'Specify audio format: "best", "aac", "vorbis", "mp3", "m4a", "opus", or "wav"; "%default" by default; No effect without -x'
+complete --command youtube-dl --long-option audio-format --description 'Specify audio format: "best", "aac", "flac", "mp3", "m4a", "opus", "vorbis", or "wav"; "%default" by default; No effect without -x'
 complete --command youtube-dl --long-option audio-quality --description 'Specify ffmpeg/avconv audio quality, insert a value between 0 (better) and 9 (worse) for VBR or a specific bitrate like 128K (default %default)'
 complete --command youtube-dl --long-option recode-video --description 'Encode the video to another format if necessary (currently supported: mp4|flv|ogg|webm|mkv|avi)' --arguments 'mp4 flv ogg webm mkv' --exclusive
 complete --command youtube-dl --long-option postprocessor-args --description 'Give these arguments to the postprocessor'
