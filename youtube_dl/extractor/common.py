@@ -36,34 +36,35 @@ from ..utils import (
     clean_html,
     compiled_regex_type,
     determine_ext,
+    determine_protocol,
     error_to_compat_str,
     ExtractorError,
+    extract_attributes,
     fix_xml_ampersands,
     float_or_none,
     GeoRestrictedError,
     GeoUtils,
     int_or_none,
     js_to_json,
+    mimetype2ext,
+    orderedSet,
+    parse_codecs,
+    parse_duration,
     parse_iso8601,
+    parse_m3u8_attributes,
     RegexNotFoundError,
-    sanitize_filename,
     sanitized_Request,
+    sanitize_filename,
     unescapeHTML,
     unified_strdate,
     unified_timestamp,
+    update_Request,
+    update_url_query,
+    urljoin,
     url_basename,
     xpath_element,
     xpath_text,
     xpath_with_ns,
-    determine_protocol,
-    parse_duration,
-    mimetype2ext,
-    update_Request,
-    update_url_query,
-    parse_m3u8_attributes,
-    extract_attributes,
-    parse_codecs,
-    urljoin,
 )
 
 
@@ -713,6 +714,13 @@ class InfoExtractor(object):
         if video_title is not None:
             video_info['title'] = video_title
         return video_info
+
+    def playlist_from_matches(self, matches, video_id, video_title, getter=None, ie=None):
+        urlrs = orderedSet(
+            self.url_result(self._proto_relative_url(getter(m) if getter else m), ie)
+            for m in matches)
+        return self.playlist_result(
+            urlrs, playlist_id=video_id, playlist_title=video_title)
 
     @staticmethod
     def playlist_result(entries, playlist_id=None, playlist_title=None, playlist_description=None):
@@ -2161,18 +2169,24 @@ class InfoExtractor(object):
                     })
         return formats
 
-    @staticmethod
-    def _find_jwplayer_data(webpage):
+    def _find_jwplayer_data(self, webpage, video_id=None, transform_source=js_to_json):
         mobj = re.search(
             r'jwplayer\((?P<quote>[\'"])[^\'" ]+(?P=quote)\)\.setup\s*\((?P<options>[^)]+)\)',
             webpage)
         if mobj:
-            return mobj.group('options')
+            try:
+                jwplayer_data = self._parse_json(mobj.group('options'),
+                                                 video_id=video_id,
+                                                 transform_source=transform_source)
+            except ExtractorError:
+                pass
+            else:
+                if isinstance(jwplayer_data, dict):
+                    return jwplayer_data
 
     def _extract_jwplayer_data(self, webpage, video_id, *args, **kwargs):
-        jwplayer_data = self._parse_json(
-            self._find_jwplayer_data(webpage), video_id,
-            transform_source=js_to_json)
+        jwplayer_data = self._find_jwplayer_data(
+            webpage, video_id, transform_source=js_to_json)
         return self._parse_jwplayer_data(
             jwplayer_data, video_id, *args, **kwargs)
 
@@ -2247,6 +2261,9 @@ class InfoExtractor(object):
             elif ext == 'mpd':
                 formats.extend(self._extract_mpd_formats(
                     source_url, video_id, mpd_id=mpd_id, fatal=False))
+            elif ext == 'smil':
+                formats.extend(self._extract_smil_formats(
+                    source_url, video_id, fatal=False))
             # https://github.com/jwplayer/jwplayer/blob/master/src/js/providers/default.js#L67
             elif source_type.startswith('audio') or ext in (
                     'oga', 'aac', 'mp3', 'mpeg', 'vorbis'):

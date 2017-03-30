@@ -80,29 +80,43 @@ class OpenloadIE(InfoExtractor):
         first_char = ord(ol_id[0])
         key = first_char - 55
         maxKey = max(2, key)
-        key = min(maxKey, len(ol_id) - 14)
-        t = ol_id[key:key + 12]
+        key = min(maxKey, len(ol_id) - 38)
+        t = ol_id[key:key + 36]
 
         hashMap = {}
-        v = ol_id.replace(t, "")
+        v = ol_id.replace(t, '')
         h = 0
 
         while h < len(t):
-            f = t[h:h + 2]
-            i = int(f, 16)
-            hashMap[h / 2] = i
-            h += 2
+            f = t[h:h + 3]
+            i = int(f, 8)
+            hashMap[h / 3] = i
+            h += 3
 
         h = 0
-
+        H = 0
         while h < len(v):
-            B = v[h:h + 2]
+            B = ''
+            C = ''
+            if len(v) >= h + 2:
+                B = v[h:h + 2]
+            if len(v) >= h + 3:
+                C = v[h:h + 3]
             i = int(B, 16)
-            index = (h / 2) % 6
-            A = hashMap[index]
-            i = i ^ A
-            video_url_chars.append(compat_chr(i))
             h += 2
+            if H % 3 == 0:
+                i = int(C, 8)
+                h += 1
+            elif H % 2 == 0 and H != 0 and ord(v[H - 1]) < 60:
+                i = int(C, 10)
+                h += 1
+            index = H % 7
+
+            A = hashMap[index]
+            i ^= 213
+            i ^= A
+            video_url_chars.append(compat_chr(i))
+            H += 1
 
         video_url = 'https://openload.co/stream/%s?mime=true'
         video_url = video_url % (''.join(video_url_chars))
