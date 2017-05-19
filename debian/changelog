@@ -2,7 +2,8 @@ youtube-dl (2017.05.18.1-1~1.gbp532a08) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @532a08904ffbacc5e5ccf99edb660c5f37ddb213 **
 
-  * New upstream version 2017.05.18.1
+  * New upstream version 2017.05.18.1.
+    + Fixes downloads from YouTube, among other sites. Closes: #861538.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Fri, 19 May 2017 03:22:38 -0300
 
