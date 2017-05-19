@@ -210,12 +210,15 @@ Download Options:
     -R, --retries RETRIES            Number of retries (default is 10), or
                                      "infinite".
     --fragment-retries RETRIES       Number of retries for a fragment (default
-                                     is 10), or "infinite" (DASH and hlsnative
-                                     only)
-    --skip-unavailable-fragments     Skip unavailable fragments (DASH and
-                                     hlsnative only)
+                                     is 10), or "infinite" (DASH, hlsnative and
+                                     ISM)
+    --skip-unavailable-fragments     Skip unavailable fragments (DASH, hlsnative
+                                     and ISM)
     --abort-on-unavailable-fragment  Abort downloading when some fragment is not
                                      available
+    --keep-fragments                 Keep downloaded fragments on disk after
+                                     downloading is finished; fragments are
+                                     erased by default
     --buffer-size SIZE               Size of download buffer (e.g. 1024 or 16K)
                                      (default is 1024)
     --no-resize-buffer               Do not automatically adjust the buffer
@@ -444,12 +447,14 @@ Post-processing Options:
     --add-metadata                   Write metadata to the video file
     --metadata-from-title FORMAT     Parse additional metadata like song title /
                                      artist from the video title. The format
-                                     syntax is the same as --output, the parsed
-                                     parameters replace existing values.
-                                     Additional templates: %(album)s,
-                                     %(artist)s. Example: --metadata-from-title
-                                     "%(artist)s - %(title)s" matches a title
-                                     like "Coldplay - Paradise"
+                                     syntax is the same as --output. Regular
+                                     expression with named capture groups may
+                                     also be used. The parsed parameters replace
+                                     existing values. Example: --metadata-from-
+                                     title "%(artist)s - %(title)s" matches a
+                                     title like "Coldplay - Paradise". Example
+                                     (regex): --metadata-from-title
+                                     "(?P<artist>.+?) - (?P<title>.+)"
     --xattrs                         Write metadata to the video file's xattrs
                                      (using dublin core and xdg standards)
     --fixup POLICY                   Automatically correct known faults of the
