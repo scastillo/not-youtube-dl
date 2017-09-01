@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: youtube-dl
 Upstream-Contact: https://github.com/rg3/youtube-dl
-Source: git://github.com/rg3/youtube-dl.git
+Source: https://github.com/rg3/youtube-dl
 
 Files: *
 Copyright: none
