@@ -38,7 +38,7 @@ complete --command youtube-dl --long-option datebefore --description 'Download o
 complete --command youtube-dl --long-option dateafter --description 'Download only videos uploaded on or after this date (i.e. inclusive)'
 complete --command youtube-dl --long-option min-views --description 'Do not download any videos with less than COUNT views'
 complete --command youtube-dl --long-option max-views --description 'Do not download any videos with more than COUNT views'
-complete --command youtube-dl --long-option match-filter --description 'Generic video filter. Specify any key (see help for -o for a list of available keys) to match if the key is present, !key to check if the key is not present, key > NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to compare against a number, key = '"'"'LITERAL'"'"' (like "uploader = '"'"'Mike Smith'"'"'", also works with !=) to match against a string literal and & to require multiple matches. Values which are not known are excluded unless you put a question mark (?) after the operator. For example, to only match videos that have been liked more than 100 times and disliked less than 50 times (or the dislike functionality is not available at the given service), but who also have a description, use --match-filter "like_count > 100 & dislike_count <? 50 & description" .'
+complete --command youtube-dl --long-option match-filter --description 'Generic video filter. Specify any key (see the "OUTPUT TEMPLATE" for a list of available keys) to match if the key is present, !key to check if the key is not present, key > NUMBER (like "comment_count > 12", also works with >=, <, <=, !=, =) to compare against a number, key = '"'"'LITERAL'"'"' (like "uploader = '"'"'Mike Smith'"'"'", also works with !=) to match against a string literal and & to require multiple matches. Values which are not known are excluded unless you put a question mark (?) after the operator. For example, to only match videos that have been liked more than 100 times and disliked less than 50 times (or the dislike functionality is not available at the given service), but who also have a description, use --match-filter "like_count > 100 & dislike_count <? 50 & description" .'
 complete --command youtube-dl --long-option no-playlist --description 'Download only the video, if the URL refers to a video and a playlist.'
 complete --command youtube-dl --long-option yes-playlist --description 'Download the playlist, if the URL refers to a video and a playlist.'
 complete --command youtube-dl --long-option age-limit --description 'Download only videos suitable for the given age'
@@ -98,7 +98,7 @@ complete --command youtube-dl --long-option get-description --description 'Simul
 complete --command youtube-dl --long-option get-duration --description 'Simulate, quiet but print video length'
 complete --command youtube-dl --long-option get-filename --description 'Simulate, quiet but print output filename'
 complete --command youtube-dl --long-option get-format --description 'Simulate, quiet but print output format'
-complete --command youtube-dl --long-option dump-json --short-option j --description 'Simulate, quiet but print JSON information. See --output for a description of available keys.'
+complete --command youtube-dl --long-option dump-json --short-option j --description 'Simulate, quiet but print JSON information. See the "OUTPUT TEMPLATE" for a description of available keys.'
 complete --command youtube-dl --long-option dump-single-json --short-option J --description 'Simulate, quiet but print JSON information for each command-line argument. If the URL refers to a playlist, dump the whole playlist information in a single line.'
 complete --command youtube-dl --long-option print-json --description 'Be quiet and print the video information as JSON (video is still being downloaded).'
 complete --command youtube-dl --long-option newline --description 'Output progress bar as new lines'
@@ -159,7 +159,7 @@ complete --command youtube-dl --long-option prefer-avconv --description 'Prefer 
 complete --command youtube-dl --long-option prefer-ffmpeg --description 'Prefer ffmpeg over avconv for running the postprocessors'
 complete --command youtube-dl --long-option ffmpeg-location --description 'Location of the ffmpeg/avconv binary; either the path to the binary or its containing directory.'
 complete --command youtube-dl --long-option exec --description 'Execute a command on the file after downloading, similar to find'"'"'s -exec syntax. Example: --exec '"'"'adb push {} /sdcard/Music/ && rm {}'"'"''
-complete --command youtube-dl --long-option convert-subs --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt)'
+complete --command youtube-dl --long-option convert-subs --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt|lrc)'
 
 
 complete --command youtube-dl --arguments ":ytfavorites :ytrecommended :ytsubscriptions :ytwatchlater :ythistory"
