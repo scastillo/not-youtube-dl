@@ -1,3 +1,11 @@
+youtube-dl (2017.09.24-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream release 2017.09.24.
+    + Fixes downloads from Daily Motion. Closes: #876118, #873853.
+
+ -- Francois Marier <francois@debian.org>  Sun, 24 Sep 2017 16:07:57 -0700
+
 youtube-dl (2017.05.18.1-1) unstable; urgency=medium
 
   * New upstream version 2017.05.18.1.
