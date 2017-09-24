@@ -6,6 +6,7 @@ import collections
 import email
 import getpass
 import io
+import itertools
 import optparse
 import os
 import re
@@ -15,7 +16,6 @@ import socket
 import struct
 import subprocess
 import sys
-import itertools
 import xml.etree.ElementTree
 
 
@@ -2322,6 +2322,19 @@ try:
 except ImportError:  # Python 2
     from HTMLParser import HTMLParser as compat_HTMLParser
 
+try:  # Python 2
+    from HTMLParser import HTMLParseError as compat_HTMLParseError
+except ImportError:  # Python <3.4
+    try:
+        from html.parser import HTMLParseError as compat_HTMLParseError
+    except ImportError:  # Python >3.4
+
+        # HTMLParseError has been deprecated in Python 3.3 and removed in
+        # Python 3.5. Introducing dummy exception for Python >3.5 for compatible
+        # and uniform cross-version exceptiong handling
+        class compat_HTMLParseError(Exception):
+            pass
+
 try:
     from subprocess import DEVNULL
     compat_subprocess_get_DEVNULL = lambda: DEVNULL
@@ -2604,14 +2617,22 @@ except ImportError:  # Python 2
                 parsed_result[name] = [value]
         return parsed_result
 
-try:
-    from shlex import quote as compat_shlex_quote
-except ImportError:  # Python < 3.3
+
+compat_os_name = os._name if os.name == 'java' else os.name
+
+
+if compat_os_name == 'nt':
     def compat_shlex_quote(s):
-        if re.match(r'^[-_\w./]+$', s):
-            return s
-        else:
-            return "'" + s.replace("'", "'\"'\"'") + "'"
+        return s if re.match(r'^[-_\w./]+$', s) else '"%s"' % s.replace('"', '\\"')
+else:
+    try:
+        from shlex import quote as compat_shlex_quote
+    except ImportError:  # Python < 3.3
+        def compat_shlex_quote(s):
+            if re.match(r'^[-_\w./]+$', s):
+                return s
+            else:
+                return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 try:
@@ -2634,9 +2655,6 @@ def compat_ord(c):
         return c
     else:
         return ord(c)
-
-
-compat_os_name = os._name if os.name == 'java' else os.name
 
 
 if sys.version_info >= (3, 0):
@@ -2880,8 +2898,16 @@ else:
     compat_struct_pack = struct.pack
     compat_struct_unpack = struct.unpack
 
+try:
+    from future_builtins import zip as compat_zip
+except ImportError:  # not 2.6+ or is 3.x
+    try:
+        from itertools import izip as compat_zip  # < 2.5 or 3.x
+    except ImportError:
+        compat_zip = zip
 
 __all__ = [
+    'compat_HTMLParseError',
     'compat_HTMLParser',
     'compat_HTTPError',
     'compat_basestring',
@@ -2929,5 +2955,6 @@ __all__ = [
     'compat_urlretrieve',
     'compat_xml_parse_error',
     'compat_xpath',
+    'compat_zip',
     'workaround_optparse_bug9161',
 ]

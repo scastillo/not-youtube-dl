@@ -186,7 +186,7 @@ class PornHubIE(InfoExtractor):
             title, thumbnail, duration = [None] * 3
 
         video_uploader = self._html_search_regex(
-            r'(?s)From:&nbsp;.+?<(?:a href="/users/|a href="/channels/|span class="username)[^>]+>(.+?)<',
+            r'(?s)From:&nbsp;.+?<(?:a\b[^>]+\bhref=["\']/(?:user|channel)s/|span\b[^>]+\bclass=["\']username)[^>]+>(.+?)<',
             webpage, 'uploader', fatal=False)
 
         view_count = self._extract_count(
@@ -227,20 +227,6 @@ class PornHubIE(InfoExtractor):
 
 class PornHubPlaylistBaseIE(InfoExtractor):
     def _extract_entries(self, webpage):
-        return [
-            self.url_result(
-                'http://www.pornhub.com/%s' % video_url,
-                PornHubIE.ie_key(), video_title=title)
-            for video_url, title in orderedSet(re.findall(
-                r'href="/?(view_video\.php\?.*\bviewkey=[\da-z]+[^"]*)"[^>]*\s+title="([^"]+)"',
-                webpage))
-        ]
-
-    def _real_extract(self, url):
-        playlist_id = self._match_id(url)
-
-        webpage = self._download_webpage(url, playlist_id)
-
         # Only process container div with main playlist content skipping
         # drop-down menu that uses similar pattern for videos (see
         # https://github.com/rg3/youtube-dl/issues/11594).
@@ -248,15 +234,32 @@ class PornHubPlaylistBaseIE(InfoExtractor):
             r'(?s)(<div[^>]+class=["\']container.+)', webpage,
             'container', default=webpage)
 
-        entries = self._extract_entries(container)
+        return [
+            self.url_result(
+                'http://www.pornhub.com/%s' % video_url,
+                PornHubIE.ie_key(), video_title=title)
+            for video_url, title in orderedSet(re.findall(
+                r'href="/?(view_video\.php\?.*\bviewkey=[\da-z]+[^"]*)"[^>]*\s+title="([^"]+)"',
+                container))
+        ]
+
+    def _real_extract(self, url):
+        playlist_id = self._match_id(url)
+
+        webpage = self._download_webpage(url, playlist_id)
+
+        entries = self._extract_entries(webpage)
 
         playlist = self._parse_json(
             self._search_regex(
-                r'playlistObject\s*=\s*({.+?});', webpage, 'playlist'),
-            playlist_id)
+                r'(?:playlistObject|PLAYLIST_VIEW)\s*=\s*({.+?});', webpage,
+                'playlist', default='{}'),
+            playlist_id, fatal=False)
+        title = playlist.get('title') or self._search_regex(
+            r'>Videos\s+in\s+(.+?)\s+[Pp]laylist<', webpage, 'title', fatal=False)
 
         return self.playlist_result(
-            entries, playlist_id, playlist.get('title'), playlist.get('description'))
+            entries, playlist_id, title, playlist.get('description'))
 
 
 class PornHubPlaylistIE(PornHubPlaylistBaseIE):
@@ -296,6 +299,7 @@ class PornHubUserVideosIE(PornHubPlaylistBaseIE):
             except ExtractorError as e:
                 if isinstance(e.cause, compat_HTTPError) and e.cause.code == 404:
                     break
+                raise
             page_entries = self._extract_entries(webpage)
             if not page_entries:
                 break
