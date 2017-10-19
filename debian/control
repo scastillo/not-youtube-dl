@@ -15,8 +15,8 @@ Build-Depends-Indep:
 X-Python3-Version: >= 3.2
 Standards-Version: 3.9.8
 Homepage: https://rg3.github.com/youtube-dl/
-Vcs-Git: https://anonscm.debian.org/git/collab-maint/youtube-dl.git
-Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/youtube-dl.git
+Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
+Vcs-Browser: https://github.com/rbrito/pkg-youtube-dl
 
 Package: youtube-dl
 Architecture: all
