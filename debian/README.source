@@ -30,9 +30,20 @@ be ahead of the Debian mirror.
 
 I prefer that, if possible, when working with the master branch:
 
+* Please, check if I don't have changes already made at:
+
+      https://github.com/rbrito/pkg-youtube-dl
+
 * People send me pull requests there
+
 * If they are not comfortable with the use of GitHub for any kind of reason
   (political, ideological etc.), that they send me patches via email (git
   send-email is best).
 
- -- Rogério Brito <rbrito@ime.usp.br>, Thu, 19 Oct 2017 16:14:19 -0200
+  This can be sent to my personal email or to the Debian BTS. I'm flexible.
+
+Of course, if it is not possible to coordinate in the way described above,
+alas... :-(
+
+
+ -- Rogério Brito <rbrito@ime.usp.br>, Thu, 19 Oct 2017 16:19:25 -0200
