@@ -1,3 +1,14 @@
+youtube-dl (2017.10.15.1-1~1.gbpd1f304) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @d1f304bf54caa539923ca447251db0fbda7093c8 **
+
+  * New upstream version 2017.10.15.1
+  * debian/control: Update the repository to github.com.
+  * debian/README.source:
+    + Update with instructions relative to my workflow.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 19 Oct 2017 16:20:46 -0200
+
 youtube-dl (2017.09.24-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
