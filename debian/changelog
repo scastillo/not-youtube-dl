@@ -1,11 +1,13 @@
-youtube-dl (2017.10.15.1-1~2.gbpe32324) UNRELEASED; urgency=medium
+youtube-dl (2017.10.15.1-1~3.gbpc2edc4) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @e3232482a924f71bbe391c4b998194863d5d8be2 **
+  ** SNAPSHOT build @c2edc42d918f3c48d2a94c2629b42c38e7e80917 **
 
   * New upstream version 2017.10.15.1
   * debian/control:
     + Update the source repository to github.com.
     + Update S-V to 4.0.0, no more changes needed.
+    + Change priority from extra to optional.
+    + Mark compliance with policy 4.1.1. No further changes needed.
   * debian/README.source:
     + Update with instructions relative to my workflow.
   * debian/copyright:
@@ -13,7 +15,7 @@ youtube-dl (2017.10.15.1-1~2.gbpe32324) UNRELEASED; urgency=medium
     + Use HTTPS for upstream's source.
   * debian/{compat,control}: Update compat to 10.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 19 Oct 2017 17:13:26 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 19 Oct 2017 17:37:48 -0200
 
 youtube-dl (2017.09.24-0.1) unstable; urgency=medium
 
