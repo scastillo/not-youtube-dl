@@ -1,6 +1,6 @@
 Source: youtube-dl
 Section: web
-Priority: extra
+Priority: optional
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Build-Depends:
  bash-completion,
