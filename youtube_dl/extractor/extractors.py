@@ -150,6 +150,7 @@ from .canalc2 import Canalc2IE
 from .canvas import (
     CanvasIE,
     CanvasEenIE,
+    VrtNUIE,
 )
 from .carambatv import (
     CarambaTVIE,
@@ -431,7 +432,10 @@ from .hitbox import HitboxIE, HitboxLiveIE
 from .hitrecord import HitRecordIE
 from .hornbunny import HornBunnyIE
 from .hotnewhiphop import HotNewHipHopIE
-from .hotstar import HotStarIE
+from .hotstar import (
+    HotStarIE,
+    HotStarPlaylistIE,
+)
 from .howcast import HowcastIE
 from .howstuffworks import HowStuffWorksIE
 from .hrti import (
@@ -623,7 +627,6 @@ from .mwave import MwaveIE, MwaveMeetGreetIE
 from .myspace import MySpaceIE, MySpaceAlbumIE
 from .myspass import MySpassIE
 from .myvi import MyviIE
-from .myvideo import MyVideoIE
 from .myvidster import MyVidsterIE
 from .nationalgeographic import (
     NationalGeographicVideoIE,
@@ -925,6 +928,7 @@ from .seeker import SeekerIE
 from .senateisvp import SenateISVPIE
 from .sendtonews import SendtoNewsIE
 from .servingsys import ServingSysIE
+from .servus import ServusIE
 from .sexu import SexuIE
 from .shahid import ShahidIE
 from .shared import (
@@ -1109,10 +1113,6 @@ from .tvplayer import TVPlayerIE
 from .tweakers import TweakersIE
 from .twentyfourvideo import TwentyFourVideoIE
 from .twentymin import TwentyMinutenIE
-from .twentytwotracks import (
-    TwentyTwoTracksIE,
-    TwentyTwoTracksGenreIE
-)
 from .twitch import (
     TwitchVideoIE,
     TwitchChapterIE,
@@ -1138,6 +1138,7 @@ from .udn import UDNEmbedIE
 from .uktvplay import UKTVPlayIE
 from .digiteka import DigitekaIE
 from .unistra import UnistraIE
+from .unity import UnityIE
 from .uol import UOLIE
 from .uplynk import (
     UplynkIE,
@@ -1332,6 +1333,11 @@ from .youjizz import YouJizzIE
 from .youku import (
     YoukuIE,
     YoukuShowIE,
+)
+from .younow import (
+    YouNowLiveIE,
+    YouNowChannelIE,
+    YouNowMomentIE,
 )
 from .youporn import YouPornIE
 from .yourupload import YourUploadIE
