@@ -1,10 +1,11 @@
-youtube-dl (2017.11.06-1~1.gbp421b7b) UNRELEASED; urgency=medium
+youtube-dl (2017.11.06-1~2.gbp9befab) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @421b7b220ea958384617bd7d339f188bf601280e **
+  ** SNAPSHOT build @9befab8ca05410d0aa06bbdb4ebfd22cf483e921 **
 
   * New upstream version 2017.11.06
+  * debian/control: Add recommends on phantomjs. Closes: #880739
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 08 Nov 2017 04:34:20 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 08 Nov 2017 04:35:28 -0200
 
 youtube-dl (2017.10.15.1-1) unstable; urgency=medium
 
