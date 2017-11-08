@@ -3,8 +3,6 @@
  - **1up.com**
  - **20min**
  - **220.ro**
- - **22tracks:genre**
- - **22tracks:track**
  - **24video**
  - **3qsdn**: 3Q SDN
  - **3sat**
@@ -342,6 +340,7 @@
  - **HornBunny**
  - **HotNewHipHop**
  - **HotStar**
+ - **hotstar:playlist**
  - **Howcast**
  - **HowStuffWorks**
  - **HRTi**
@@ -498,7 +497,6 @@
  - **MySpace:album**
  - **MySpass**
  - **Myvi**
- - **myvideo** (Currently broken)
  - **MyVidster**
  - **n-tv.de**
  - **natgeo**
@@ -728,6 +726,7 @@
  - **SenateISVP**
  - **SendtoNews**
  - **ServingSys**
+ - **Servus**
  - **Sexu**
  - **Shahid**
  - **Shared**: shared.sx
@@ -887,6 +886,7 @@
  - **UDNEmbed**: 聯合影音
  - **UKTVPlay**
  - **Unistra**
+ - **Unity**
  - **uol.com.br**
  - **uplynk**
  - **uplynk:preplay**
@@ -975,6 +975,7 @@
  - **vpro**: npo.nl, ntr.nl, omroepwnl.nl, zapp.nl and npo3.nl
  - **Vrak**
  - **VRT**: deredactie.be, sporza.be, cobra.be and cobra.canvas.be
+ - **VrtNU**: VrtNU.be
  - **vrv**
  - **vrv:series**
  - **VShare**
@@ -1033,6 +1034,9 @@
  - **YouJizz**
  - **youku**: 优酷
  - **youku:show**
+ - **YouNowChannel**
+ - **YouNowLive**
+ - **YouNowMoment**
  - **YouPorn**
  - **YourUpload**
  - **youtube**: YouTube.com
