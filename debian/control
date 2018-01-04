@@ -13,7 +13,7 @@ Build-Depends:
 Build-Depends-Indep:
  python3
 X-Python3-Version: >= 3.2
-Standards-Version: 4.1.1
+Standards-Version: 4.1.3
 Homepage: https://rg3.github.com/youtube-dl/
 Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
 Vcs-Browser: https://github.com/rbrito/pkg-youtube-dl
