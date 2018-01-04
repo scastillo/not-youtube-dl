@@ -1066,6 +1066,15 @@ scale used depends on the webpage
 .IP \[bu] 2
 \f[C]age_limit\f[] (numeric): Age restriction for the video (years)
 .IP \[bu] 2
+\f[C]is_live\f[] (boolean): Whether this video is a live stream or a
+fixed\-length video
+.IP \[bu] 2
+\f[C]start_time\f[] (numeric): Time in seconds where the reproduction
+should start, as specified in the URL
+.IP \[bu] 2
+\f[C]end_time\f[] (numeric): Time in seconds where the reproduction
+should end, as specified in the URL
+.IP \[bu] 2
 \f[C]format\f[] (string): A human\-readable description of the format
 .IP \[bu] 2
 \f[C]format_id\f[] (string): Format code specified by
@@ -1120,6 +1129,11 @@ padded with leading zeros according to the total length of the playlist
 \f[C]playlist_id\f[] (string): Playlist identifier
 .IP \[bu] 2
 \f[C]playlist_title\f[] (string): Playlist title
+.IP \[bu] 2
+\f[C]playlist_uploader\f[] (string): Full name of the playlist uploader
+.IP \[bu] 2
+\f[C]playlist_uploader_id\f[] (string): Nickname or id of the playlist
+uploader
 .PP
 Available for the video that belongs to some logical chapter or section:
 .IP \[bu] 2
