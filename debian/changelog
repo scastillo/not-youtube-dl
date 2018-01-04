@@ -2,7 +2,7 @@ youtube-dl (2017.12.31-1~1.gbp9113df) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @9113dfef91df19343cf76c6274dd0a85258c1004 **
 
-  * New upstream version 2017.12.31
+  * New upstream version 2017.12.31. (Closes: #886249)
 
  -- Rogério Brito <rbrito@ime.usp.br>  Thu, 04 Jan 2018 04:13:14 -0200
 
