@@ -259,6 +259,7 @@ from .deezer import DeezerPlaylistIE
 from .democracynow import DemocracynowIE
 from .dfb import DFBIE
 from .dhm import DHMIE
+from .digg import DiggIE
 from .dotsub import DotsubIE
 from .douyutv import (
     DouyuShowIE,
@@ -489,7 +490,6 @@ from .jwplatform import JWPlatformIE
 from .jpopsukitv import JpopsukiIE
 from .kakao import KakaoIE
 from .kaltura import KalturaIE
-from .kamcord import KamcordIE
 from .kanalplay import KanalPlayIE
 from .kankan import KankanIE
 from .karaoketv import KaraoketvIE
@@ -609,7 +609,10 @@ from .mofosex import MofosexIE
 from .mojvideo import MojvideoIE
 from .moniker import MonikerIE
 from .morningstar import MorningstarIE
-from .motherless import MotherlessIE
+from .motherless import (
+    MotherlessIE,
+    MotherlessGroupIE
+)
 from .motorsport import MotorsportIE
 from .movieclips import MovieClipsIE
 from .moviezine import MoviezineIE
@@ -878,7 +881,6 @@ from .revision3 import (
     Revision3IE,
 )
 from .rice import RICEIE
-from .ringtv import RingTVIE
 from .rmcdecouverte import RMCDecouverteIE
 from .ro220 import Ro220IE
 from .rockstargames import RockstarGamesIE
@@ -898,6 +900,7 @@ from .rtp import RTPIE
 from .rts import RTSIE
 from .rtve import RTVEALaCartaIE, RTVELiveIE, RTVEInfantilIE, RTVELiveIE, RTVETelevisionIE
 from .rtvnh import RTVNHIE
+from .rtvs import RTVSIE
 from .rudo import RudoIE
 from .ruhd import RUHDIE
 from .ruleporn import RulePornIE
@@ -930,6 +933,10 @@ from .servingsys import ServingSysIE
 from .servus import ServusIE
 from .sevenplus import SevenPlusIE
 from .sexu import SexuIE
+from .seznamzpravy import (
+    SeznamZpravyIE,
+    SeznamZpravyArticleIE,
+)
 from .shahid import (
     ShahidIE,
     ShahidShowIE,
@@ -987,7 +994,7 @@ from .stitcher import StitcherIE
 from .sport5 import Sport5IE
 from .sportbox import SportBoxEmbedIE
 from .sportdeutschland import SportDeutschlandIE
-from .sportschau import SportschauIE
+from .springboardplatform import SpringboardPlatformIE
 from .sprout import SproutIE
 from .srgssr import (
     SRGSSRIE,
@@ -1043,7 +1050,6 @@ from .theplatform import (
     ThePlatformFeedIE,
 )
 from .thescene import TheSceneIE
-from .thesixtyone import TheSixtyOneIE
 from .thestar import TheStarIE
 from .thesun import TheSunIE
 from .theweatherchannel import TheWeatherChannelIE
@@ -1285,6 +1291,8 @@ from .watchbox import WatchBoxIE
 from .watchindianporn import WatchIndianPornIE
 from .wdr import (
     WDRIE,
+    WDRPageIE,
+    WDRElefantIE,
     WDRMobileIE,
 )
 from .webcaster import (
@@ -1294,6 +1302,10 @@ from .webcaster import (
 from .webofstories import (
     WebOfStoriesIE,
     WebOfStoriesPlaylistIE,
+)
+from .weibo import (
+    WeiboIE, 
+    WeiboMobileIE
 )
 from .weiqitv import WeiqiTVIE
 from .wimp import WimpIE
@@ -1319,6 +1331,10 @@ from .xiami import (
     XiamiAlbumIE,
     XiamiArtistIE,
     XiamiCollectionIE
+)
+from .ximalaya import (
+    XimalayaIE,
+    XimalayaAlbumIE
 )
 from .xminus import XMinusIE
 from .xnxx import XNXXIE

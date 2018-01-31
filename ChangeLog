@@ -1,3 +1,92 @@
+version 2018.01.27
+
+Core
+* [extractor/common] Improve _json_ld for articles
+* Switch codebase to use compat_b64decode
++ [compat] Add compat_b64decode
+
+Extractors
++ [seznamzpravy] Add support for seznam.cz and seznamzpravy.cz (#14102, #14616)
+* [dplay] Bypass geo restriction
++ [dplay] Add support for disco-api videos (#15396)
+* [youtube] Extract precise error messages (#15284)
+* [teachertube] Capture and output error message
+* [teachertube] Fix and relax thumbnail extraction (#15403)
++ [prosiebensat1] Add another clip id regular expression (#15378)
+* [tbs] Update tokenizer url (#15395)
+* [mixcloud] Use compat_b64decode (#15394)
+- [thesixtyone] Remove extractor (#15341)
+
+
+version 2018.01.21
+
+Core
+* [extractor/common] Improve jwplayer DASH formats extraction (#9242, #15187)
+* [utils] Improve scientific notation handling in js_to_json (#14789)
+
+Extractors
++ [southparkdk] Add support for southparkstudios.nu
++ [southpark] Add support for collections (#14803)
+* [franceinter] Fix upload date extraction (#14996)
++ [rtvs] Add support for rtvs.sk (#9242, #15187)
+* [restudy] Fix extraction and extend URL regular expression (#15347)
+* [youtube:live] Improve live detection (#15365)
++ [springboardplatform] Add support for springboardplatform.com
+* [prosiebensat1] Add another clip id regular expression (#15290)
+- [ringtv] Remove extractor (#15345)
+
+
+version 2018.01.18
+
+Extractors
+* [soundcloud] Update client id (#15306)
+- [kamcord] Remove extractor (#15322)
++ [spiegel] Add support for nexx videos (#15285)
+* [twitch] Fix authentication and error capture (#14090, #15264)
+* [vk] Detect more errors due to copyright complaints (#15259)
+
+
+version 2018.01.14
+
+Extractors
+* [youtube] Fix live streams extraction (#15202)
+* [wdr] Bypass geo restriction
+* [wdr] Rework extractors (#14598)
++ [wdr] Add support for wdrmaus.de/elefantenseite (#14598)
++ [gamestar] Add support for gamepro.de (#3384)
+* [viafree] Skip rtmp formats (#15232)
++ [pandoratv] Add support for mobile URLs (#12441)
++ [pandoratv] Add support for new URL format (#15131)
++ [ximalaya] Add support for ximalaya.com (#14687)
++ [digg] Add support for digg.com (#15214)
+* [limelight] Tolerate empty pc formats (#15150, #15151, #15207)
+* [ndr:embed:base] Make separate formats extraction non fatal (#15203)
++ [weibo] Add extractor (#15079)
++ [ok] Add support for live streams
+* [canalplus] Fix extraction (#15072)
+* [bilibili] Fix extraction (#15188)
+
+
+version 2018.01.07
+
+Core
+* [utils] Fix youtube-dl under PyPy3 on Windows
+* [YoutubeDL] Output python implementation in debug header
+
+Extractors
++ [jwplatform] Add support for multiple embeds (#15192)
+* [mitele] Fix extraction (#15186)
++ [motherless] Add support for groups (#15124)
+* [lynda] Relax URL regular expression (#15185)
+* [soundcloud] Fallback to avatar picture for thumbnail (#12878)
+* [youku] Fix list extraction (#15135)
+* [openload] Fix extraction (#15166)
+* [lynda] Skip invalid subtitles (#15159)
+* [twitch] Pass video id to url_result when extracting playlist (#15139)
+* [rtve.es:alacarta] Fix extraction of some new URLs
+* [acast] Fix extraction (#15147)
+
+
 version 2017.12.31
 
 Core
