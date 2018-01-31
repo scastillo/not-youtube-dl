@@ -61,9 +61,9 @@ DESCRIPTION
 YOUTUBE-DL is a command-line program to download videos from YouTube.com
 and a few more sites. It requires the Python interpreter, version 2.6,
 2.7, or 3.2+, and it is not platform specific. It should work on your
-Unix box, on Windows or on Mac OS X. It is released to the public
-domain, which means you can modify it, redistribute it or use it however
-you like.
+Unix box, on Windows or on macOS. It is released to the public domain,
+which means you can modify it, redistribute it or use it however you
+like.
 
     youtube-dl [OPTIONS] URL [URL...]
 
@@ -1145,8 +1145,8 @@ first line of the cookies file must be either # HTTP Cookie File or
 # Netscape HTTP Cookie File. Make sure you have correct newline format
 in the cookies file and convert newlines if necessary to correspond with
 your OS, namely CRLF (\r\n) for Windows and LF (\n) for Unix and
-Unix-like systems (Linux, Mac OS, etc.). HTTP Error 400: Bad Request
-when using --cookies is a good sign of invalid newline format.
+Unix-like systems (Linux, macOS, etc.). HTTP Error 400: Bad Request when
+using --cookies is a good sign of invalid newline format.
 
 Passing cookies to youtube-dl is a good way to workaround login when a
 particular extractor does not implement it explicitly. Another use case
