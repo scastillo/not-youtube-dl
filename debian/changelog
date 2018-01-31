@@ -1,3 +1,11 @@
+youtube-dl (2018.01.27-1~1.gbpecaee9) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @ecaee9d66905db1d5836d396c705d18d6e5f1f72 **
+
+  * New upstream version 2018.01.27
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 31 Jan 2018 02:42:21 -0200
+
 youtube-dl (2017.12.31-1) unstable; urgency=medium
 
   * New upstream version 2017.12.31. (Closes: #886249)
