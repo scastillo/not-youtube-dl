@@ -2,6 +2,7 @@ youtube-dl (2017.12.31-2) UNRELEASED; urgency=medium
 
   * Team upload.
   * cme fix dpkg-control
+  * Moved packaging to salsa.debian.org
 
  -- Andreas Tille <tille@debian.org>  Thu, 01 Mar 2018 08:25:16 +0100
 

@@ -11,8 +11,8 @@ Build-Depends: bash-completion,
                zip
 Build-Depends-Indep: python3
 Standards-Version: 4.1.3
-Vcs-Browser: https://github.com/rbrito/pkg-youtube-dl
-Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
+Vcs-Browser: https://salsa.debian.org/debian/youtube-dl
+Vcs-Git: https://salsa.debian.org/debian/youtube-dl.git
 Homepage: https://rg3.github.com/youtube-dl/
 X-Python3-Version: >= 3.2
 
