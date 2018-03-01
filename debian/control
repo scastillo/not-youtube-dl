@@ -1,38 +1,32 @@
 Source: youtube-dl
+Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Section: web
 Priority: optional
-Maintainer: Rogério Brito <rbrito@ime.usp.br>
-Build-Depends:
- bash-completion,
- debhelper (>= 10),
- dh-exec,
- dh-python,
- pandoc,
- python3-pkg-resources,
- zip
-Build-Depends-Indep:
- python3
-X-Python3-Version: >= 3.2
+Build-Depends: bash-completion,
+               debhelper (>= 10),
+               dh-exec,
+               dh-python,
+               pandoc,
+               python3-pkg-resources,
+               zip
+Build-Depends-Indep: python3
 Standards-Version: 4.1.3
-Homepage: https://rg3.github.com/youtube-dl/
-Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
 Vcs-Browser: https://github.com/rbrito/pkg-youtube-dl
+Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
+Homepage: https://rg3.github.com/youtube-dl/
+X-Python3-Version: >= 3.2
 
 Package: youtube-dl
 Architecture: all
-Pre-Depends:
- dpkg (>= 1.15.7.2)
-Depends:
- python3-pkg-resources,
- ${misc:Depends},
- ${python3:Depends}
-Recommends:
- aria2 | wget | curl,
- ca-certificates,
- ffmpeg | libav-tools,
- mpv | mplayer,
- phantomjs,
- rtmpdump
+Depends: python3-pkg-resources,
+         ${misc:Depends},
+         ${python3:Depends}
+Recommends: aria2 | wget | curl,
+            ca-certificates,
+            ffmpeg | libav-tools,
+            mpv | mplayer,
+            phantomjs,
+            rtmpdump
 Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the

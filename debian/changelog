@@ -1,3 +1,10 @@
+youtube-dl (2017.12.31-2) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * cme fix dpkg-control
+
+ -- Andreas Tille <tille@debian.org>  Thu, 01 Mar 2018 08:25:16 +0100
+
 youtube-dl (2018.01.27-1~1.gbpecaee9) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @ecaee9d66905db1d5836d396c705d18d6e5f1f72 **
