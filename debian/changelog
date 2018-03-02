@@ -1,6 +1,11 @@
-youtube-dl (2017.12.31-2) UNRELEASED; urgency=medium
+youtube-dl (2018.01.27-1~1.gbpecaee9) UNRELEASED; urgency=medium
 
-  * Team upload.
+  ** SNAPSHOT build @ecaee9d66905db1d5836d396c705d18d6e5f1f72 **
+
+  [ Rogério Brito ]
+  * New upstream version 2018.01.27
+
+  [ Andreas Tille ]
   * cme fix dpkg-control
   * Moved packaging to salsa.debian.org
 
