@@ -3,7 +3,7 @@ Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Section: web
 Priority: optional
 Build-Depends: bash-completion,
-               debhelper (>= 10),
+               debhelper (>= 11),
                dh-exec,
                dh-python,
                pandoc,
