@@ -52,6 +52,7 @@ complete --command youtube-dl --long-option abort-on-unavailable-fragment --desc
 complete --command youtube-dl --long-option keep-fragments --description 'Keep downloaded fragments on disk after downloading is finished; fragments are erased by default'
 complete --command youtube-dl --long-option buffer-size --description 'Size of download buffer (e.g. 1024 or 16K) (default is %default)'
 complete --command youtube-dl --long-option no-resize-buffer --description 'Do not automatically adjust the buffer size. By default, the buffer size is automatically resized from an initial value of SIZE.'
+complete --command youtube-dl --long-option http-chunk-size --description 'Size of a chunk for chunk-based HTTP downloading (e.g. 10485760 or 10M) (default is disabled). May be useful for bypassing bandwidth throttling imposed by a webserver (experimental)'
 complete --command youtube-dl --long-option test
 complete --command youtube-dl --long-option playlist-reverse --description 'Download playlist videos in reverse order'
 complete --command youtube-dl --long-option playlist-random --description 'Download playlist videos in random order'

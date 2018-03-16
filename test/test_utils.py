@@ -53,10 +53,12 @@ from youtube_dl.utils import (
     parse_filesize,
     parse_count,
     parse_iso8601,
+    parse_resolution,
     pkcs1pad,
     read_batch_urls,
     sanitize_filename,
     sanitize_path,
+    sanitize_url,
     expand_path,
     prepend_extension,
     replace_extension,
@@ -219,6 +221,12 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(sanitize_path('./abc'), 'abc')
         self.assertEqual(sanitize_path('./../abc'), '..\\abc')
 
+    def test_sanitize_url(self):
+        self.assertEqual(sanitize_url('//foo.bar'), 'http://foo.bar')
+        self.assertEqual(sanitize_url('httpss://foo.bar'), 'https://foo.bar')
+        self.assertEqual(sanitize_url('rmtps://foo.bar'), 'rtmps://foo.bar')
+        self.assertEqual(sanitize_url('https://foo.bar'), 'https://foo.bar')
+
     def test_expand_path(self):
         def env(var):
             return '%{0}%'.format(var) if sys.platform == 'win32' else '${0}'.format(var)
@@ -344,6 +352,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(unified_timestamp('2017-03-30T17:52:41Q'), 1490896361)
         self.assertEqual(unified_timestamp('Sep 11, 2013 | 5:49 AM'), 1378878540)
         self.assertEqual(unified_timestamp('December 15, 2017 at 7:49 am'), 1513324140)
+        self.assertEqual(unified_timestamp('2018-03-14T08:32:43.1493874+00:00'), 1521016363)
 
     def test_determine_ext(self):
         self.assertEqual(determine_ext('http://example.com/foo/bar.mp4/?download'), 'mp4')
@@ -974,6 +983,16 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(parse_count('1.1kk'), 1100000)
         self.assertEqual(parse_count('1.1kk '), 1100000)
         self.assertEqual(parse_count('1.1kk views'), 1100000)
+
+    def test_parse_resolution(self):
+        self.assertEqual(parse_resolution(None), {})
+        self.assertEqual(parse_resolution(''), {})
+        self.assertEqual(parse_resolution('1920x1080'), {'width': 1920, 'height': 1080})
+        self.assertEqual(parse_resolution('1920×1080'), {'width': 1920, 'height': 1080})
+        self.assertEqual(parse_resolution('1920 x 1080'), {'width': 1920, 'height': 1080})
+        self.assertEqual(parse_resolution('720p'), {'height': 720})
+        self.assertEqual(parse_resolution('4k'), {'height': 2160})
+        self.assertEqual(parse_resolution('8K'), {'height': 4320})
 
     def test_version_tuple(self):
         self.assertEqual(version_tuple('1'), (1,))

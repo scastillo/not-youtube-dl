@@ -175,10 +175,27 @@ class AfreecaTVIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
+        webpage = self._download_webpage(url, video_id)
+
+        if re.search(r'alert\(["\']This video has been deleted', webpage):
+            raise ExtractorError(
+                'Video %s has been deleted' % video_id, expected=True)
+
+        station_id = self._search_regex(
+            r'nStationNo\s*=\s*(\d+)', webpage, 'station')
+        bbs_id = self._search_regex(
+            r'nBbsNo\s*=\s*(\d+)', webpage, 'bbs')
+        video_id = self._search_regex(
+            r'nTitleNo\s*=\s*(\d+)', webpage, 'title', default=video_id)
+
         video_xml = self._download_xml(
             'http://afbbs.afreecatv.com:8080/api/video/get_video_info.php',
-            video_id, query={
+            video_id, headers={
+                'Referer': 'http://vod.afreecatv.com/embed.php',
+            }, query={
                 'nTitleNo': video_id,
+                'nStationNo': station_id,
+                'nBbsNo': bbs_id,
                 'partialView': 'SKIP_ADULT',
             })
 
@@ -187,10 +204,10 @@ class AfreecaTVIE(InfoExtractor):
             raise ExtractorError(
                 '%s said: %s' % (self.IE_NAME, flag), expected=True)
 
-        video_element = video_xml.findall(compat_xpath('./track/video'))[1]
+        video_element = video_xml.findall(compat_xpath('./track/video'))[-1]
         if video_element is None or video_element.text is None:
-            raise ExtractorError('Specified AfreecaTV video does not exist',
-                                 expected=True)
+            raise ExtractorError(
+                'Video %s video does not exist' % video_id, expected=True)
 
         video_url = video_element.text.strip()
 
