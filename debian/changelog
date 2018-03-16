@@ -1,6 +1,6 @@
-youtube-dl (2018.03.14-1~2.gbp941b2c) UNRELEASED; urgency=medium
+youtube-dl (2018.03.14-1~3.gbp903490) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @941b2c19f4769eabb3004accc12cf96965d4bca6 **
+  ** SNAPSHOT build @903490db3cf588364c9ff08098b1a9193438a7f3 **
 
   [ Rogério Brito ]
   * New upstream version 2018.01.27
@@ -18,7 +18,22 @@ youtube-dl (2018.03.14-1~2.gbp941b2c) UNRELEASED; urgency=medium
   * debian/control: Add Recommends: python3-pyxattr.
     Thanks to Mathieu Malaterre for the report. (Closes: #891446)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 13:38:11 -0300
+  [ Nicolas Braud-Santoni ]
+  * d/p/remove-autoupdate-mechanism.patch: Remove upstream's autoupdate
+    mechanism (Closes: #890119)
+
+  [ Rogério Brito ]
+  * debian/patches:
+    + remove-autoupdate-mechanism.patch: Update patch with metadata at the top.
+    + fix_libav_compat_outdated.patch: Refresh.
+    + remove-autoupdate-mechanism.patch: Refresh.
+    + remove-autoupdate-mechanism.patch: Remove fewer things to avoid future
+      conflicts.
+    + remove-autoupdate-mechanism.patch: Update metadata and rename to
+      disable-autoupdate-mechanism.patch
+    + Refresh all patches with gbp pq.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 14:39:18 -0300
 
 youtube-dl (2017.12.31-1) unstable; urgency=medium
 
