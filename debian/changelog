@@ -1,28 +1,24 @@
-youtube-dl (2018.03.14-1~4.gbp784b21) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @784b21f8e1ab6308ddf1ee440475d74fbc71dd1b **
-
-  [ Rogério Brito ]
-  * New upstream version 2018.01.27
+youtube-dl (2018.03.14-1) unstable; urgency=medium
 
   [ Andreas Tille ]
   * cme fix dpkg-control
   * Moved packaging to salsa.debian.org
-
-  [ Rogério Brito ]
-  * New upstream version 2018.03.14
-  * debian/copyright:
-    + Update my copyright years.
-  * debian/{compat,control}:
-    + Relutanctly update compat to 11.
-  * debian/control: Add Recommends: python3-pyxattr.
-    Thanks to Mathieu Malaterre for the report. (Closes: #891446)
 
   [ Nicolas Braud-Santoni ]
   * d/p/remove-autoupdate-mechanism.patch: Remove upstream's autoupdate
     mechanism (Closes: #693534, #890119)
 
   [ Rogério Brito ]
+  * New upstream version 2018.01.27
+  * New upstream version 2018.03.14
+  * debian/copyright:
+    + Update my copyright years.
+  * debian/{compat,control}:
+    + Relutanctly update compat to 11.
+  * debian/control:
+    + Add Recommends: python3-pyxattr. Thanks to Mathieu Malaterre for the
+      report. (Closes: #891446)
+    + Update long description with list of supported sites/extractors.
   * debian/patches:
     + remove-autoupdate-mechanism.patch: Update patch with metadata at the top.
     + fix_libav_compat_outdated.patch: Refresh.
@@ -32,9 +28,8 @@ youtube-dl (2018.03.14-1~4.gbp784b21) UNRELEASED; urgency=medium
     + remove-autoupdate-mechanism.patch: Update metadata and rename to
       disable-autoupdate-mechanism.patch
     + Refresh all patches with gbp pq.
-  * debian/control: Update list of supported sites/extractors.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 15:52:04 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 15:55:33 -0300
 
 youtube-dl (2017.12.31-1) unstable; urgency=medium
 
