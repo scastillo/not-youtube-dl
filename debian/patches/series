@@ -1,3 +1,3 @@
 skip_support_file_installation.patch
 fix_libav_compat_outdated.patch
-remove-autoupdate-mechanism.patch
+disable-autoupdate-mechanism.patch

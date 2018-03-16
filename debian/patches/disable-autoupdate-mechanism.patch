@@ -1,35 +1,43 @@
-Subject: Remove autoupdate mechanism
-Bug: 890119
-Forwarded: no
 From: Nicolas Braud-Santoni <nicolas@braud-santoni.eu>
+Date: Fri, 16 Mar 2018 14:17:40 -0300
+Subject: Disable upstream's autoupdate mechanism
+
+
+Description: Remove autoupdate mechanism
+Bug-Debian: 890119
+Forwarded: not-needed
+Author: Nicolas Braud-Santoni <nicolas@braud-santoni.eu>
 Reviewed-by: Rogério Theodoro de Brito <rbrito@ime.usp.br>
 Last-Update: 2018-03-16
-Applied-Upstream: no
 
 ---
- youtube_dl/__init__.py |   8 ++-
- youtube_dl/options.py  |   2 +-
- youtube_dl/update.py   | 187 -------------------------------------------------
- 3 files changed, 6 insertions(+), 191 deletions(-)
- delete mode 100644 youtube_dl/update.py
+ youtube_dl/__init__.py | 7 ++++++-
+ youtube_dl/options.py  | 2 +-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
+diff --git a/youtube_dl/__init__.py b/youtube_dl/__init__.py
+index 9bb9524..7bf379b 100644
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
-@@ -438,7 +437,10 @@
+@@ -438,7 +438,12 @@ def _real_main(argv=None):
      with YoutubeDL(ydl_opts) as ydl:
          # Update version
          if opts.update_self:
 -            update_self(ydl.to_screen, opts.verbose, ydl._opener)
 +            parser.error(
 +                "youtube-dl's self-update mechanism is disabled on Debian.\n"
-+                "Please update youtube-dl using apt(8)."
++                "Please update youtube-dl using apt(8).\n"
++                "See https://packages.debian.org/sid/youtube-dl for the "
++                "latest packaged version.\n"
 +            )
  
          # Remove cache dir
          if opts.rm_cachedir:
+diff --git a/youtube_dl/options.py b/youtube_dl/options.py
+index 7d1bbc0..cafca0c 100644
 --- a/youtube_dl/options.py
 +++ b/youtube_dl/options.py
-@@ -140,7 +140,7 @@
+@@ -140,7 +140,7 @@ def parseOpts(overrideArguments=None):
      general.add_option(
          '-U', '--update',
          action='store_true', dest='update_self',
