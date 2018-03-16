@@ -9,13 +9,11 @@ Origin: vendor
 Forwarded: not-needed
 Last-Update: 2016-06-27
 ---
-This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
----
  setup.py | 7 +------
  1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/setup.py b/setup.py
-index 508b27f..7b13ef7 100644
+index 7dbb580..80599be 100644
 --- a/setup.py
 +++ b/setup.py
 @@ -58,12 +58,7 @@ py2exe_params = {
