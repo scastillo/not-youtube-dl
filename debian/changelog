@@ -1,6 +1,6 @@
-youtube-dl (2018.03.14-1~1.gbp75e3f4) UNRELEASED; urgency=medium
+youtube-dl (2018.03.14-1~2.gbp941b2c) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @75e3f4edaae1eaeba293fd8bcccd747d70e8155a **
+  ** SNAPSHOT build @941b2c19f4769eabb3004accc12cf96965d4bca6 **
 
   [ Rogério Brito ]
   * New upstream version 2018.01.27
@@ -15,8 +15,10 @@ youtube-dl (2018.03.14-1~1.gbp75e3f4) UNRELEASED; urgency=medium
     + Update my copyright years.
   * debian/{compat,control}:
     + Relutanctly update compat to 11.
+  * debian/control: Add Recommends: python3-pyxattr.
+    Thanks to Mathieu Malaterre for the report. (Closes: #891446)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 13:32:48 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 13:38:11 -0300
 
 youtube-dl (2017.12.31-1) unstable; urgency=medium
 
