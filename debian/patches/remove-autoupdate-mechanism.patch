@@ -13,12 +13,9 @@ Applied-Upstream: no
  3 files changed, 6 insertions(+), 191 deletions(-)
  delete mode 100644 youtube_dl/update.py
 
-diff --git a/youtube_dl/__init__.py b/youtube_dl/__init__.py
-index ba684a0..298ed7e 100644
-
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
-@@ -36,7 +36,6 @@ from .utils import (
+@@ -36,7 +36,6 @@
      write_string,
      render_table,
  )
@@ -26,7 +23,7 @@ index ba684a0..298ed7e 100644
  from .downloader import (
      FileDownloader,
  )
-@@ -432,7 +431,10 @@ def _real_main(argv=None):
+@@ -438,7 +437,10 @@
      with YoutubeDL(ydl_opts) as ydl:
          # Update version
          if opts.update_self:
@@ -38,7 +35,7 @@ index ba684a0..298ed7e 100644
  
          # Remove cache dir
          if opts.rm_cachedir:
-@@ -440,7 +442,7 @@ def _real_main(argv=None):
+@@ -446,7 +448,7 @@
  
          # Maybe do nothing
          if (len(all_urls) < 1) and (opts.load_info_filename is None):
@@ -47,11 +44,9 @@ index ba684a0..298ed7e 100644
                  sys.exit()
  
              ydl.warn_if_short_id(sys.argv[1:] if argv is None else argv)
-diff --git a/youtube_dl/options.py b/youtube_dl/options.py
-index 4c04550..cca8cb6 100644
 --- a/youtube_dl/options.py
 +++ b/youtube_dl/options.py
-@@ -140,7 +140,7 @@ def parseOpts(overrideArguments=None):
+@@ -140,7 +140,7 @@
      general.add_option(
          '-U', '--update',
          action='store_true', dest='update_self',
@@ -60,9 +55,6 @@ index 4c04550..cca8cb6 100644
      general.add_option(
          '-i', '--ignore-errors',
          action='store_true', dest='ignoreerrors', default=False,
-diff --git a/youtube_dl/update.py b/youtube_dl/update.py
-deleted file mode 100644
-index ebce966..0000000
 --- a/youtube_dl/update.py
 +++ /dev/null
 @@ -1,187 +0,0 @@
