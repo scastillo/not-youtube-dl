@@ -102,6 +102,8 @@ from .channel9 import Channel9IE
 from .vshare import VShareIE
 from .mediasite import MediasiteIE
 from .springboardplatform import SpringboardPlatformIE
+from .yapfiles import YapFilesIE
+from .vice import ViceIE
 
 
 class GenericIE(InfoExtractor):
@@ -1954,6 +1956,34 @@ class GenericIE(InfoExtractor):
                 'skip_download': True,
             },
             'add_ie': [SpringboardPlatformIE.ie_key()],
+        },
+        {
+            'url': 'https://www.youtube.com/shared?ci=1nEzmT-M4fU',
+            'info_dict': {
+                'id': 'uPDB5I9wfp8',
+                'ext': 'webm',
+                'title': 'Pocoyo: 90 minutos de episódios completos Português para crianças - PARTE 3',
+                'description': 'md5:d9e4d9346a2dfff4c7dc4c8cec0f546d',
+                'upload_date': '20160219',
+                'uploader': 'Pocoyo - Português (BR)',
+                'uploader_id': 'PocoyoBrazil',
+            },
+            'add_ie': [YoutubeIE.ie_key()],
+            'params': {
+                'skip_download': True,
+            },
+        },
+        {
+            'url': 'https://www.yapfiles.ru/show/1872528/690b05d3054d2dbe1e69523aa21bb3b1.mp4.html',
+            'info_dict': {
+                'id': 'vMDE4NzI1Mjgt690b',
+                'ext': 'mp4',
+                'title': 'Котята',
+            },
+            'add_ie': [YapFilesIE.ie_key()],
+            'params': {
+                'skip_download': True,
+            },
         }
         # {
         #     # TODO: find another test
@@ -2280,7 +2310,10 @@ class GenericIE(InfoExtractor):
         # Look for Brightcove New Studio embeds
         bc_urls = BrightcoveNewIE._extract_urls(self, webpage)
         if bc_urls:
-            return self.playlist_from_matches(bc_urls, video_id, video_title, ie='BrightcoveNew')
+            return self.playlist_from_matches(
+                bc_urls, video_id, video_title,
+                getter=lambda x: smuggle_url(x, {'referrer': url}),
+                ie='BrightcoveNew')
 
         # Look for Nexx embeds
         nexx_urls = NexxIE._extract_urls(webpage)
@@ -2927,6 +2960,16 @@ class GenericIE(InfoExtractor):
             return self.playlist_from_matches(
                 springboardplatform_urls, video_id, video_title,
                 ie=SpringboardPlatformIE.ie_key())
+
+        yapfiles_urls = YapFilesIE._extract_urls(webpage)
+        if yapfiles_urls:
+            return self.playlist_from_matches(
+                yapfiles_urls, video_id, video_title, ie=YapFilesIE.ie_key())
+
+        vice_urls = ViceIE._extract_urls(webpage)
+        if vice_urls:
+            return self.playlist_from_matches(
+                vice_urls, video_id, video_title, ie=ViceIE.ie_key())
 
         def merge_dicts(dict1, dict2):
             merged = {}

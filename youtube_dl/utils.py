@@ -82,7 +82,7 @@ def register_socks_protocols():
 compiled_regex_type = type(re.compile(''))
 
 std_headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0 (Chrome)',
     'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
@@ -538,10 +538,22 @@ def sanitize_path(s):
     return os.path.join(*sanitized_path)
 
 
-# Prepend protocol-less URLs with `http:` scheme in order to mitigate the number of
-# unwanted failures due to missing protocol
 def sanitize_url(url):
-    return 'http:%s' % url if url.startswith('//') else url
+    # Prepend protocol-less URLs with `http:` scheme in order to mitigate
+    # the number of unwanted failures due to missing protocol
+    if url.startswith('//'):
+        return 'http:%s' % url
+    # Fix some common typos seen so far
+    COMMON_TYPOS = (
+        # https://github.com/rg3/youtube-dl/issues/15649
+        (r'^httpss://', r'https://'),
+        # https://bx1.be/lives/direct-tv/
+        (r'^rmtp([es]?)://', r'rtmp\1://'),
+    )
+    for mistake, fixup in COMMON_TYPOS:
+        if re.match(mistake, url):
+            return re.sub(mistake, fixup, url)
+    return url
 
 
 def sanitized_Request(url, *args, **kwargs):
@@ -866,8 +878,8 @@ def _create_http_connection(ydl_handler, http_class, is_https, *args, **kwargs):
     # expected HTTP responses to meet HTTP/1.0 or later (see also
     # https://github.com/rg3/youtube-dl/issues/6727)
     if sys.version_info < (3, 0):
-        kwargs[b'strict'] = True
-    hc = http_class(*args, **kwargs)
+        kwargs['strict'] = True
+    hc = http_class(*args, **compat_kwargs(kwargs))
     source_address = ydl_handler._params.get('source_address')
     if source_address is not None:
         sa = (source_address, 0)
@@ -1198,6 +1210,11 @@ def unified_timestamp(date_str, day_first=True):
     m = re.search(r'\d{1,2}:\d{1,2}(?:\.\d+)?(?P<tz>\s*[A-Z]+)$', date_str)
     if m:
         date_str = date_str[:-len(m.group('tz'))]
+
+    # Python only supports microseconds, so remove nanoseconds
+    m = re.search(r'^([0-9]{4,}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}\.[0-9]{6})[0-9]+$', date_str)
+    if m:
+        date_str = m.group(1)
 
     for expression in date_formats(day_first):
         try:
@@ -1675,6 +1692,28 @@ def parse_count(s):
     }
 
     return lookup_unit_table(_UNIT_TABLE, s)
+
+
+def parse_resolution(s):
+    if s is None:
+        return {}
+
+    mobj = re.search(r'\b(?P<w>\d+)\s*[xX×]\s*(?P<h>\d+)\b', s)
+    if mobj:
+        return {
+            'width': int(mobj.group('w')),
+            'height': int(mobj.group('h')),
+        }
+
+    mobj = re.search(r'\b(\d+)[pPiI]\b', s)
+    if mobj:
+        return {'height': int(mobj.group(1))}
+
+    mobj = re.search(r'\b([48])[kK]\b', s)
+    if mobj:
+        return {'height': int(mobj.group(1)) * 540}
+
+    return {}
 
 
 def month_by_name(name, lang='en'):
