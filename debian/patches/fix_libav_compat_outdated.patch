@@ -16,11 +16,9 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  youtube_dl/postprocessor/ffmpeg.py | 9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/youtube_dl/postprocessor/ffmpeg.py b/youtube_dl/postprocessor/ffmpeg.py
-index fa99b0c..29beb48 100644
 --- a/youtube_dl/postprocessor/ffmpeg.py
 +++ b/youtube_dl/postprocessor/ffmpeg.py
-@@ -98,11 +98,16 @@ class FFmpegPostProcessor(PostProcessor):
+@@ -110,11 +110,16 @@
                  self._paths = dict(
                      (p, os.path.join(location, p)) for p in programs)
                  self._versions = dict(
