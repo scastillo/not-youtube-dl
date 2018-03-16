@@ -20,7 +20,7 @@ youtube-dl (2018.03.14-1~4.gbp784b21) UNRELEASED; urgency=medium
 
   [ Nicolas Braud-Santoni ]
   * d/p/remove-autoupdate-mechanism.patch: Remove upstream's autoupdate
-    mechanism (Closes: #890119)
+    mechanism (Closes: #693534, #890119)
 
   [ Rogério Brito ]
   * debian/patches:
