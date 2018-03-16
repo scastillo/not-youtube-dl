@@ -1,6 +1,6 @@
-youtube-dl (2018.03.14-1~0.gbp27375a) UNRELEASED; urgency=medium
+youtube-dl (2018.03.14-1~1.gbp75e3f4) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @27375a0e586f091b3366c9963a15304fee569a05 **
+  ** SNAPSHOT build @75e3f4edaae1eaeba293fd8bcccd747d70e8155a **
 
   [ Rogério Brito ]
   * New upstream version 2018.01.27
@@ -8,12 +8,15 @@ youtube-dl (2018.03.14-1~0.gbp27375a) UNRELEASED; urgency=medium
   [ Andreas Tille ]
   * cme fix dpkg-control
   * Moved packaging to salsa.debian.org
-  * Start new release.
 
   [ Rogério Brito ]
   * New upstream version 2018.03.14
+  * debian/copyright:
+    + Update my copyright years.
+  * debian/{compat,control}:
+    + Relutanctly update compat to 11.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 12:38:39 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 16 Mar 2018 13:32:48 -0300
 
 youtube-dl (2017.12.31-1) unstable; urgency=medium
 
