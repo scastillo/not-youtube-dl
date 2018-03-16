@@ -1,4 +1,10 @@
 Subject: Remove autoupdate mechanism
+Bug: 890119
+Forwarded: no
+From: Nicolas Braud-Santoni <nicolas@braud-santoni.eu>
+Reviewed-by: Rogério Theodoro de Brito <rbrito@ime.usp.br>
+Last-Update: 2018-03-16
+Applied-Upstream: no
 
 ---
  youtube_dl/__init__.py |   8 ++-
@@ -9,12 +15,6 @@ Subject: Remove autoupdate mechanism
 
 diff --git a/youtube_dl/__init__.py b/youtube_dl/__init__.py
 index ba684a0..298ed7e 100644
-Bug: 890119
-Forwarded: no
-From: Nicolas Braud-Santoni <nicolas@braud-santoni.eu>
-Reviewed-by: Nicolas Braud-Santoni <nicolas@braud-santoni.eu>
-Last-Update: 2018-02-24
-Applied-Upstream: no
 
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
