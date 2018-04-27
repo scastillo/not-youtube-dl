@@ -58,6 +58,7 @@ from .xhamster import XHamsterEmbedIE
 from .tnaflix import TNAFlixNetworkEmbedIE
 from .drtuber import DrTuberIE
 from .redtube import RedTubeIE
+from .tube8 import Tube8IE
 from .vimeo import VimeoIE
 from .dailymotion import DailymotionIE
 from .dailymail import DailyMailIE
@@ -104,6 +105,7 @@ from .mediasite import MediasiteIE
 from .springboardplatform import SpringboardPlatformIE
 from .yapfiles import YapFilesIE
 from .vice import ViceIE
+from .xfileshare import XFileShareIE
 
 
 class GenericIE(InfoExtractor):
@@ -1218,7 +1220,7 @@ class GenericIE(InfoExtractor):
                 'title': '35871',
                 'timestamp': 1355743100,
                 'upload_date': '20121217',
-                'uploader_id': 'batchUser',
+                'uploader_id': 'cplapp@learn360.com',
             },
             'add_ie': ['Kaltura'],
         },
@@ -1269,23 +1271,21 @@ class GenericIE(InfoExtractor):
             },
             'add_ie': ['Kaltura'],
         },
-        # EaglePlatform embed (generic URL)
         {
-            'url': 'http://lenta.ru/news/2015/03/06/navalny/',
-            # Not checking MD5 as sometimes the direct HTTP link results in 404 and HLS is used
+            # meta twitter:player
+            'url': 'http://thechive.com/2017/12/08/all-i-want-for-christmas-is-more-twerk/',
             'info_dict': {
-                'id': '227304',
+                'id': '0_01b42zps',
                 'ext': 'mp4',
-                'title': 'Навальный вышел на свободу',
-                'description': 'md5:d97861ac9ae77377f3f20eaf9d04b4f5',
-                'thumbnail': r're:^https?://.*\.jpg$',
-                'duration': 87,
-                'view_count': int,
-                'age_limit': 0,
+                'title': 'Main Twerk (Video)',
+                'upload_date': '20171208',
+                'uploader_id': 'sebastian.salinas@thechive.com',
+                'timestamp': 1512713057,
             },
             'params': {
                 'skip_download': True,
             },
+            'add_ie': ['Kaltura'],
         },
         # referrer protected EaglePlatform embed
         {
@@ -1984,7 +1984,17 @@ class GenericIE(InfoExtractor):
             'params': {
                 'skip_download': True,
             },
-        }
+        },
+        {
+            'url': 'http://share-videos.se/auto/video/83645793?uid=13',
+            'md5': 'b68d276de422ab07ee1d49388103f457',
+            'info_dict': {
+                'id': '83645793',
+                'title': 'Lock up and get excited',
+                'ext': 'mp4'
+            },
+            'skip': 'TODO: fix nested playlists processing in tests',
+        },
         # {
         #     # TODO: find another test
         #     # http://schema.org/VideoObject
@@ -2231,7 +2241,11 @@ class GenericIE(InfoExtractor):
                 self._sort_formats(smil['formats'])
                 return smil
             elif doc.tag == '{http://xspf.org/ns/0/}playlist':
-                return self.playlist_result(self._parse_xspf(doc, video_id), video_id)
+                return self.playlist_result(
+                    self._parse_xspf(
+                        doc, video_id, xspf_url=url,
+                        xspf_base_url=compat_str(full_response.geturl())),
+                    video_id)
             elif re.match(r'(?i)^(?:{[^}]+})?MPD$', doc.tag):
                 info_dict['formats'] = self._parse_mpd_formats(
                     doc,
@@ -2558,6 +2572,11 @@ class GenericIE(InfoExtractor):
         redtube_urls = RedTubeIE._extract_urls(webpage)
         if redtube_urls:
             return self.playlist_from_matches(redtube_urls, video_id, video_title, ie=RedTubeIE.ie_key())
+
+        # Look for embedded Tube8 player
+        tube8_urls = Tube8IE._extract_urls(webpage)
+        if tube8_urls:
+            return self.playlist_from_matches(tube8_urls, video_id, video_title, ie=Tube8IE.ie_key())
 
         # Look for embedded Tvigle player
         mobj = re.search(
@@ -2970,6 +2989,18 @@ class GenericIE(InfoExtractor):
         if vice_urls:
             return self.playlist_from_matches(
                 vice_urls, video_id, video_title, ie=ViceIE.ie_key())
+
+        xfileshare_urls = XFileShareIE._extract_urls(webpage)
+        if xfileshare_urls:
+            return self.playlist_from_matches(
+                xfileshare_urls, video_id, video_title, ie=XFileShareIE.ie_key())
+
+        sharevideos_urls = [mobj.group('url') for mobj in re.finditer(
+            r'<iframe[^>]+?\bsrc\s*=\s*(["\'])(?P<url>(?:https?:)?//embed\.share-videos\.se/auto/embed/\d+\?.*?\buid=\d+.*?)\1',
+            webpage)]
+        if sharevideos_urls:
+            return self.playlist_from_matches(
+                sharevideos_urls, video_id, video_title)
 
         def merge_dicts(dict1, dict2):
             merged = {}
