@@ -62,7 +62,7 @@ complete --command youtube-dl --long-option hls-prefer-ffmpeg --description 'Use
 complete --command youtube-dl --long-option hls-use-mpegts --description 'Use the mpegts container for HLS videos, allowing to play the video while downloading (some players may not be able to play it)'
 complete --command youtube-dl --long-option external-downloader --description 'Use the specified external downloader. Currently supports aria2c,avconv,axel,curl,ffmpeg,httpie,wget'
 complete --command youtube-dl --long-option external-downloader-args --description 'Give these arguments to the external downloader'
-complete --command youtube-dl --long-option batch-file --short-option a --description 'File containing URLs to download ('"'"'-'"'"' for stdin)' --require-parameter
+complete --command youtube-dl --long-option batch-file --short-option a --description 'File containing URLs to download ('"'"'-'"'"' for stdin), one URL per line. Lines starting with '"'"'#'"'"', '"'"';'"'"' or '"'"']'"'"' are considered as comments and ignored.' --require-parameter
 complete --command youtube-dl --long-option id --description 'Use only video ID in file name'
 complete --command youtube-dl --long-option output --short-option o --description 'Output filename template, see the "OUTPUT TEMPLATE" for all the info'
 complete --command youtube-dl --long-option autonumber-size

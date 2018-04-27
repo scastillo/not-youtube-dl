@@ -254,7 +254,9 @@ Download Options:
 Filesystem Options:
 
     -a, --batch-file FILE            File containing URLs to download ('-' for
-                                     stdin)
+                                     stdin), one URL per line. Lines starting
+                                     with '#', ';' or ']' are considered as
+                                     comments and ignored.
     --id                             Use only video ID in file name
     -o, --output TEMPLATE            Output filename template, see the "OUTPUT
                                      TEMPLATE" for all the info
@@ -1351,12 +1353,12 @@ yourextractor):
 1.  Fork this repository
 2.  Check out the source code with:
 
-        git clone git@github.com:YOUR_GITHUB_USERNAME/youtube-dl.git
+         git clone git@github.com:YOUR_GITHUB_USERNAME/youtube-dl.git
 
 3.  Start a new git branch with
 
-        cd youtube-dl
-        git checkout -b yourextractor
+         cd youtube-dl
+         git checkout -b yourextractor
 
 4.  Start with this simple template and save it to
     youtube_dl/extractor/yourextractor.py:
@@ -1419,10 +1421,10 @@ yourextractor):
 9.  When the tests pass, add the new files and commit them and push the
     result, like this:
 
-        $ git add youtube_dl/extractor/extractors.py
-        $ git add youtube_dl/extractor/yourextractor.py
-        $ git commit -m '[yourextractor] Add new extractor'
-        $ git push origin yourextractor
+         $ git add youtube_dl/extractor/extractors.py
+         $ git add youtube_dl/extractor/yourextractor.py
+         $ git commit -m '[yourextractor] Add new extractor'
+         $ git push origin yourextractor
 
 10. Finally, create a pull request. We'll then review and merge it.
 
