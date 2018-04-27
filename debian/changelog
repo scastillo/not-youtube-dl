@@ -1,3 +1,13 @@
+youtube-dl (2018.04.25-1) unstable; urgency=medium
+
+  * New upstream version 2018.04.25
+  * New buld to fix missing build dependencies due to changes in python3.6.
+    (Closes: #896789)
+  * debian/control:
+    + Verify compliance with Policy 4.1.4 (no changes needed).
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 27 Apr 2018 17:20:44 -0300
+
 youtube-dl (2018.03.14-1) unstable; urgency=medium
 
   [ Andreas Tille ]
