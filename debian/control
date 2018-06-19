@@ -2,14 +2,16 @@ Source: youtube-dl
 Maintainer: Rogério Brito <rbrito@ime.usp.br>
 Section: web
 Priority: optional
-Build-Depends: bash-completion,
-               debhelper (>= 11),
-               dh-exec,
-               dh-python,
-               pandoc,
-               python3-pkg-resources,
-               zip
-Build-Depends-Indep: python3
+Build-Depends:
+ bash-completion,
+ debhelper (>= 11),
+ dh-exec,
+ dh-python,
+ pandoc,
+ python3-pkg-resources,
+ zip
+Build-Depends-Indep:
+ python3
 Standards-Version: 4.1.4
 Vcs-Browser: https://salsa.debian.org/debian/youtube-dl
 Vcs-Git: https://salsa.debian.org/debian/youtube-dl.git
@@ -18,16 +20,18 @@ X-Python3-Version: >= 3.2
 
 Package: youtube-dl
 Architecture: all
-Depends: python3-pkg-resources,
-         ${misc:Depends},
-         ${python3:Depends}
-Recommends: aria2 | wget | curl,
-            ca-certificates,
-            ffmpeg | libav-tools,
-            mpv | mplayer,
-            phantomjs,
-            python3-pyxattr,
-            rtmpdump
+Depends:
+ python3-pkg-resources,
+ ${misc:Depends},
+ ${python3:Depends}
+Recommends:
+ aria2 | wget | curl,
+ ca-certificates,
+ ffmpeg | libav-tools,
+ mpv | mplayer,
+ phantomjs,
+ python3-pyxattr,
+ rtmpdump
 Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the
