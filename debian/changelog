@@ -1,13 +1,12 @@
-youtube-dl (2018.06.18-1~2.gbp188197) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @188197bfba3e2d24ca5d776e4b0a34efec58253f **
+youtube-dl (2018.06.18-1) unstable; urgency=medium
 
   * New upstream version 2018.06.18 (Closes: #900642)
   * debian/control:
     + Canonicalize with `wrap-and-sort -s -a -b`.
     + Remove X-Python3-Version indication with ancient versions.
+    + Remove trailing whitespace at EOF.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 19 Jun 2018 04:55:21 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 19 Jun 2018 07:44:05 -0300
 
 youtube-dl (2018.04.25-1) unstable; urgency=medium
 
