@@ -1,10 +1,12 @@
-youtube-dl (2018.06.18-1~1.gbpcb32b5) UNRELEASED; urgency=medium
+youtube-dl (2018.06.18-1~2.gbp188197) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @cb32b5fcf6f680ea9caf47919b33779491b79038 **
+  ** SNAPSHOT build @188197bfba3e2d24ca5d776e4b0a34efec58253f **
 
   * New upstream version 2018.06.18
+  * debian/control: Canonicalize with `wrap-and-sort -s -a -b`.
+  * debian/control: Remove X-Python3-Version indication.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 19 Jun 2018 04:01:25 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 19 Jun 2018 04:55:21 -0300
 
 youtube-dl (2018.04.25-1) unstable; urgency=medium
 
