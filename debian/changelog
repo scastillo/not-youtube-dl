@@ -1221,4 +1221,3 @@ youtube-dl (2006.08.28-1) unstable; urgency=low
   * Initial release, closes: #385748.
 
  -- Robert S. Edmonds <edmonds@debian.org>  Sun,  3 Sep 2006 19:43:27 -0400
-
