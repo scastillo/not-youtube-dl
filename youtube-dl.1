@@ -116,7 +116,7 @@ Do not emit color codes in output
 .TP
 .B \-\-proxy \f[I]URL\f[]
 Use the specified HTTP/HTTPS/SOCKS proxy.
-To enable experimental SOCKS proxy, specify a proper scheme.
+To enable SOCKS proxy, specify a proper scheme.
 For example socks5://127.0.0.1:1080/.
 Pass in an empty string (\-\-proxy "") for direct connection
 .RS
@@ -145,26 +145,31 @@ Make all connections via IPv6
 .TP
 .B \-\-geo\-verification\-proxy \f[I]URL\f[]
 Use this proxy to verify the IP address for some geo\-restricted sites.
-The default proxy specified by \-\-proxy (or none, if the options is not
+The default proxy specified by \-\-proxy (or none, if the option is not
 present) is used for the actual downloading.
 .RS
 .RE
 .TP
 .B \-\-geo\-bypass
 Bypass geographic restriction via faking X\-Forwarded\-For HTTP header
-(experimental)
 .RS
 .RE
 .TP
 .B \-\-no\-geo\-bypass
 Do not bypass geographic restriction via faking X\-Forwarded\-For HTTP
-header (experimental)
+header
 .RS
 .RE
 .TP
 .B \-\-geo\-bypass\-country \f[I]CODE\f[]
 Force bypass geographic restriction with explicitly provided two\-letter
-ISO 3166\-2 country code (experimental)
+ISO 3166\-2 country code
+.RS
+.RE
+.TP
+.B \-\-geo\-bypass\-ip\-block \f[I]IP_BLOCK\f[]
+Force bypass geographic restriction with explicitly provided IP block in
+CIDR notation
 .RS
 .RE
 .SS Video Selection:
@@ -353,7 +358,7 @@ Download playlist videos in random order
 .RE
 .TP
 .B \-\-xattr\-set\-filesize
-Set file xattribute ytdl.filesize with expected file size (experimental)
+Set file xattribute ytdl.filesize with expected file size
 .RS
 .RE
 .TP
