@@ -9,6 +9,7 @@ Build-Depends:
  dh-python,
  pandoc,
  python3-pkg-resources,
+ python3-setuptools,
  zip
 Build-Depends-Indep:
  python3

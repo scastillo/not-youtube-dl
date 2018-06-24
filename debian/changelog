@@ -1,3 +1,10 @@
+youtube-dl (2018.06.18-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add missing python3-setuptools build dependency.  closes: #902279.
+
+ -- Clint Adams <clint@debian.org>  Sun, 24 Jun 2018 16:54:30 -0400
+
 youtube-dl (2018.06.18-1) unstable; urgency=medium
 
   * New upstream version 2018.06.18 (Closes: #900642)
