@@ -64,7 +64,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     # If True it will raise an error if no login info is provided
     _LOGIN_REQUIRED = False
 
-    _PLAYLIST_ID_RE = r'(?:PL|LL|EC|UU|FL|RD|UL|TL)[0-9A-Za-z-_]{10,}'
+    _PLAYLIST_ID_RE = r'(?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,}'
 
     def _set_language(self):
         self._set_cookie(
@@ -178,13 +178,13 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
             warn('Unable to extract result entry')
             return False
 
-        tfa = try_get(res, lambda x: x[0][0], list)
-        if tfa:
-            tfa_str = try_get(tfa, lambda x: x[2], compat_str)
-            if tfa_str == 'TWO_STEP_VERIFICATION':
+        login_challenge = try_get(res, lambda x: x[0][0], list)
+        if login_challenge:
+            challenge_str = try_get(login_challenge, lambda x: x[2], compat_str)
+            if challenge_str == 'TWO_STEP_VERIFICATION':
                 # SEND_SUCCESS - TFA code has been successfully sent to phone
                 # QUOTA_EXCEEDED - reached the limit of TFA codes
-                status = try_get(tfa, lambda x: x[5], compat_str)
+                status = try_get(login_challenge, lambda x: x[5], compat_str)
                 if status == 'QUOTA_EXCEEDED':
                     warn('Exceeded the limit of TFA codes, try later')
                     return False
@@ -228,6 +228,17 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
                 check_cookie_url = try_get(
                     tfa_results, lambda x: x[0][-1][2], compat_str)
+            else:
+                CHALLENGES = {
+                    'LOGIN_CHALLENGE': "This device isn't recognized. For your security, Google wants to make sure it's really you.",
+                    'USERNAME_RECOVERY': 'Please provide additional information to aid in the recovery process.',
+                    'REAUTH': "There is something unusual about your activity. For your security, Google wants to make sure it's really you.",
+                }
+                challenge = CHALLENGES.get(
+                    challenge_str,
+                    '%s returned error %s.' % (self.IE_NAME, challenge_str))
+                warn('%s\nGo to https://accounts.google.com/, login and solve a challenge.' % challenge)
+                return False
         else:
             check_cookie_url = try_get(res, lambda x: x[2], compat_str)
 
@@ -1167,7 +1178,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
     def _parse_sig_js(self, jscode):
         funcname = self._search_regex(
             (r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\('),
+             r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
+             r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+             r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\('),
             jscode, 'Initial JS player signature function name', group='sig')
 
         jsi = JSInterpreter(jscode)
@@ -2112,7 +2125,7 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
                             youtu\.be/[0-9A-Za-z_-]{11}\?.*?\blist=
                         )
                         (
-                            (?:PL|LL|EC|UU|FL|RD|UL|TL)?[0-9A-Za-z-_]{10,}
+                            (?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)?[0-9A-Za-z-_]{10,}
                             # Top tracks, they can also include dots
                             |(?:MC)[\w\.]*
                         )
@@ -2249,6 +2262,10 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
         'only_matching': True,
     }, {
         'url': 'TLGGrESM50VT6acwMjAyMjAxNw',
+        'only_matching': True,
+    }, {
+        # music album playlist
+        'url': 'OLAK5uy_m4xAFdmMC5rX3Ji3g93pQe3hqLZw_9LhM',
         'only_matching': True,
     }]
 
