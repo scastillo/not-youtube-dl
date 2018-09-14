@@ -13,6 +13,7 @@ Build-Depends:
  zip
 Build-Depends-Indep:
  python3
+Rules-Requires-Root: no
 Standards-Version: 4.1.4
 Vcs-Browser: https://salsa.debian.org/debian/youtube-dl
 Vcs-Git: https://salsa.debian.org/debian/youtube-dl.git
