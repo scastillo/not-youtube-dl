@@ -1,3 +1,12 @@
+youtube-dl (2018.09.10-1~1.gbp233624) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @233624c1db781ee7dabbaf88453cf18e248dd20d **
+
+  * ACK NMU by Clint Adams. Thanks!
+  * New upstream version 2018.09.10. Closes: #908461, #907722, #904619.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 14 Sep 2018 17:05:09 -0300
+
 youtube-dl (2018.06.18-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.
