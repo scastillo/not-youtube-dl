@@ -14,11 +14,9 @@ Last-Update: 2016-06-27
  youtube_dl/postprocessor/ffmpeg.py | 9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/youtube_dl/postprocessor/ffmpeg.py b/youtube_dl/postprocessor/ffmpeg.py
-index 3ea1afc..c62256e 100644
 --- a/youtube_dl/postprocessor/ffmpeg.py
 +++ b/youtube_dl/postprocessor/ffmpeg.py
-@@ -110,11 +110,16 @@ class FFmpegPostProcessor(PostProcessor):
+@@ -110,11 +110,16 @@
                  self._paths = dict(
                      (p, os.path.join(location, p)) for p in programs)
                  self._versions = dict(
@@ -36,4 +34,4 @@ index 3ea1afc..c62256e 100644
 +                for p in programs)
              self._paths = dict((p, p) for p in programs)
  
-         if prefer_ffmpeg:
+         if prefer_ffmpeg is False:

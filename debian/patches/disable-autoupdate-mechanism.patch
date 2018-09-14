@@ -15,11 +15,9 @@ Last-Update: 2018-03-16
  youtube_dl/options.py  | 2 +-
  2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/youtube_dl/__init__.py b/youtube_dl/__init__.py
-index 9bb9524..7bf379b 100644
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
-@@ -438,7 +438,12 @@ def _real_main(argv=None):
+@@ -439,7 +439,12 @@
      with YoutubeDL(ydl_opts) as ydl:
          # Update version
          if opts.update_self:
@@ -33,11 +31,9 @@ index 9bb9524..7bf379b 100644
  
          # Remove cache dir
          if opts.rm_cachedir:
-diff --git a/youtube_dl/options.py b/youtube_dl/options.py
-index 7d1bbc0..cafca0c 100644
 --- a/youtube_dl/options.py
 +++ b/youtube_dl/options.py
-@@ -140,7 +140,7 @@ def parseOpts(overrideArguments=None):
+@@ -140,7 +140,7 @@
      general.add_option(
          '-U', '--update',
          action='store_true', dest='update_self',

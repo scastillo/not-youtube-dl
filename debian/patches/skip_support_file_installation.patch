@@ -12,11 +12,9 @@ Last-Update: 2016-06-27
  setup.py | 7 +------
  1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/setup.py b/setup.py
-index 7dbb580..80599be 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -58,12 +58,7 @@ py2exe_params = {
+@@ -58,12 +58,7 @@
  if len(sys.argv) >= 2 and sys.argv[1] == 'py2exe':
      params = py2exe_params
  else:
