@@ -56,6 +56,7 @@
  - **archive.org**: archive.org videos
  - **ARD**
  - **ARD:mediathek**
+ - **ARDBetaMediathek**
  - **Arkena**
  - **arte.tv**
  - **arte.tv:+7**
@@ -108,6 +109,8 @@
  - **BiliBili**
  - **BioBioChileTV**
  - **BIQLE**
+ - **BitChute**
+ - **BitChuteChannel**
  - **BleacherReport**
  - **BleacherReportCMS**
  - **blinkx**
@@ -189,7 +192,7 @@
  - **Crackle**
  - **Criterion**
  - **CrooksAndLiars**
- - **Crunchyroll**
+ - **crunchyroll**
  - **crunchyroll:playlist**
  - **CSNNE**
  - **CSpan**: C-SPAN
@@ -290,7 +293,6 @@
  - **Foxgay**
  - **foxnews**: Fox News and Fox Business Video
  - **foxnews:article**
- - **foxnews:insider**
  - **FoxSports**
  - **france2.fr:generation-what**
  - **FranceCulture**
@@ -303,6 +305,9 @@
  - **Freesound**
  - **freespeech.org**
  - **FreshLive**
+ - **FrontendMasters**
+ - **FrontendMastersCourse**
+ - **FrontendMastersLesson**
  - **Funimation**
  - **FunkChannel**
  - **FunkMix**
@@ -403,6 +408,7 @@
  - **Ketnet**
  - **KhanAcademy**
  - **KickStarter**
+ - **KinoPoisk**
  - **KonserthusetPlay**
  - **kontrtube**: KontrTube.ru - Труба зовёт
  - **KrasView**: Красвью
@@ -575,6 +581,7 @@
  - **Normalboots**
  - **NosVideo**
  - **Nova**: TN.cz, Prásk.tv, Nova.cz, Novaplus.cz, FANDA.tv, Krásná.cz and Doma.cz
+ - **NovaEmbed**
  - **nowness**
  - **nowness:playlist**
  - **nowness:series**
@@ -590,7 +597,9 @@
  - **NRKSkole**: NRK Skole
  - **NRKTV**: NRK TV and NRK Radio
  - **NRKTVDirekte**: NRK TV Direkte and NRK Radio Direkte
+ - **NRKTVEpisode**
  - **NRKTVEpisodes**
+ - **NRKTVSeason**
  - **NRKTVSeries**
  - **ntv.ru**
  - **Nuvid**
@@ -668,6 +677,8 @@
  - **PrimeShareTV**
  - **PromptFile**
  - **prosiebensat1**: ProSiebenSat.1 Digital
+ - **puhutv**
+ - **puhutv:serie**
  - **Puls4**
  - **Pyvideo**
  - **qqmusic**: QQ音乐
@@ -690,6 +701,7 @@
  - **RaiPlayLive**
  - **RaiPlayPlaylist**
  - **RayWenderlich**
+ - **RayWenderlichCourse**
  - **RBMARadio**
  - **RDS**: RDS.ca
  - **RedBullTV**
@@ -814,6 +826,7 @@
  - **StretchInternet**
  - **SunPorno**
  - **SVT**
+ - **SVTPage**
  - **SVTPlay**: SVT Play and Öppet arkiv
  - **SVTSeries**
  - **SWRMediathek**
@@ -834,6 +847,7 @@
  - **techtv.mit.edu**
  - **ted**
  - **Tele13**
+ - **Tele5**
  - **TeleBruxelles**
  - **Telecinco**: telecinco.es, cuatro.com and mediaset.es
  - **Telegraaf**
@@ -905,6 +919,7 @@
  - **tvp:embed**: Telewizja Polska
  - **tvp:series**
  - **TVPlayer**
+ - **TVPlayHome**
  - **Tweakers**
  - **twitch:chapter**
  - **twitch:clips**
@@ -994,6 +1009,7 @@
  - **Vimple**: Vimple - one-click video hosting
  - **Vine**
  - **vine:user**
+ - **Viqeo**
  - **Viu**
  - **viu:ott**
  - **viu:playlist**
@@ -1085,6 +1101,7 @@
  - **YouNowLive**
  - **YouNowMoment**
  - **YouPorn**
+ - **YourPorn**
  - **YourUpload**
  - **youtube**: YouTube.com
  - **youtube:channel**: YouTube.com channels
