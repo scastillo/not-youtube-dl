@@ -1,6 +1,4 @@
-youtube-dl (2018.09.10-1~4.gbp16a911) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @16a91194b542b099c141633fd95e77db4ff075ed **
+youtube-dl (2018.09.10-1) unstable; urgency=medium
 
   * ACK NMU by Clint Adams. Thanks!
   * New upstream version 2018.09.10. Closes: #908461, #907722, #904619.
@@ -11,7 +9,7 @@ youtube-dl (2018.09.10-1~4.gbp16a911) UNRELEASED; urgency=medium
     + Mark compliance with Debian policy 4.2.1. No further changes needed.
     + Update list of extractors in long description.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 14 Sep 2018 23:09:22 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 14 Sep 2018 23:11:59 -0300
 
 youtube-dl (2018.06.18-1.1) unstable; urgency=medium
 
