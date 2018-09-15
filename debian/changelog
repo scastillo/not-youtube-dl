@@ -1,11 +1,16 @@
-youtube-dl (2018.09.10-1~1.gbp233624) UNRELEASED; urgency=medium
+youtube-dl (2018.09.10-1~2.gbp0b7733) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @233624c1db781ee7dabbaf88453cf18e248dd20d **
+  ** SNAPSHOT build @0b77335c30ccc5854a45cd8678a8b512c68b89d7 **
 
   * ACK NMU by Clint Adams. Thanks!
   * New upstream version 2018.09.10. Closes: #908461, #907722, #904619.
+  * debian/patch:
+    + Refresh all patches to avoid FTBFS.
+  * debian/control:
+    + Set 'Rules-Requires-Root: no'.
+    + Mark compliance with Debian policy 4.1.5.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 14 Sep 2018 17:05:09 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 14 Sep 2018 22:25:58 -0300
 
 youtube-dl (2018.06.18-1.1) unstable; urgency=medium
 
