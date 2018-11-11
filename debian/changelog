@@ -1,3 +1,12 @@
+youtube-dl (2018.11.07-1~1.gbp6a680a) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @6a680aa147c68717d8224546bf1bcbb737b78ac7 **
+
+  * New upstream version 2018.11.07.
+    + Highlight: Fix problem extracting videos from YouTube.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Sat, 10 Nov 2018 23:59:37 -0200
+
 youtube-dl (2018.09.10-1) unstable; urgency=medium
 
   * ACK NMU by Clint Adams. Thanks!
