@@ -84,8 +84,6 @@
  - **awaan:season**
  - **awaan:video**
  - **AZMedien**: AZ Medien videos
- - **AZMedienPlaylist**: AZ Medien playlists
- - **AZMedienShowPlaylist**: AZ Medien show playlists
  - **BaiduVideo**: 百度视频
  - **bambuser**
  - **bambuser:channel**
@@ -98,6 +96,7 @@
  - **bbc.co.uk:article**: BBC articles
  - **bbc.co.uk:iplayer:playlist**
  - **bbc.co.uk:playlist**
+ - **BBVTV**
  - **Beatport**
  - **Beeg**
  - **BehindKink**
@@ -177,6 +176,7 @@
  - **Clyp**
  - **cmt.com**
  - **CNBC**
+ - **CNBCVideo**
  - **CNN**
  - **CNNArticle**
  - **CNNBlogs**
@@ -250,7 +250,9 @@
  - **EchoMsk**
  - **egghead:course**: egghead.io course
  - **egghead:lesson**: egghead.io lesson
+ - **ehftv**
  - **eHow**
+ - **EinsUndEinsTV**
  - **Einthusan**
  - **eitb.tv**
  - **EllenTube**
@@ -268,6 +270,7 @@
  - **EsriVideo**
  - **Europa**
  - **EveryonesMixtape**
+ - **EWETV**
  - **ExpoTV**
  - **Expressen**
  - **ExtremeTube**
@@ -327,6 +330,7 @@
  - **Gfycat**
  - **GiantBomb**
  - **Giga**
+ - **GlattvisionTV**
  - **Glide**: Glide mobile video messages (glide.me)
  - **Globo**
  - **GloboArticle**
@@ -356,7 +360,7 @@
  - **HitRecord**
  - **HornBunny**
  - **HotNewHipHop**
- - **HotStar**
+ - **hotstar**
  - **hotstar:playlist**
  - **Howcast**
  - **HowStuffWorks**
@@ -441,6 +445,8 @@
  - **limelight:channel**
  - **limelight:channel_list**
  - **LineTV**
+ - **linkedin:learning**
+ - **linkedin:learning:course**
  - **LiTV**
  - **LiveLeak**
  - **LiveLeakEmbed**
@@ -494,6 +500,7 @@
  - **Mixer:vod**
  - **MLB**
  - **Mnet**
+ - **MNetTV**
  - **MoeVideo**: LetitBit video services: moevideo.net, playreplay.net and videochart.net
  - **Mofosex**
  - **Mojvideo**
@@ -525,6 +532,7 @@
  - **Myvi**
  - **MyVidster**
  - **MyviEmbed**
+ - **MyVisionTV**
  - **n-tv.de**
  - **natgeo**
  - **natgeo:episodeguide**
@@ -550,6 +558,7 @@
  - **netease:program**: 网易云音乐 - 电台节目
  - **netease:singer**: 网易云音乐 - 歌手
  - **netease:song**: 网易云音乐
+ - **NetPlus**
  - **Netzkino**
  - **Newgrounds**
  - **NewgroundsPlaylist**
@@ -626,6 +635,7 @@
  - **orf:iptv**: iptv.ORF.at
  - **orf:oe1**: Radio Österreich 1
  - **orf:tvthek**: ORF TVthek
+ - **OsnatelTV**
  - **PacktPub**
  - **PacktPubCourse**
  - **PandaTV**: 熊猫TV
@@ -686,6 +696,7 @@
  - **qqmusic:playlist**: QQ音乐 - 歌单
  - **qqmusic:singer**: QQ音乐 - 歌手
  - **qqmusic:toplist**: QQ音乐 - 排行榜
+ - **QuantumTV**
  - **Quickline**
  - **QuicklineLive**
  - **R7**
@@ -753,6 +764,7 @@
  - **safari**: safaribooksonline.com online video
  - **safari:api**
  - **safari:course**: safaribooksonline.com online courses
+ - **SAKTV**
  - **Sapo**: SAPO Vídeos
  - **savefrom.net**
  - **SBS**: sbs.com.au
@@ -808,7 +820,7 @@
  - **Spiegeltv**
  - **sport.francetvinfo.fr**
  - **Sport5**
- - **SportBoxEmbed**
+ - **SportBox**
  - **SportDeutschland**
  - **SpringboardPlatform**
  - **Sprout**
@@ -899,7 +911,6 @@
  - **TV2**
  - **tv2.hu**
  - **TV2Article**
- - **TV3**
  - **TV4**: tv4.se and tv4play.se
  - **TV5MondePlus**: TV5MONDE+
  - **TVA**
@@ -921,6 +932,7 @@
  - **TVPlayer**
  - **TVPlayHome**
  - **Tweakers**
+ - **TwitCasting**
  - **twitch:chapter**
  - **twitch:clips**
  - **twitch:profile**
@@ -1035,12 +1047,14 @@
  - **vrv**
  - **vrv:series**
  - **VShare**
+ - **VTXTV**
  - **vube**: Vube.com
  - **VuClip**
  - **VVVVID**
  - **VyboryMos**
  - **Vzaar**
  - **Walla**
+ - **WalyTV**
  - **washingtonpost**
  - **washingtonpost:article**
  - **wat.tv**

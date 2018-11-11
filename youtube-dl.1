@@ -1064,6 +1064,11 @@ became available
 .IP \[bu] 2
 \f[C]uploader_id\f[] (string): Nickname or id of the video uploader
 .IP \[bu] 2
+\f[C]channel\f[] (string): Full name of the channel the video is
+uploaded on
+.IP \[bu] 2
+\f[C]channel_id\f[] (string): Id of the channel
+.IP \[bu] 2
 \f[C]location\f[] (string): Physical location where the video was filmed
 .IP \[bu] 2
 \f[C]duration\f[] (numeric): Length of the video in seconds
@@ -2328,9 +2333,36 @@ title\ =\ self._search_regex(
 .fi
 .SS Use safe conversion functions
 .PP
-Wrap all extracted numeric data into safe functions from \f[C]utils\f[]:
+Wrap all extracted numeric data into safe functions from
+\f[C]youtube_dl/utils.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py):
 \f[C]int_or_none\f[], \f[C]float_or_none\f[].
 Use them for string to number conversions as well.
+.PP
+Use \f[C]url_or_none\f[] for safe URL processing.
+.PP
+Use \f[C]try_get\f[] for safe metadata extraction from parsed JSON.
+.PP
+Explore
+\f[C]youtube_dl/utils.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py)
+for more useful convenience functions.
+.SS More examples
+.SS Safely extract optional description from parsed JSON
+.IP
+.nf
+\f[C]
+description\ =\ try_get(response,\ lambda\ x:\ x[\[aq]result\[aq]][\[aq]video\[aq]][0][\[aq]summary\[aq]],\ compat_str)
+\f[]
+.fi
+.SS Safely extract more optional metadata
+.IP
+.nf
+\f[C]
+video\ =\ try_get(response,\ lambda\ x:\ x[\[aq]result\[aq]][\[aq]video\[aq]][0],\ dict)\ or\ {}
+description\ =\ video.get(\[aq]summary\[aq])
+duration\ =\ float_or_none(video.get(\[aq]durationMs\[aq]),\ scale=1000)
+view_count\ =\ int_or_none(video.get(\[aq]views\[aq]))
+\f[]
+.fi
 .SH EMBEDDING YOUTUBE\-DL
 .PP
 youtube\-dl makes the best effort to be a good command\-line program,

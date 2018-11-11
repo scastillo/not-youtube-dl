@@ -594,6 +594,8 @@ with sequence type are:
     available
 -   upload_date (string): Video upload date (YYYYMMDD)
 -   uploader_id (string): Nickname or id of the video uploader
+-   channel (string): Full name of the channel the video is uploaded on
+-   channel_id (string): Id of the channel
 -   location (string): Physical location where the video was filmed
 -   duration (numeric): Length of the video in seconds
 -   view_count (numeric): How many users have watched the video on the
@@ -1589,9 +1591,28 @@ The code definitely should not look like:
 
 Use safe conversion functions
 
-Wrap all extracted numeric data into safe functions from utils:
-int_or_none, float_or_none. Use them for string to number conversions as
-well.
+Wrap all extracted numeric data into safe functions from
+youtube_dl/utils.py: int_or_none, float_or_none. Use them for string to
+number conversions as well.
+
+Use url_or_none for safe URL processing.
+
+Use try_get for safe metadata extraction from parsed JSON.
+
+Explore youtube_dl/utils.py for more useful convenience functions.
+
+More examples
+
+Safely extract optional description from parsed JSON
+
+    description = try_get(response, lambda x: x['result']['video'][0]['summary'], compat_str)
+
+Safely extract more optional metadata
+
+    video = try_get(response, lambda x: x['result']['video'][0], dict) or {}
+    description = video.get('summary')
+    duration = float_or_none(video.get('durationMs'), scale=1000)
+    view_count = int_or_none(video.get('views'))
 
 
 
