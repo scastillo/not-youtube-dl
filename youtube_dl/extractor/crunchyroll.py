@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import re
 import json
+import xml.etree.ElementTree as etree
 import zlib
 
 from hashlib import sha1
@@ -45,7 +46,7 @@ class CrunchyrollBaseIE(InfoExtractor):
         data['req'] = 'RpcApi' + method
         data = compat_urllib_parse_urlencode(data).encode('utf-8')
         return self._download_xml(
-            'http://www.crunchyroll.com/xml/',
+            'https://www.crunchyroll.com/xml/',
             video_id, note, fatal=False, data=data, headers={
                 'Content-Type': 'application/x-www-form-urlencoded',
             })
@@ -398,7 +399,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 'Downloading subtitles for ' + sub_name, data={
                     'subtitle_script_id': sub_id,
                 })
-            if sub_doc is None:
+            if not isinstance(sub_doc, etree.Element):
                 continue
             sid = sub_doc.get('id')
             iv = xpath_text(sub_doc, 'iv', 'subtitle iv')
@@ -445,6 +446,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             webpage, 'vilos media', default='{}'), video_id)
         media_metadata = media.get('metadata') or {}
 
+        language = self._search_regex(
+            r'(?:vilos\.config\.player\.language|LOCALE)\s*=\s*(["\'])(?P<lang>(?:(?!\1).)+)\1',
+            webpage, 'language', default=None, group='lang')
+
         video_title = self._html_search_regex(
             r'(?s)<h1[^>]*>((?:(?!<h1).)*?<span[^>]+itemprop=["\']title["\'][^>]*>(?:(?!<h1).)+?)</h1>',
             webpage, 'video_title')
@@ -466,9 +471,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
         formats = []
         for stream in media.get('streams', []):
-            formats.extend(self._extract_vrv_formats(
+            audio_lang = stream.get('audio_lang')
+            hardsub_lang = stream.get('hardsub_lang')
+            vrv_formats = self._extract_vrv_formats(
                 stream.get('url'), video_id, stream.get('format'),
-                stream.get('audio_lang'), stream.get('hardsub_lang')))
+                audio_lang, hardsub_lang)
+            for f in vrv_formats:
+                if not hardsub_lang:
+                    f['preference'] = 1
+                language_preference = 0
+                if audio_lang == language:
+                    language_preference += 1
+                if hardsub_lang == language:
+                    language_preference += 1
+                if language_preference:
+                    f['language_preference'] = language_preference
+            formats.extend(vrv_formats)
         if not formats:
             available_fmts = []
             for a, fmt in re.findall(r'(<a[^>]+token=["\']showmedia\.([0-9]{3,4})p["\'][^>]+>)', webpage):
@@ -498,7 +516,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         'video_quality': stream_quality,
                         'current_page': url,
                     })
-                if streamdata is not None:
+                if isinstance(streamdata, etree.Element):
                     stream_info = streamdata.find('./{default}preload/stream_info')
                     if stream_info is not None:
                         stream_infos.append(stream_info)
@@ -509,7 +527,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         'video_format': stream_format,
                         'video_encode_quality': stream_quality,
                     })
-                if stream_info is not None:
+                if isinstance(stream_info, etree.Element):
                     stream_infos.append(stream_info)
                 for stream_info in stream_infos:
                     video_encode_id = xpath_text(stream_info, './video_encode_id')
@@ -557,7 +575,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         'ext': 'flv',
                     })
                     formats.append(format_info)
-        self._sort_formats(formats, ('height', 'width', 'tbr', 'fps'))
+        self._sort_formats(formats, ('preference', 'language_preference', 'height', 'width', 'tbr', 'fps'))
 
         metadata = self._call_rpc_api(
             'VideoPlayer_GetMediaMetadata', video_id,
@@ -581,10 +599,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         series = self._html_search_regex(
             r'(?s)<h\d[^>]+\bid=["\']showmedia_about_episode_num[^>]+>(.+?)</h\d',
             webpage, 'series', fatal=False)
-        season = xpath_text(metadata, 'series_title')
 
-        episode = xpath_text(metadata, 'episode_title') or media_metadata.get('title')
-        episode_number = int_or_none(xpath_text(metadata, 'episode_number') or media_metadata.get('episode_number'))
+        season = episode = episode_number = duration = thumbnail = None
+
+        if isinstance(metadata, etree.Element):
+            season = xpath_text(metadata, 'series_title')
+            episode = xpath_text(metadata, 'episode_title')
+            episode_number = int_or_none(xpath_text(metadata, 'episode_number'))
+            duration = float_or_none(media_metadata.get('duration'), 1000)
+            thumbnail = xpath_text(metadata, 'episode_image_url')
+
+        if not episode:
+            episode = media_metadata.get('title')
+        if not episode_number:
+            episode_number = int_or_none(media_metadata.get('episode_number'))
+        if not thumbnail:
+            thumbnail = media_metadata.get('thumbnail', {}).get('url')
 
         season_number = int_or_none(self._search_regex(
             r'(?s)<h\d[^>]+id=["\']showmedia_about_episode_num[^>]+>.+?</h\d>\s*<h4>\s*Season (\d+)',
@@ -594,8 +624,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             'id': video_id,
             'title': video_title,
             'description': video_description,
-            'duration': float_or_none(media_metadata.get('duration'), 1000),
-            'thumbnail': xpath_text(metadata, 'episode_image_url') or media_metadata.get('thumbnail', {}).get('url'),
+            'duration': duration,
+            'thumbnail': thumbnail,
             'uploader': video_uploader,
             'upload_date': video_upload_date,
             'series': series,
