@@ -1,13 +1,11 @@
-youtube-dl (2019.01.16-1~2.gbp325691) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @32569172c58bbc32bcc4fdb64af8615f98c4cccb **
+youtube-dl (2019.01.16-1) unstable; urgency=medium
 
   * New upstream version 2019.01.16. Fixes downloads from YouTube.
   * debian/patches: Remove patch to disambiguate between ffmpeg and avconv.
   * debian/{compat,control}: Update to debhelper compatibility level 12.
   * debian/control: Mark package compliant with Policy 4.3.0 (no changes).
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 16 Jan 2019 20:12:57 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 16 Jan 2019 20:20:25 -0200
 
 youtube-dl (2018.11.07-1) unstable; urgency=medium
 
