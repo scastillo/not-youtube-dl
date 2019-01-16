@@ -1033,7 +1033,7 @@ formatting
 operations (https://docs.python.org/2/library/stdtypes.html#string-formatting).
 For example, \f[C]%(NAME)s\f[] or \f[C]%(NAME)05d\f[].
 To clarify, that is a percent symbol followed by a name in parentheses,
-followed by a formatting operations.
+followed by formatting operations.
 Allowed names along with sequence type are:
 .IP \[bu] 2
 \f[C]id\f[] (string): Video identifier
@@ -2091,15 +2091,24 @@ Have a look at
 \f[C]youtube_dl/extractor/common.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py)
 for possible helper methods and a detailed description of what your
 extractor should and may
-return (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py#L74-L252).
+return (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303).
 Add tests and code for as many as you want.
 .IP " 8." 4
 Make sure your code follows youtube\-dl coding conventions and check the
-code with flake8 (https://pypi.python.org/pypi/flake8).
-Also make sure your code works under all
-Python (https://www.python.org/) versions claimed supported by
-youtube\-dl, namely 2.6, 2.7, and 3.2+.
+code with
+flake8 (http://flake8.pycqa.org/en/latest/index.html#quickstart):
+.RS 4
+.IP
+.nf
+\f[C]
+\ $\ flake8\ youtube_dl/extractor/yourextractor.py
+\f[]
+.fi
+.RE
 .IP " 9." 4
+Make sure your code works under all Python (https://www.python.org/)
+versions claimed supported by youtube\-dl, namely 2.6, 2.7, and 3.2+.
+.IP "10." 4
 When the tests pass, add (https://git-scm.com/docs/git-add) the new
 files and commit (https://git-scm.com/docs/git-commit) them and
 push (https://git-scm.com/docs/git-push) the result, like this:
@@ -2107,14 +2116,14 @@ push (https://git-scm.com/docs/git-push) the result, like this:
 .IP
 .nf
 \f[C]
-\ $\ git\ add\ youtube_dl/extractor/extractors.py
-\ $\ git\ add\ youtube_dl/extractor/yourextractor.py
-\ $\ git\ commit\ \-m\ \[aq][yourextractor]\ Add\ new\ extractor\[aq]
-\ $\ git\ push\ origin\ yourextractor
+$\ git\ add\ youtube_dl/extractor/extractors.py
+$\ git\ add\ youtube_dl/extractor/yourextractor.py
+$\ git\ commit\ \-m\ \[aq][yourextractor]\ Add\ new\ extractor\[aq]
+$\ git\ push\ origin\ yourextractor
 \f[]
 .fi
 .RE
-.IP "10." 4
+.IP "11." 4
 Finally, create a pull
 request (https://help.github.com/articles/creating-a-pull-request).
 We\[aq]ll then review and merge it.
@@ -2144,7 +2153,7 @@ update at all.
 .PP
 For extraction to work youtube\-dl relies on metadata your extractor
 extracts and provides to youtube\-dl expressed by an information
-dictionary (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py#L75-L257)
+dictionary (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303)
 or simply \f[I]info dict\f[].
 Only the following meta fields in the \f[I]info dict\f[] are considered
 mandatory for a successful extraction process by youtube\-dl:
@@ -2165,7 +2174,7 @@ extraction does not make any sense without and if any of them fail to be
 extracted then the extractor is considered completely broken.
 .PP
 Any
-field (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py#L149-L257)
+field (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L188-L303)
 apart from the aforementioned ones are considered \f[B]optional\f[].
 That means that extraction should be \f[B]tolerant\f[] to situations
 when sources for these fields can potentially be unavailable (even if
@@ -2286,9 +2295,37 @@ title\ =\ meta.get(\[aq]title\[aq])\ or\ self._og_search_title(webpage)
 .PP
 This code will try to extract from \f[C]meta\f[] first and if it fails
 it will try extracting \f[C]og:title\f[] from a \f[C]webpage\f[].
-.SS Make regular expressions flexible
+.SS Regular expressions
+.SS Don\[aq]t capture groups you don\[aq]t use
 .PP
-When using regular expressions try to write them fuzzy and flexible.
+Capturing group must be an indication that it\[aq]s used somewhere in
+the code.
+Any group that is not used must be non capturing.
+.SS Example
+.PP
+Don\[aq]t capture id attribute name here since you can\[aq]t use it for
+anything anyway.
+.PP
+Correct:
+.IP
+.nf
+\f[C]
+r\[aq](?:id|ID)=(?P<id>\\d+)\[aq]
+\f[]
+.fi
+.PP
+Incorrect:
+.IP
+.nf
+\f[C]
+r\[aq](id|ID)=(?P<id>\\d+)\[aq]
+\f[]
+.fi
+.SS Make regular expressions relaxed and flexible
+.PP
+When using regular expressions try to write them fuzzy, relaxed and
+flexible, skipping insignificant parts that are more likely to change,
+allowing both single and double quotes for quoted values and so on.
 .SS Example
 .PP
 Say you need to extract \f[C]title\f[] from the following HTML code:
@@ -2329,6 +2366,32 @@ The code definitely should not look like:
 title\ =\ self._search_regex(
 \ \ \ \ r\[aq]<span\ style="position:\ absolute;\ left:\ 910px;\ width:\ 90px;\ float:\ right;\ z\-index:\ 9999;"\ class="title">(.*?)</span>\[aq],
 \ \ \ \ webpage,\ \[aq]title\[aq],\ group=\[aq]title\[aq])
+\f[]
+.fi
+.SS Long lines policy
+.PP
+There is a soft limit to keep lines of code under 80 characters long.
+This means it should be respected if possible and if it does not make
+readability and code maintenance worse.
+.PP
+For example, you should \f[B]never\f[] split long string literals like
+URLs or some other often copied entities over multiple lines to fit this
+limit:
+.PP
+Correct:
+.IP
+.nf
+\f[C]
+\[aq]https://www.youtube.com/watch?v=FqZTN594JQw&list=PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4\[aq]
+\f[]
+.fi
+.PP
+Incorrect:
+.IP
+.nf
+\f[C]
+\[aq]https://www.youtube.com/watch?v=FqZTN594JQw&list=\[aq]
+\[aq]PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4\[aq]
 \f[]
 .fi
 .SS Use safe conversion functions

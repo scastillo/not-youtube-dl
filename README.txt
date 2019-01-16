@@ -576,8 +576,8 @@ However, it may contain special sequences that will be replaced when
 downloading each video. The special sequences may be formatted according
 to python string formatting operations. For example, %(NAME)s or
 %(NAME)05d. To clarify, that is a percent symbol followed by a name in
-parentheses, followed by a formatting operations. Allowed names along
-with sequence type are:
+parentheses, followed by formatting operations. Allowed names along with
+sequence type are:
 
 -   id (string): Video identifier
 -   title (string): Video title
@@ -1419,18 +1419,21 @@ yourextractor):
     methods and a detailed description of what your extractor should and
     may return. Add tests and code for as many as you want.
 8.  Make sure your code follows youtube-dl coding conventions and check
-    the code with flake8. Also make sure your code works under all
-    Python versions claimed supported by youtube-dl, namely 2.6, 2.7,
-    and 3.2+.
-9.  When the tests pass, add the new files and commit them and push the
+    the code with flake8:
+
+         $ flake8 youtube_dl/extractor/yourextractor.py
+
+9.  Make sure your code works under all Python versions claimed
+    supported by youtube-dl, namely 2.6, 2.7, and 3.2+.
+10. When the tests pass, add the new files and commit them and push the
     result, like this:
 
-         $ git add youtube_dl/extractor/extractors.py
-         $ git add youtube_dl/extractor/yourextractor.py
-         $ git commit -m '[yourextractor] Add new extractor'
-         $ git push origin yourextractor
+        $ git add youtube_dl/extractor/extractors.py
+        $ git add youtube_dl/extractor/yourextractor.py
+        $ git commit -m '[yourextractor] Add new extractor'
+        $ git push origin yourextractor
 
-10. Finally, create a pull request. We'll then review and merge it.
+11. Finally, create a pull request. We'll then review and merge it.
 
 In any case, thank you very much for your contributions!
 
@@ -1559,9 +1562,31 @@ fallback scenario:
 This code will try to extract from meta first and if it fails it will
 try extracting og:title from a webpage.
 
-Make regular expressions flexible
+Regular expressions
 
-When using regular expressions try to write them fuzzy and flexible.
+Don't capture groups you don't use
+
+Capturing group must be an indication that it's used somewhere in the
+code. Any group that is not used must be non capturing.
+
+Example
+
+Don't capture id attribute name here since you can't use it for anything
+anyway.
+
+Correct:
+
+    r'(?:id|ID)=(?P<id>\d+)'
+
+Incorrect:
+
+    r'(id|ID)=(?P<id>\d+)'
+
+Make regular expressions relaxed and flexible
+
+When using regular expressions try to write them fuzzy, relaxed and
+flexible, skipping insignificant parts that are more likely to change,
+allowing both single and double quotes for quoted values and so on.
 
 Example
 
@@ -1588,6 +1613,24 @@ The code definitely should not look like:
     title = self._search_regex(
         r'<span style="position: absolute; left: 910px; width: 90px; float: right; z-index: 9999;" class="title">(.*?)</span>',
         webpage, 'title', group='title')
+
+Long lines policy
+
+There is a soft limit to keep lines of code under 80 characters long.
+This means it should be respected if possible and if it does not make
+readability and code maintenance worse.
+
+For example, you should NEVER split long string literals like URLs or
+some other often copied entities over multiple lines to fit this limit:
+
+Correct:
+
+    'https://www.youtube.com/watch?v=FqZTN594JQw&list=PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
+
+Incorrect:
+
+    'https://www.youtube.com/watch?v=FqZTN594JQw&list='
+    'PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
 
 Use safe conversion functions
 
