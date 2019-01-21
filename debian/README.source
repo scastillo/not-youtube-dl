@@ -10,8 +10,19 @@ to, assuming that one already has the packages `devscripts`,
     gbp clone --all https://github.com/rbrito/pkg-youtube-dl
     cd pkg-youtube-dl
     gbp import-orig --pristine-tar --uscan
+    gbp dch -S -a
     [ Make here some adaptations, like updating debian/patches, if needed ]
-    gbp buildpackage --git-pristine-tar
+    gbp buildpackage -us -uc # create a test build
+
+    # Final package creation:
+
+    gbp dch -R -a
+    gbp buildpackage -k8F930BD1934C3E2140A258790747BD39BCFCAAAA --git-tag
+
+    # Push the results to the repositories:
+    git push --all; git push --tags
+    git push git@salsa.debian.org:debian/youtube-dl.git --all; git push git@salsa.debian.org:debian/youtube-dl.git --tags
+    dput ftp-master youtube-dl*changes
 
 These are the important steps and may need to be changed according to
 deviations, say, in the release process of upstream releases (e.g., if
@@ -24,7 +35,7 @@ GitHub and I usually try to have my changes there, since I am not always
 with my SSH/GPG keys at hand.
 
 For the benefit of the co-maintainers, I keep a backup copy of the changes
-at git.debian.org, where, due to said keys not being available at all times,
+at salsa.debian.org, where, due to said keys not being available at all times,
 I can't push my changes, which leads, sometimes to my GitHub repository to
 be ahead of the Debian mirror.
 
@@ -46,4 +57,4 @@ Of course, if it is not possible to coordinate in the way described above,
 alas... :-(
 
 
- -- Rogério Brito <rbrito@ime.usp.br>, Thu, 19 Oct 2017 16:19:25 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>, Mon, 21 Jan 2019 12:46:26 -0200
