@@ -1,6 +1,4 @@
-youtube-dl (2019.01.17-1~0.gbpc39143) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @c39143087e10ba3fe3c3a309b847354b82d6125e **
+youtube-dl (2019.01.17-1) unstable; urgency=medium
 
   * New upstream version 2019.01.17.
     Highlight:
