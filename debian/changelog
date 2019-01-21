@@ -1,3 +1,11 @@
+youtube-dl (2019.01.17-1~0.gbpc39143) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @c39143087e10ba3fe3c3a309b847354b82d6125e **
+
+  * New upstream version 2019.01.17
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 21 Jan 2019 12:13:04 -0200
+
 youtube-dl (2019.01.16-1) unstable; urgency=medium
 
   * New upstream version 2019.01.16. Fixes downloads from YouTube.
