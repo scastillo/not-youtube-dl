@@ -1,0 +1,44 @@
+From: =?UTF-8?q?Sergey=20M=E2=80=A4?= <dstftw@gmail.com>
+Date: Wed, 24 Apr 2019 09:58:00 +0700
+Subject: [youtube] Fix extraction (closes #20758, closes #20759, closes
+ #20761, closes #20762, closes #20764, closes #20766, closes #20767, closes
+ #20769, closes #20771, closes #20768, closes #20770)
+Origin: https://github.com/ytdl-org/youtube-dl/commit/56667d622c3f6e7594a04f8cd5f4371875940725
+Bug-Debian: https://bugs.debian.org/927862
+
+---
+ youtube_dl/extractor/youtube.py | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+--- a/youtube_dl/extractor/youtube.py
++++ b/youtube_dl/extractor/youtube.py
+@@ -1648,7 +1648,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor
+                         view_count = extract_view_count(get_video_info)
+                     if not video_info:
+                         video_info = get_video_info
+-                    if 'token' in get_video_info:
++                    get_token = get_video_info.get('token') or get_video_info.get('account_playback_token')
++                    if get_token:
+                         # Different get_video_info requests may report different results, e.g.
+                         # some may report video unavailability, but some may serve it without
+                         # any complaint (see https://github.com/rg3/youtube-dl/issues/7362,
+@@ -1658,7 +1659,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor
+                         # due to YouTube measures against IP ranges of hosting providers.
+                         # Working around by preferring the first succeeded video_info containing
+                         # the token if no such video_info yet was found.
+-                        if 'token' not in video_info:
++                        token = video_info.get('token') or video_info.get('account_playback_token')
++                        if not token:
+                             video_info = get_video_info
+                         break
+ 
+@@ -1667,7 +1669,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor
+                 r'(?s)<h1[^>]+id="unavailable-message"[^>]*>(.+?)</h1>',
+                 video_webpage, 'unavailable message', default=None)
+ 
+-        if 'token' not in video_info:
++        token = video_info.get('token') or video_info.get('account_playback_token')
++        if not token:
+             if 'reason' in video_info:
+                 if 'The uploader has not made this video available in your country.' in video_info['reason']:
+                     regions_allowed = self._html_search_meta(
