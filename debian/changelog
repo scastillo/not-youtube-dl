@@ -1,3 +1,10 @@
+youtube-dl (2019.01.17-1.1) unstable; urgency=medium
+
+  [ Salvatore Bonaccorso ]
+  * Fix extraction from youtube. (Closes: #927862)
+
+ -- Antoine Beaupré <anarcat@debian.org>  Sat, 27 Apr 2019 17:03:56 -0400
+
 youtube-dl (2019.01.17-1) unstable; urgency=medium
 
   * New upstream version 2019.01.17.
