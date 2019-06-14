@@ -779,15 +779,20 @@ of a particular file extension served as a single file, e.g. -f webm
 will download the best quality format with the webm extension served as
 a single file.
 
-You can also use special names to select particular edge case formats: -
-best: Select the best quality format represented by a single file with
-video and audio. - worst: Select the worst quality format represented by
-a single file with video and audio. - bestvideo: Select the best quality
-video-only format (e.g. DASH video). May not be available. - worstvideo:
-Select the worst quality video-only format. May not be available. -
-bestaudio: Select the best quality audio only-format. May not be
-available. - worstaudio: Select the worst quality audio only-format. May
-not be available.
+You can also use special names to select particular edge case formats:
+
+-   best: Select the best quality format represented by a single file
+    with video and audio.
+-   worst: Select the worst quality format represented by a single file
+    with video and audio.
+-   bestvideo: Select the best quality video-only format (e.g. DASH
+    video). May not be available.
+-   worstvideo: Select the worst quality video-only format. May not be
+    available.
+-   bestaudio: Select the best quality audio only-format. May not be
+    available.
+-   worstaudio: Select the worst quality audio only-format. May not be
+    available.
 
 For example, to download the worst quality video-only format you can use
 -f worstvideo.
@@ -810,20 +815,31 @@ You can also filter the video formats by putting a condition in
 brackets, as in -f "best[height=720]" (or -f "[filesize>10M]").
 
 The following numeric meta fields can be used with comparisons <, <=, >,
->=, = (equals), != (not equals): - filesize: The number of bytes, if
-known in advance - width: Width of the video, if known - height: Height
-of the video, if known - tbr: Average bitrate of audio and video in
-KBit/s - abr: Average audio bitrate in KBit/s - vbr: Average video
-bitrate in KBit/s - asr: Audio sampling rate in Hertz - fps: Frame rate
+>=, = (equals), != (not equals):
 
-Also filtering work for comparisons = (equals), != (not equals), ^=
-(begins with), $= (ends with), *= (contains) and following string meta
-fields: - ext: File extension - acodec: Name of the audio codec in use -
-vcodec: Name of the video codec in use - container: Name of the
-container format - protocol: The protocol that will be used for the
-actual download, lower-case (http, https, rtsp, rtmp, rtmpe, mms, f4m,
-ism, http_dash_segments, m3u8, or m3u8_native) - format_id: A short
-description of the format
+-   filesize: The number of bytes, if known in advance
+-   width: Width of the video, if known
+-   height: Height of the video, if known
+-   tbr: Average bitrate of audio and video in KBit/s
+-   abr: Average audio bitrate in KBit/s
+-   vbr: Average video bitrate in KBit/s
+-   asr: Audio sampling rate in Hertz
+-   fps: Frame rate
+
+Also filtering work for comparisons = (equals), ^= (starts with), $=
+(ends with), *= (contains) and following string meta fields:
+
+-   ext: File extension
+-   acodec: Name of the audio codec in use
+-   vcodec: Name of the video codec in use
+-   container: Name of the container format
+-   protocol: The protocol that will be used for the actual download,
+    lower-case (http, https, rtsp, rtmp, rtmpe, mms, f4m, ism,
+    http_dash_segments, m3u8, or m3u8_native)
+-   format_id: A short description of the format
+
+Any string comparison may be prefixed with negation ! in order to
+produce an opposite comparison, e.g. !*= (does not contain).
 
 Note that none of the aforementioned meta fields are guaranteed to be
 present since this solely depends on the metadata obtained by particular
@@ -876,7 +892,7 @@ single.
     # Download best mp4 format available or any other best if no mp4 available
     $ youtube-dl -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 
-    # Download best format available but not better that 480p
+    # Download best format available but no better than 480p
     $ youtube-dl -f 'bestvideo[height<=480]+bestaudio/best[height<=480]'
 
     # Download best video only format but no bigger than 50 MB
@@ -1632,7 +1648,7 @@ Incorrect:
     'https://www.youtube.com/watch?v=FqZTN594JQw&list='
     'PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
 
-Use safe conversion functions
+Use convenience conversion and parsing functions
 
 Wrap all extracted numeric data into safe functions from
 youtube_dl/utils.py: int_or_none, float_or_none. Use them for string to
@@ -1641,6 +1657,12 @@ number conversions as well.
 Use url_or_none for safe URL processing.
 
 Use try_get for safe metadata extraction from parsed JSON.
+
+Use unified_strdate for uniform upload_date or any YYYYMMDD meta field
+extraction, unified_timestamp for uniform timestamp extraction,
+parse_filesize for filesize extraction, parse_count for count meta
+fields extraction, parse_resolution, parse_duration for duration
+extraction, parse_age_limit for age_limit extraction.
 
 Explore youtube_dl/utils.py for more useful convenience functions.
 
@@ -1723,9 +1745,9 @@ BUGS
 
 
 Bugs and suggestions should be reported at:
-https://github.com/rg3/youtube-dl/issues. Unless you were prompted to or
-there is another pertinent reason (e.g. GitHub fails to accept the bug
-report), please do not send bug reports via personal email. For
+https://github.com/ytdl-org/youtube-dl/issues. Unless you were prompted
+to or there is another pertinent reason (e.g. GitHub fails to accept the
+bug report), please do not send bug reports via personal email. For
 discussions, join us in the IRC channel #youtube-dl on freenode
 (webchat).
 
