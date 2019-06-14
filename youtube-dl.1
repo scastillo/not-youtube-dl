@@ -1323,18 +1323,24 @@ format of a particular file extension served as a single file, e.g.
 \f[C]webm\f[] extension served as a single file.
 .PP
 You can also use special names to select particular edge case formats:
-\- \f[C]best\f[]: Select the best quality format represented by a single
+.IP \[bu] 2
+\f[C]best\f[]: Select the best quality format represented by a single
 file with video and audio.
-\- \f[C]worst\f[]: Select the worst quality format represented by a
-single file with video and audio.
-\- \f[C]bestvideo\f[]: Select the best quality video\-only format (e.g.
+.IP \[bu] 2
+\f[C]worst\f[]: Select the worst quality format represented by a single
+file with video and audio.
+.IP \[bu] 2
+\f[C]bestvideo\f[]: Select the best quality video\-only format (e.g.
 DASH video).
 May not be available.
-\- \f[C]worstvideo\f[]: Select the worst quality video\-only format.
+.IP \[bu] 2
+\f[C]worstvideo\f[]: Select the worst quality video\-only format.
 May not be available.
-\- \f[C]bestaudio\f[]: Select the best quality audio only\-format.
+.IP \[bu] 2
+\f[C]bestaudio\f[]: Select the best quality audio only\-format.
 May not be available.
-\- \f[C]worstaudio\f[]: Select the worst quality audio only\-format.
+.IP \[bu] 2
+\f[C]worstaudio\f[]: Select the worst quality audio only\-format.
 May not be available.
 .PP
 For example, to download the worst quality video\-only format you can
@@ -1363,24 +1369,46 @@ brackets, as in \f[C]\-f\ "best[height=720]"\f[] (or
 .PP
 The following numeric meta fields can be used with comparisons
 \f[C]<\f[], \f[C]<=\f[], \f[C]>\f[], \f[C]>=\f[], \f[C]=\f[] (equals),
-\f[C]!=\f[] (not equals): \- \f[C]filesize\f[]: The number of bytes, if
-known in advance \- \f[C]width\f[]: Width of the video, if known \-
-\f[C]height\f[]: Height of the video, if known \- \f[C]tbr\f[]: Average
-bitrate of audio and video in KBit/s \- \f[C]abr\f[]: Average audio
-bitrate in KBit/s \- \f[C]vbr\f[]: Average video bitrate in KBit/s \-
-\f[C]asr\f[]: Audio sampling rate in Hertz \- \f[C]fps\f[]: Frame rate
+\f[C]!=\f[] (not equals):
+.IP \[bu] 2
+\f[C]filesize\f[]: The number of bytes, if known in advance
+.IP \[bu] 2
+\f[C]width\f[]: Width of the video, if known
+.IP \[bu] 2
+\f[C]height\f[]: Height of the video, if known
+.IP \[bu] 2
+\f[C]tbr\f[]: Average bitrate of audio and video in KBit/s
+.IP \[bu] 2
+\f[C]abr\f[]: Average audio bitrate in KBit/s
+.IP \[bu] 2
+\f[C]vbr\f[]: Average video bitrate in KBit/s
+.IP \[bu] 2
+\f[C]asr\f[]: Audio sampling rate in Hertz
+.IP \[bu] 2
+\f[C]fps\f[]: Frame rate
 .PP
-Also filtering work for comparisons \f[C]=\f[] (equals), \f[C]!=\f[]
-(not equals), \f[C]^=\f[] (begins with), \f[C]$=\f[] (ends with),
-\f[C]*=\f[] (contains) and following string meta fields: \-
-\f[C]ext\f[]: File extension \- \f[C]acodec\f[]: Name of the audio codec
-in use \- \f[C]vcodec\f[]: Name of the video codec in use \-
-\f[C]container\f[]: Name of the container format \- \f[C]protocol\f[]:
-The protocol that will be used for the actual download, lower\-case
-(\f[C]http\f[], \f[C]https\f[], \f[C]rtsp\f[], \f[C]rtmp\f[],
-\f[C]rtmpe\f[], \f[C]mms\f[], \f[C]f4m\f[], \f[C]ism\f[],
-\f[C]http_dash_segments\f[], \f[C]m3u8\f[], or \f[C]m3u8_native\f[]) \-
+Also filtering work for comparisons \f[C]=\f[] (equals), \f[C]^=\f[]
+(starts with), \f[C]$=\f[] (ends with), \f[C]*=\f[] (contains) and
+following string meta fields:
+.IP \[bu] 2
+\f[C]ext\f[]: File extension
+.IP \[bu] 2
+\f[C]acodec\f[]: Name of the audio codec in use
+.IP \[bu] 2
+\f[C]vcodec\f[]: Name of the video codec in use
+.IP \[bu] 2
+\f[C]container\f[]: Name of the container format
+.IP \[bu] 2
+\f[C]protocol\f[]: The protocol that will be used for the actual
+download, lower\-case (\f[C]http\f[], \f[C]https\f[], \f[C]rtsp\f[],
+\f[C]rtmp\f[], \f[C]rtmpe\f[], \f[C]mms\f[], \f[C]f4m\f[], \f[C]ism\f[],
+\f[C]http_dash_segments\f[], \f[C]m3u8\f[], or \f[C]m3u8_native\f[])
+.IP \[bu] 2
 \f[C]format_id\f[]: A short description of the format
+.PP
+Any string comparison may be prefixed with negation \f[C]!\f[] in order
+to produce an opposite comparison, e.g.
+\f[C]!*=\f[] (does not contain).
 .PP
 Note that none of the aforementioned meta fields are guaranteed to be
 present since this solely depends on the metadata obtained by particular
@@ -1406,8 +1434,8 @@ than 480 you can use \f[C]\-f\ \[aq](mp4,webm)[height<480]\[aq]\f[].
 .PP
 Since the end of April 2015 and version 2015.04.26, youtube\-dl uses
 \f[C]\-f\ bestvideo+bestaudio/best\f[] as the default format selection
-(see #5447 (https://github.com/rg3/youtube-dl/issues/5447),
-#5456 (https://github.com/rg3/youtube-dl/issues/5456)).
+(see #5447 (https://github.com/ytdl-org/youtube-dl/issues/5447),
+#5456 (https://github.com/ytdl-org/youtube-dl/issues/5456)).
 If ffmpeg or avconv are installed this results in downloading
 \f[C]bestvideo\f[] and \f[C]bestaudio\f[] separately and muxing them
 together into a single file giving the best overall quality available.
@@ -1443,7 +1471,7 @@ single.
 #\ Download\ best\ mp4\ format\ available\ or\ any\ other\ best\ if\ no\ mp4\ available
 $\ youtube\-dl\ \-f\ \[aq]bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best\[aq]
 
-#\ Download\ best\ format\ available\ but\ not\ better\ that\ 480p
+#\ Download\ best\ format\ available\ but\ no\ better\ than\ 480p
 $\ youtube\-dl\ \-f\ \[aq]bestvideo[height<=480]+bestaudio/best[height<=480]\[aq]
 
 #\ Download\ best\ video\ only\ format\ but\ no\ bigger\ than\ 50\ MB
@@ -1488,8 +1516,8 @@ $\ youtube\-dl\ \-\-dateafter\ 20000101\ \-\-datebefore\ 20091231
 .SS How do I update youtube\-dl?
 .PP
 If you\[aq]ve followed our manual installation
-instructions (https://rg3.github.io/youtube-dl/download.html), you can
-simply run \f[C]youtube\-dl\ \-U\f[] (or, on Linux,
+instructions (https://ytdl-org.github.io/youtube-dl/download.html), you
+can simply run \f[C]youtube\-dl\ \-U\f[] (or, on Linux,
 \f[C]sudo\ youtube\-dl\ \-U\f[]).
 .PP
 If you have used pip, a simple
@@ -1518,7 +1546,7 @@ sudo\ apt\-get\ remove\ \-y\ youtube\-dl
 .fi
 .PP
 Afterwards, simply follow our manual installation
-instructions (https://rg3.github.io/youtube-dl/download.html):
+instructions (https://ytdl-org.github.io/youtube-dl/download.html):
 .IP
 .nf
 \f[C]
@@ -1585,7 +1613,7 @@ this?
 Apparently YouTube requires you to pass a CAPTCHA test if you download
 too much.
 We\[aq]re considering to provide a way to let you solve the
-CAPTCHA (https://github.com/rg3/youtube-dl/issues/154), but at the
+CAPTCHA (https://github.com/ytdl-org/youtube-dl/issues/154), but at the
 moment, your best course of action is pointing a web browser to the
 youtube URL, solving the CAPTCHA, and restart youtube\-dl.
 .SS Do I need any other programs?
@@ -1702,10 +1730,11 @@ means you\[aq]re using an outdated version of Python.
 Please update to Python 2.6 or 2.7.
 .SS What is this binary file? Where has the code gone?
 .PP
-Since June 2012 (#342 (https://github.com/rg3/youtube-dl/issues/342))
-youtube\-dl is packed as an executable zipfile, simply unzip it (might
-need renaming to \f[C]youtube\-dl.zip\f[] first on some systems) or
-clone the git repository, as laid out above.
+Since June 2012
+(#342 (https://github.com/ytdl-org/youtube-dl/issues/342)) youtube\-dl
+is packed as an executable zipfile, simply unzip it (might need renaming
+to \f[C]youtube\-dl.zip\f[] first on some systems) or clone the git
+repository, as laid out above.
 If you modify the code, you can run it by executing the
 \f[C]__main__.py\f[] file.
 To recompile the executable, run \f[C]make\ youtube\-dl\f[].
@@ -1838,7 +1867,7 @@ improvements of the built\-in downloader and/or ffmpeg.
 .PP
 In particular, the generic extractor (used when your website is not in
 the list of supported sites by
-youtube\-dl (https://rg3.github.io/youtube-dl/supportedsites.html)
+youtube\-dl (https://ytdl-org.github.io/youtube-dl/supportedsites.html)
 cannot mandate one specific downloader.
 .PP
 If you put either \f[C]\-\-hls\-prefer\-native\f[] or
@@ -1951,8 +1980,8 @@ such as checking that your version of youtube\-dl is current.
 .SH DEVELOPER INSTRUCTIONS
 .PP
 Most users do not need to build youtube\-dl and can download the
-builds (https://rg3.github.io/youtube-dl/download.html) or get them from
-their distribution.
+builds (https://ytdl-org.github.io/youtube-dl/download.html) or get them
+from their distribution.
 .PP
 To run youtube\-dl as a developer, you don\[aq]t need to build anything
 either.
@@ -2001,7 +2030,7 @@ After you have ensured this site is distributing its content legally,
 you can follow this quick list (assuming your service is called
 \f[C]yourextractor\f[]):
 .IP " 1." 4
-Fork this repository (https://github.com/rg3/youtube-dl/fork)
+Fork this repository (https://github.com/ytdl-org/youtube-dl/fork)
 .IP " 2." 4
 Check out the source code with:
 .RS 4
@@ -2073,7 +2102,7 @@ class\ YourExtractorIE(InfoExtractor):
 .RE
 .IP " 5." 4
 Add an import in
-\f[C]youtube_dl/extractor/extractors.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/extractors.py).
+\f[C]youtube_dl/extractor/extractors.py\f[] (https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/extractor/extractors.py).
 .IP " 6." 4
 Run
 \f[C]python\ test/test_download.py\ TestDownload.test_YourExtractor\f[].
@@ -2088,10 +2117,10 @@ Note that tests with \f[C]only_matching\f[] key in test\[aq]s dict are
 not counted in.
 .IP " 7." 4
 Have a look at
-\f[C]youtube_dl/extractor/common.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/common.py)
+\f[C]youtube_dl/extractor/common.py\f[] (https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/extractor/common.py)
 for possible helper methods and a detailed description of what your
 extractor should and may
-return (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303).
+return (https://github.com/ytdl-org/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303).
 Add tests and code for as many as you want.
 .IP " 8." 4
 Make sure your code follows youtube\-dl coding conventions and check the
@@ -2153,7 +2182,7 @@ update at all.
 .PP
 For extraction to work youtube\-dl relies on metadata your extractor
 extracts and provides to youtube\-dl expressed by an information
-dictionary (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303)
+dictionary (https://github.com/ytdl-org/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L94-L303)
 or simply \f[I]info dict\f[].
 Only the following meta fields in the \f[I]info dict\f[] are considered
 mandatory for a successful extraction process by youtube\-dl:
@@ -2174,7 +2203,7 @@ extraction does not make any sense without and if any of them fail to be
 extracted then the extractor is considered completely broken.
 .PP
 Any
-field (https://github.com/rg3/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L188-L303)
+field (https://github.com/ytdl-org/youtube-dl/blob/7f41a598b3fba1bcab2817de64a08941200aa3c8/youtube_dl/extractor/common.py#L188-L303)
 apart from the aforementioned ones are considered \f[B]optional\f[].
 That means that extraction should be \f[B]tolerant\f[] to situations
 when sources for these fields can potentially be unavailable (even if
@@ -2394,10 +2423,10 @@ Incorrect:
 \[aq]PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4\[aq]
 \f[]
 .fi
-.SS Use safe conversion functions
+.SS Use convenience conversion and parsing functions
 .PP
 Wrap all extracted numeric data into safe functions from
-\f[C]youtube_dl/utils.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py):
+\f[C]youtube_dl/utils.py\f[] (https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/utils.py):
 \f[C]int_or_none\f[], \f[C]float_or_none\f[].
 Use them for string to number conversions as well.
 .PP
@@ -2405,8 +2434,16 @@ Use \f[C]url_or_none\f[] for safe URL processing.
 .PP
 Use \f[C]try_get\f[] for safe metadata extraction from parsed JSON.
 .PP
+Use \f[C]unified_strdate\f[] for uniform \f[C]upload_date\f[] or any
+\f[C]YYYYMMDD\f[] meta field extraction, \f[C]unified_timestamp\f[] for
+uniform \f[C]timestamp\f[] extraction, \f[C]parse_filesize\f[] for
+\f[C]filesize\f[] extraction, \f[C]parse_count\f[] for count meta fields
+extraction, \f[C]parse_resolution\f[], \f[C]parse_duration\f[] for
+\f[C]duration\f[] extraction, \f[C]parse_age_limit\f[] for
+\f[C]age_limit\f[] extraction.
+.PP
 Explore
-\f[C]youtube_dl/utils.py\f[] (https://github.com/rg3/youtube-dl/blob/master/youtube_dl/utils.py)
+\f[C]youtube_dl/utils.py\f[] (https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/utils.py)
 for more useful convenience functions.
 .SS More examples
 .SS Safely extract optional description from parsed JSON
@@ -2431,7 +2468,7 @@ view_count\ =\ int_or_none(video.get(\[aq]views\[aq]))
 youtube\-dl makes the best effort to be a good command\-line program,
 and thus should be callable from any programming language.
 If you encounter any problems parsing its output, feel free to create a
-report (https://github.com/rg3/youtube-dl/issues/new).
+report (https://github.com/ytdl-org/youtube-dl/issues/new).
 .PP
 From a Python program, you can embed youtube\-dl in a more powerful
 fashion, like this:
@@ -2449,7 +2486,7 @@ with\ youtube_dl.YoutubeDL(ydl_opts)\ as\ ydl:
 .PP
 Most likely, you\[aq]ll want to use various options.
 For a list of options available, have a look at
-\f[C]youtube_dl/YoutubeDL.py\f[] (https://github.com/rg3/youtube-dl/blob/3e4cedf9e8cd3157df2457df7274d0c842421945/youtube_dl/YoutubeDL.py#L137-L312).
+\f[C]youtube_dl/YoutubeDL.py\f[] (https://github.com/ytdl-org/youtube-dl/blob/3e4cedf9e8cd3157df2457df7274d0c842421945/youtube_dl/YoutubeDL.py#L137-L312).
 For a start, if you want to intercept youtube\-dl\[aq]s output, set a
 \f[C]logger\f[] object.
 .PP
@@ -2496,7 +2533,7 @@ with\ youtube_dl.YoutubeDL(ydl_opts)\ as\ ydl:
 .SH BUGS
 .PP
 Bugs and suggestions should be reported at:
-<https://github.com/rg3/youtube-dl/issues>.
+<https://github.com/ytdl-org/youtube-dl/issues>.
 Unless you were prompted to or there is another pertinent reason (e.g.
 GitHub fails to accept the bug report), please do not send bug reports
 via personal email.
@@ -2598,8 +2635,8 @@ This goes for feature requests as well.
 Make sure that someone has not already opened the issue you\[aq]re
 trying to open.
 Search at the top of the window or browse the GitHub
-Issues (https://github.com/rg3/youtube-dl/search?type=Issues) of this
-repository.
+Issues (https://github.com/ytdl-org/youtube-dl/search?type=Issues) of
+this repository.
 If there is an issue, feel free to write something along the lines of
 "This affects me as well, with version 2015.01.01.
 Here is some more information on the issue: ...".
@@ -2609,7 +2646,7 @@ activity.
 .PP
 Before requesting a new feature, please have a quick peek at the list of
 supported
-options (https://github.com/rg3/youtube-dl/blob/master/README.md#options).
+options (https://github.com/ytdl-org/youtube-dl/blob/master/README.md#options).
 Many feature requests are for features that actually exist already!
 Please, absolutely do show off your work in the issue report and detail
 how the existing similar options do \f[I]not\f[] solve your problem.
