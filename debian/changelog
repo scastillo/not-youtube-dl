@@ -1,13 +1,13 @@
-youtube-dl (2019.06.08-1~1.gbp0f0afa) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @0f0afa2a182178f8c70d50daf99f864372fe71f3 **
+youtube-dl (2019.06.08-1) unstable; urgency=medium
 
   * ACK NMU. Thanks Antoine and Salvatore for the upload!
   * New upstream version 2019.06.08. Closes: #930462.
-  * debian/patches: Remove patch cherry-picked from upstream for the NMU.
   * debian/README.source: Update steps used to create new release.
+  * debian/patches:
+    + Remove patch cherry-picked from upstream for the NMU.
+    + Refresh patches to apply cleanly.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Thu, 13 Jun 2019 21:05:24 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Thu, 13 Jun 2019 21:24:55 -0300
 
 youtube-dl (2019.01.17-1.1) unstable; urgency=medium
 
