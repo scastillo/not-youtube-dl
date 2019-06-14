@@ -17,7 +17,7 @@ Last-Update: 2018-03-16
 
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
-@@ -439,7 +439,12 @@
+@@ -441,7 +441,12 @@
      with YoutubeDL(ydl_opts) as ydl:
          # Update version
          if opts.update_self:
