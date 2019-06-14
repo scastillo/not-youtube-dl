@@ -3,7 +3,7 @@ youtube-dl (2019.06.08-1~1.gbp0f0afa) UNRELEASED; urgency=medium
   ** SNAPSHOT build @0f0afa2a182178f8c70d50daf99f864372fe71f3 **
 
   * ACK NMU. Thanks Antoine and Salvatore for the upload!
-  * New upstream version 2019.06.08
+  * New upstream version 2019.06.08. Closes: #930462.
   * debian/patches: Remove patch cherry-picked from upstream for the NMU.
   * debian/README.source: Update steps used to create new release.
 
