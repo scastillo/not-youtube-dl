@@ -1,13 +1,11 @@
-youtube-dl (2019.07.02-1~1.gbpf844a9) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @f844a9ea177d7a03120f00d87c1c52e87c299af3 **
+youtube-dl (2019.07.02-1) unstable; urgency=medium
 
   * New upstream version 2019.07.02.
     Highlight:
      + Fixes download of encrypted videos (e.g., almost everything with music)
        from YouTube.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 03 Jul 2019 19:28:48 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 03 Jul 2019 19:36:43 -0300
 
 youtube-dl (2019.06.08-1) unstable; urgency=medium
 
