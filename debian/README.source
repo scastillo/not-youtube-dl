@@ -28,7 +28,8 @@ These are the important steps and may need to be changed according to
 deviations, say, in the release process of upstream releases (e.g., if
 upstream changes the location where the tarballs reside).
 
-# Maintaining the repository
+Maintaining the repository
+--------------------------
 
 I keep my development of the package (in particular, the master branch) at
 GitHub and I usually try to have my changes there, since I am not always
@@ -57,4 +58,4 @@ Of course, if it is not possible to coordinate in the way described above,
 alas... :-(
 
 
- -- Rogério Brito <rbrito@ime.usp.br>, Mon, 21 Jan 2019 12:46:26 -0200
+ -- Rogério Brito <rbrito@ime.usp.br>, Mon,  2 Sep 2019 14:50:43 -0300
