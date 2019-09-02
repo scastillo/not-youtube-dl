@@ -1,13 +1,17 @@
-youtube-dl (2019.09.01-1~1.gbpb2d460) UNRELEASED; urgency=medium
+youtube-dl (2019.09.01-1~2.gbpa4e5df) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @b2d460955a615719ffe64af79a5a1f38361683d5 **
+  ** SNAPSHOT build @a4e5dfe95bc8baaa961161b75ac623ce5831abf9 **
 
-  * New upstream version 2019.09.01
+  * New upstream version 2019.09.01.
+    Highlight:
+     + Fix extraction of video titles from YouTube.
+     Closes: #933381, #939041
   * debian/{control,copyright,watch}: Change upstream location.
   * debian/README.source: Change 'markup'.
   * debian/copyright: Update my copyright years.
+  * debian/control: State compliancy with Debian Policy 4.4.0.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Mon, 02 Sep 2019 14:54:36 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 02 Sep 2019 15:27:29 -0300
 
 youtube-dl (2019.07.02-1) unstable; urgency=medium
 
