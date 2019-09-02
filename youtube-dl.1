@@ -2423,6 +2423,86 @@ Incorrect:
 \[aq]PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4\[aq]
 \f[]
 .fi
+.SS Inline values
+.PP
+Extracting variables is acceptable for reducing code duplication and
+improving readability of complex expressions.
+However, you should avoid extracting variables used only once and moving
+them to opposite parts of the extractor file, which makes reading the
+linear flow difficult.
+.SS Example
+.PP
+Correct:
+.IP
+.nf
+\f[C]
+title\ =\ self._html_search_regex(r\[aq]<title>([^<]+)</title>\[aq],\ webpage,\ \[aq]title\[aq])
+\f[]
+.fi
+.PP
+Incorrect:
+.IP
+.nf
+\f[C]
+TITLE_RE\ =\ r\[aq]<title>([^<]+)</title>\[aq]
+#\ ...some\ lines\ of\ code...
+title\ =\ self._html_search_regex(TITLE_RE,\ webpage,\ \[aq]title\[aq])
+\f[]
+.fi
+.SS Collapse fallbacks
+.PP
+Multiple fallback values can quickly become unwieldy.
+Collapse multiple fallback values into a single expression via a list of
+patterns.
+.SS Example
+.PP
+Good:
+.IP
+.nf
+\f[C]
+description\ =\ self._html_search_meta(
+\ \ \ \ [\[aq]og:description\[aq],\ \[aq]description\[aq],\ \[aq]twitter:description\[aq]],
+\ \ \ \ webpage,\ \[aq]description\[aq],\ default=None)
+\f[]
+.fi
+.PP
+Unwieldy:
+.IP
+.nf
+\f[C]
+description\ =\ (
+\ \ \ \ self._og_search_description(webpage,\ default=None)
+\ \ \ \ or\ self._html_search_meta(\[aq]description\[aq],\ webpage,\ default=None)
+\ \ \ \ or\ self._html_search_meta(\[aq]twitter:description\[aq],\ webpage,\ default=None))
+\f[]
+.fi
+.PP
+Methods supporting list of patterns are: \f[C]_search_regex\f[],
+\f[C]_html_search_regex\f[], \f[C]_og_search_property\f[],
+\f[C]_html_search_meta\f[].
+.SS Trailing parentheses
+.PP
+Always move trailing parentheses after the last argument.
+.SS Example
+.PP
+Correct:
+.IP
+.nf
+\f[C]
+\ \ \ \ lambda\ x:\ x[\[aq]ResultSet\[aq]][\[aq]Result\[aq]][0][\[aq]VideoUrlSet\[aq]][\[aq]VideoUrl\[aq]],
+\ \ \ \ list)
+\f[]
+.fi
+.PP
+Incorrect:
+.IP
+.nf
+\f[C]
+\ \ \ \ lambda\ x:\ x[\[aq]ResultSet\[aq]][\[aq]Result\[aq]][0][\[aq]VideoUrlSet\[aq]][\[aq]VideoUrl\[aq]],
+\ \ \ \ list,
+)
+\f[]
+.fi
 .SS Use convenience conversion and parsing functions
 .PP
 Wrap all extracted numeric data into safe functions from

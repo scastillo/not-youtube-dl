@@ -1648,6 +1648,65 @@ Incorrect:
     'https://www.youtube.com/watch?v=FqZTN594JQw&list='
     'PLMYEtVRpaqY00V9W81Cwmzp6N6vZqfUKD4'
 
+Inline values
+
+Extracting variables is acceptable for reducing code duplication and
+improving readability of complex expressions. However, you should avoid
+extracting variables used only once and moving them to opposite parts of
+the extractor file, which makes reading the linear flow difficult.
+
+Example
+
+Correct:
+
+    title = self._html_search_regex(r'<title>([^<]+)</title>', webpage, 'title')
+
+Incorrect:
+
+    TITLE_RE = r'<title>([^<]+)</title>'
+    # ...some lines of code...
+    title = self._html_search_regex(TITLE_RE, webpage, 'title')
+
+Collapse fallbacks
+
+Multiple fallback values can quickly become unwieldy. Collapse multiple
+fallback values into a single expression via a list of patterns.
+
+Example
+
+Good:
+
+    description = self._html_search_meta(
+        ['og:description', 'description', 'twitter:description'],
+        webpage, 'description', default=None)
+
+Unwieldy:
+
+    description = (
+        self._og_search_description(webpage, default=None)
+        or self._html_search_meta('description', webpage, default=None)
+        or self._html_search_meta('twitter:description', webpage, default=None))
+
+Methods supporting list of patterns are: _search_regex,
+_html_search_regex, _og_search_property, _html_search_meta.
+
+Trailing parentheses
+
+Always move trailing parentheses after the last argument.
+
+Example
+
+Correct:
+
+        lambda x: x['ResultSet']['Result'][0]['VideoUrlSet']['VideoUrl'],
+        list)
+
+Incorrect:
+
+        lambda x: x['ResultSet']['Result'][0]['VideoUrlSet']['VideoUrl'],
+        list,
+    )
+
 Use convenience conversion and parsing functions
 
 Wrap all extracted numeric data into safe functions from
