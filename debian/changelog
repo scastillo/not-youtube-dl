@@ -2,8 +2,8 @@ youtube-dl (2019.09.28-1~1.gbpf16b10) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @f16b10fb8c485cdd113f9a55a6a2f32c2d81d717 **
 
+  * New upstream version 2019.09.28. Closes: #940053
   * debian/README.source: Document source-only uploads procedure.
-  * New upstream version 2019.09.28
   * debian/control: Update list of extractors/supported sites.
   * debian/control: Mark my GitHub trees as the preferred repos.
 
