@@ -1,6 +1,4 @@
-youtube-dl (2019.09.28-1~1.gbpf16b10) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @f16b10fb8c485cdd113f9a55a6a2f32c2d81d717 **
+youtube-dl (2019.09.28-1) unstable; urgency=medium
 
   * New upstream version 2019.09.28. Closes: #940053
   * debian/README.source: Document source-only uploads procedure.
@@ -8,7 +6,7 @@ youtube-dl (2019.09.28-1~1.gbpf16b10) UNRELEASED; urgency=medium
     + Update list of extractors/supported sites.
     + Mark my GitHub trees as the preferred repos.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 01 Oct 2019 16:33:08 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Tue, 01 Oct 2019 17:06:33 -0300
 
 youtube-dl (2019.09.01-1) unstable; urgency=medium
 
