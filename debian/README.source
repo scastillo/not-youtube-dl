@@ -14,10 +14,10 @@ to, assuming that one already has the packages `devscripts`,
     [ Make here some adaptations, like updating debian/patches, if needed ]
     gbp buildpackage -us -uc # create a test build
 
-    # Final package creation:
+    # Final (source only) package creation:
 
     gbp dch -R -a
-    gbp buildpackage -k8F930BD1934C3E2140A258790747BD39BCFCAAAA --git-tag
+    gbp buildpackage -S -k8F930BD1934C3E2140A258790747BD39BCFCAAAA --git-tag
 
     # Push the results to the repositories:
     git push --all; git push --tags
@@ -58,4 +58,4 @@ Of course, if it is not possible to coordinate in the way described above,
 alas... :-(
 
 
- -- Rogério Brito <rbrito@ime.usp.br>, Mon,  2 Sep 2019 14:50:43 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>, Tue,  1 Oct 2019 15:45:10 -0300
