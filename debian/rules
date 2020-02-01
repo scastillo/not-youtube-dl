@@ -16,3 +16,6 @@ override_dh_clean:
 	dh_clean
 
 override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	make offlinetest PYTHON=python3
+endif
