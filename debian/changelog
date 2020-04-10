@@ -1,6 +1,6 @@
-youtube-dl (2020.03.24-1~1.gbp70058c) UNRELEASED; urgency=medium
+youtube-dl (2020.03.24-1~2.gbp64669d) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @70058ce8528073cc636f0b014032b9cde5807cb9 **
+  ** SNAPSHOT build @64669d882d7a41b7f3c25a7191f4cc7db0684ef2 **
 
   [ Unit 193 ]
   * debian/patches:
@@ -15,13 +15,15 @@ youtube-dl (2020.03.24-1~1.gbp70058c) UNRELEASED; urgency=medium
     + Run offline tests.
 
   [ Rogério Brito ]
+  * New upstream version 2020.03.24 (Closes: #950163, #954875)
   * debian/patches:
     + Add patch to skip style checks from flake8 during test.
   * debian/control:
     + State compliancy with policy 4.5.0 (no further changes needed).
-  * New upstream version 2020.03.24
+    + Move phantomjs from Recommends to Suggests. (Closes: #950358)
+    + Add 'libfribidi-bin | bidiv' to Suggests. (Closes: #950674)
 
- -- Rogério Brito <rbrito@ime.usp.br>  Fri, 10 Apr 2020 10:30:01 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 10 Apr 2020 10:44:06 -0300
 
 youtube-dl (2020.01.24-0.1) unstable; urgency=medium
 
