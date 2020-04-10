@@ -16,7 +16,7 @@ Build-Depends:
 Build-Depends-Indep:
  python3
 Rules-Requires-Root: no
-Standards-Version: 4.4.0
+Standards-Version: 4.5.0
 Vcs-Browser: https://github.com/rbrito/pkg-youtube-dl
 Vcs-Git: https://github.com/rbrito/pkg-youtube-dl
 Homepage: https://ytdl-org.github.io/youtube-dl/
