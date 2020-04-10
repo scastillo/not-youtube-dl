@@ -7,7 +7,9 @@ Build-Depends:
  debhelper-compat (= 12),
  dh-exec,
  dh-python,
+ flake8 <!nocheck>,
  pandoc,
+ python3-nose <!nocheck>,
  python3-pkg-resources,
  python3-setuptools,
  zip

@@ -9,12 +9,13 @@ export PATH := $(CURDIR)/debian/utils:$(PATH)
 
 override_dh_auto_configure:
 	PREFIX=/usr SYSCONFDIR=/etc make
-	mv Makefile Makefile.inactive
 	rm youtube-dl
 
 override_dh_clean:
-	test -f Makefile || mv Makefile.inactive Makefile
 	make clean
 	dh_clean
 
 override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	make offlinetest PYTHON=python3
+endif

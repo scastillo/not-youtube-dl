@@ -15,9 +15,29 @@ Last-Update: 2018-03-16
  youtube_dl/options.py  | 2 +-
  2 files changed, 7 insertions(+), 2 deletions(-)
 
+--- a/README.md
++++ a/README.md
+@@ -53,9 +53,6 @@
+ # OPTIONS
+     -h, --help                       Print this help text and exit
+     --version                        Print program version and exit
+-    -U, --update                     Update this program to latest version. Make
+-                                     sure that you have sufficient permissions
+-                                     (run with sudo if needed)
+     -i, --ignore-errors              Continue on download errors, for example to
+                                      skip unavailable videos in a playlist
+     --abort-on-error                 Abort downloading of further videos (in the
 --- a/youtube_dl/__init__.py
 +++ b/youtube_dl/__init__.py
-@@ -441,7 +441,12 @@
+@@ -36,7 +36,6 @@
+     write_string,
+     render_table,
+ )
+-from .update import update_self
+ from .downloader import (
+     FileDownloader,
+ )
+@@ -441,7 +440,12 @@
      with YoutubeDL(ydl_opts) as ydl:
          # Update version
          if opts.update_self:
