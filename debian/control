@@ -32,9 +32,10 @@ Recommends:
  ca-certificates,
  ffmpeg | libav-tools,
  mpv | mplayer,
- phantomjs,
  python3-pyxattr,
  rtmpdump
+Suggests:
+ phantomjs
 Description: downloader of videos from YouTube and other sites
  youtube-dl is a small command-line program to download videos from
  YouTube.com and other sites that don't provide direct links to the
