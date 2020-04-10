@@ -960,8 +960,8 @@ that, remove the distribution's package, with a line like
 
 Afterwards, simply follow our manual installation instructions:
 
-    sudo wget https://yt-dl.org/latest/youtube-dl -O /usr/local/bin/youtube-dl
-    sudo chmod a+x /usr/local/bin/youtube-dl
+    sudo wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
+    sudo chmod a+rx /usr/local/bin/youtube-dl
     hash -r
 
 Again, from then on you'll be able to update with sudo youtube-dl -U.
