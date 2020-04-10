@@ -1711,10 +1711,21 @@ See above for how to update youtube\-dl.
 .PP
 These two error codes indicate that the service is blocking your IP
 address because of overuse.
-Contact the service and ask them to unblock your IP address, or \- if
-you have acquired a whitelisted IP address already \- use the
-\f[C]\-\-proxy\f[] or \f[C]\-\-source\-address\f[] options to select
-another IP address.
+Usually this is a soft block meaning that you can gain access again
+after solving CAPTCHA.
+Just open a browser and solve a CAPTCHA the service suggests you and
+after that pass cookies to youtube\-dl.
+Note that if your machine has multiple external IPs then you should also
+pass exactly the same IP you\[aq]ve used for solving CAPTCHA with
+\f[C]\-\-source\-address\f[].
+Also you may need to pass a \f[C]User\-Agent\f[] HTTP header of your
+browser with \f[C]\-\-user\-agent\f[].
+.PP
+If this is not the case (no CAPTCHA suggested to solve by the service)
+then you can contact the service and ask them to unblock your IP
+address, or \- if you have acquired a whitelisted IP address already \-
+use the \f[C]\-\-proxy\f[] or \f[C]\-\-source\-address\f[] options to
+select another IP address.
 .SS SyntaxError: Non\-ASCII character
 .PP
 The error
