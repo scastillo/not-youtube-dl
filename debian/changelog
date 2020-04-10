@@ -1,3 +1,28 @@
+youtube-dl (2020.03.24-1~1.gbp70058c) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @70058ce8528073cc636f0b014032b9cde5807cb9 **
+
+  [ Unit 193 ]
+  * debian/patches:
+    + disable-autoupdate-mechanism.patch: Extend to clean up errant import
+      and README clobber on clean.
+    + disable_more_online_tests.patch: Disable remaining tests that require
+      internet.
+  * debian/control:
+    + Build-depend on flake8 and python3-nose.
+  * debian/rules:
+    + Drop makefile mangling
+    + Run offline tests.
+
+  [ Rogério Brito ]
+  * debian/patches:
+    + Add patch to skip style checks from flake8 during test.
+  * debian/control:
+    + State compliancy with policy 4.5.0 (no further changes needed).
+  * New upstream version 2020.03.24
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Fri, 10 Apr 2020 10:30:01 -0300
+
 youtube-dl (2020.01.24-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
