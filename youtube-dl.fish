@@ -160,7 +160,7 @@ complete --command youtube-dl --long-option fixup --description 'Automatically c
 complete --command youtube-dl --long-option prefer-avconv --description 'Prefer avconv over ffmpeg for running the postprocessors'
 complete --command youtube-dl --long-option prefer-ffmpeg --description 'Prefer ffmpeg over avconv for running the postprocessors (default)'
 complete --command youtube-dl --long-option ffmpeg-location --description 'Location of the ffmpeg/avconv binary; either the path to the binary or its containing directory.'
-complete --command youtube-dl --long-option exec --description 'Execute a command on the file after downloading, similar to find'"'"'s -exec syntax. Example: --exec '"'"'adb push {} /sdcard/Music/ && rm {}'"'"''
+complete --command youtube-dl --long-option exec --description 'Execute a command on the file after downloading and post-processing, similar to find'"'"'s -exec syntax. Example: --exec '"'"'adb push {} /sdcard/Music/ && rm {}'"'"''
 complete --command youtube-dl --long-option convert-subs --description 'Convert the subtitles to other format (currently supported: srt|ass|vtt|lrc)'
 
 
