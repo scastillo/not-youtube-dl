@@ -1,6 +1,6 @@
-youtube-dl (2020.05.08-1~1.gbpb9a503) UNRELEASED; urgency=medium
+youtube-dl (2020.05.08-1~2.gbp948e7e) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @b9a5031529f8a67d511988b11f489860413fad26 **
+  ** SNAPSHOT build @948e7e72e8c48fac09cc92b37abe001b421fda48 **
 
   [ Debian Janitor ]
   * debian/copyright: use spaces rather than tabs to start continuation lines.
@@ -10,8 +10,10 @@ youtube-dl (2020.05.08-1~1.gbpb9a503) UNRELEASED; urgency=medium
 
   [ Rogério Brito ]
   * New upstream version 2020.05.08
+  * debian/control: Upgrade debhelper-compat to 13.
+  * debian/changelog: Wrap long line.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Tue, 12 May 2020 09:33:52 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 13 May 2020 15:33:59 -0300
 
 youtube-dl (2020.03.24-1) unstable; urgency=medium
 
