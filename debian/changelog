@@ -4,7 +4,8 @@ youtube-dl (2020.05.08-1~1.gbpb9a503) UNRELEASED; urgency=medium
 
   [ Debian Janitor ]
   * debian/copyright: use spaces rather than tabs to start continuation lines.
-  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository, Repository-Browse.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
   * Use canonical URL in Vcs-Git.
 
   [ Rogério Brito ]
