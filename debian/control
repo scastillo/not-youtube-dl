@@ -4,7 +4,7 @@ Section: web
 Priority: optional
 Build-Depends:
  bash-completion,
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  dh-exec,
  dh-python,
  flake8 <!nocheck>,
