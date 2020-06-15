@@ -1,3 +1,12 @@
+youtube-dl (2020.06.16-1~1.gbp0626de) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @0626de37fa3331c654d4affae363132a0d766ffb **
+
+  * New upstream version 2020.06.16.
+    + Fixes problems when downloading YouTube playlists.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 15 Jun 2020 17:08:09 -0300
+
 youtube-dl (2020.05.08-1) unstable; urgency=medium
 
   [ Debian Janitor ]
