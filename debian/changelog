@@ -1,10 +1,9 @@
-youtube-dl (2020.06.16.1-1~1.gbpbad87b) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @bad87b6c6e31ea0056d795ca3e7aa81ceaad2291 **
+youtube-dl (2020.06.16.1-1) unstable; urgency=medium
 
   * New upstream version 2020.06.16.1
+    + Fixes problems with some metadata from YouTube.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Jun 2020 15:11:47 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 17 Jun 2020 18:22:20 -0300
 
 youtube-dl (2020.06.16-1) unstable; urgency=medium
 
