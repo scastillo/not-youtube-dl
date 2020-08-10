@@ -1,10 +1,10 @@
-youtube-dl (2020.07.28-1~1.gbpc2f0d5) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @c2f0d513e833ff4e6be3f30d6fcade10fa4b9751 **
+youtube-dl (2020.07.28-1) unstable; urgency=medium
 
   * New upstream version 2020.07.28
+    + Fixes problems with some playlists from YouTube (among other things).
+  * debian/control: Update list of supported sites.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Mon, 10 Aug 2020 13:10:30 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Mon, 10 Aug 2020 13:56:03 -0300
 
 youtube-dl (2020.06.16.1-1) unstable; urgency=medium
 
