@@ -1,11 +1,9 @@
-youtube-dl (2020.09.14-1~1.gbp09e2f8) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @09e2f88f88353cd91b2157a8dfb28df7799cd25b **
+youtube-dl (2020.09.14-1) unstable; urgency=medium
 
   * New upstream version 2020.09.14.
     + Fixes problems with YouTube and downloads from Google Drive.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Sun, 13 Sep 2020 19:45:35 -0300
+ -- Rogério Brito <rbrito@ime.usp.br>  Sun, 13 Sep 2020 21:30:13 -0300
 
 youtube-dl (2020.07.28-1) unstable; urgency=medium
 
