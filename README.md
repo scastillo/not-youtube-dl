@@ -1,6 +1,8 @@
 [![Build Status](https://travis-ci.org/ytdl-org/youtube-dl.svg?branch=master)](https://travis-ci.org/ytdl-org/youtube-dl)
 
-this is not youtube-dl - it does not download videos from youtube.com or other video platforms
+This is not youtube-dl - it does not download videos from youtube.com or other video platforms
+
+If you are looking for youtube-dl you can find it here: https://youtube-dl.org/ again NOT HERE.
 
 - [INSTALLATION](#installation)
 - [DESCRIPTION](#description)
